@@ -1,9 +1,11 @@
 <?php
+// Get the application name from the query string, or exit if not set.
 $app = isset($_GET['app']) ? $_GET['app'] : '';
 if (! $app) {
     exit('app not set');
 }
 
+// Determine the theme (dark or light) from a configuration file or query string.
 $config_file = __DIR__ . '/../themes/theme.conf';
 $theme       = file_exists($config_file) ? trim(file_get_contents($config_file)) : 'dark';
 if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
@@ -11,7 +13,9 @@ if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
     file_put_contents($config_file, $theme);
 }
 
+// Load the base stylesheet.
 $css = file_get_contents(__DIR__ . '/../themes/style.css');
+// If the theme is light, invert the colors in the stylesheet.
 if ($theme === 'light') {
     $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
         $hex = $m[1];
@@ -22,34 +26,41 @@ if ($theme === 'light') {
     }, $css);
 }
 
-// Cargar cache
+// Load the cached package data and installation status functions.
 include __DIR__ . '/../cache/packages.php';
 include __DIR__ . '/insta_status.php';
 $products = $products_cache;
 
+// Find the specified application in the product list.
 $found = null;
 foreach ($products as $p) {
     if (strtolower($p['name']) === strtolower($app)) {$found = $p;
         break;}
 }
+// Exit if the application is not found.
 if (! $found) {
     exit('Application not found');
 }
 
+// Get application details.
 $category  = strtolower($found['category']);
 $installed = is_installed($found['name']);
 
+// Prepare to read README and .info files from the slackbuilds cache.
 $slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';
 $readme_content  = '';
 $info_content    = [];
 
+// Check for the application's directory in the slackbuilds cache.
 $app_dir = "$slackbuilds_dir/$category/$app";
 if (is_dir($app_dir)) {
+    // Read the README file if it exists.
     $readme_file = "$app_dir/README";
     if (file_exists($readme_file)) {
         $readme_content = file_get_contents($readme_file);
     }
 
+    // Read the .info file if it exists and parse its contents.
     $info_file = "$app_dir/$app.info";
     if (file_exists($info_file)) {
         $lines = file($info_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -62,8 +73,10 @@ if (is_dir($app_dir)) {
     }
 }
 
+// Start generating the HTML output.
 echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . htmlspecialchars($found['name']) . '</title><style>' . $css . '</style></head><body class="' . $theme . '">';
 $icon = htmlspecialchars($found['icon']);
+// Display the application header with icon, name, version, and install/remove buttons.
 echo '<div class="app-header" style="display:flex;align-items:center;gap:20px;">';
 echo '<img src="' . $icon . '" width="128" height="128" class="app-icon">';
 echo '<div class="app-title">' . htmlspecialchars($found['name']) . '<br>Version ' . htmlspecialchars(substr($found['version'], 0, 10)) . '</div>';
@@ -72,12 +85,14 @@ echo '<button class="app-install" ' . ($installed ? 'disabled' : '') . '>Install
 echo '<button class="app-remove" ' . ($installed ? '' : 'disabled') . '>Remove</button>';
 echo '</div></div>';
 
+// Display the README content if available.
 if ($readme_content !== '') {
     echo '<pre class="app-detail">' . htmlspecialchars($readme_content) . '</pre>';
 } else {
     echo '<p>README not found</p>';
 }
 
+// Display information from the .info file, such as requirements, homepage, maintainer, etc.
 if ($info_content) {
     if (! empty($info_content['REQUIRES'])) {
         echo '<div class="app-detail">REQUIRES: ' . htmlspecialchars(strtoupper($info_content['REQUIRES'])) . '</div>';
@@ -98,4 +113,5 @@ if ($info_content) {
     echo '</div>';
 }
 
+// Close the HTML document.
 echo '</body></html>';
