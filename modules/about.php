@@ -50,5 +50,4 @@ echo 'License: Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 Inte
 echo 'Email: hellocodelinux@gmail.com<br>';
 echo 'Repository: https://slackware.uk/slackdce/<br>';
 echo 'Slackdce manifest: https://slackware.uk/slackdce/MANIFEST.txt<br>';
-echo 'Radio license: LU9DCE';
 echo '</div></div></footer></body></html>';

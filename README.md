@@ -13,3 +13,12 @@ The goal of Slkstore is to simplify software management on Slackware, offering a
 *   **Detailed View:** Get information about each package, including its description, version, and dependencies.
 *   **Graphical Interface:** An intuitive visual design with icons for each application, making software identification easy.
 
+---
+
+<h2>SlackStore created by Eduardo Castillo - (2025)</h2>
+A graphical software store for Slackware.<br><br>
+<pre>Technologies used: Qt5, PHP, Slackware Linux.
+License: Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)
+Email: hellocodelinux@gmail.com
+Repository: https://slackware.uk/slackdce/
+Slackdce manifest: https://slackware.uk/slackdce/MANIFEST.txt</pre>
