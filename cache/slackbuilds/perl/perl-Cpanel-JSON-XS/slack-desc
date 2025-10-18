@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                   |-----handy-ruler------------------------------------------------------|
+perl-Cpanel-JSON-XS: perl-Cpanel-JSON-XS (cPanel fork of JSON::XS)
+perl-Cpanel-JSON-XS:
+perl-Cpanel-JSON-XS: This module converts Perl data structures to JSON and vice versa. Its
+perl-Cpanel-JSON-XS: primary goal is to be correct and its secondary goal is to be fast.
+perl-Cpanel-JSON-XS: To reach the latter goal it was written in C.
+perl-Cpanel-JSON-XS: As this is the n-th something JSON module on CPAN, what was the reason
+perl-Cpanel-JSON-XS: to write yet another JSON module? While it seems there are many JSON
+perl-Cpanel-JSON-XS: modules, none of them correctly handle all corner cases, and in most
+perl-Cpanel-JSON-XS: cases their maintainers are unresponsive, gone missing, or not
+perl-Cpanel-JSON-XS: listening to bug reports for other reasons.
+perl-Cpanel-JSON-XS:

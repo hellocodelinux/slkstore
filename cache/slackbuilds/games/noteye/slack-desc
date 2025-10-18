@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+      |-----handy-ruler------------------------------------------------------|
+noteye: noteye (fontend for roguelike games; includes hydraslayer)
+noteye:
+noteye: Necklace of the Eye (NotEye for short) is a roguelike frontend. It can
+noteye: modify the output of console and libtcod roguelikes, and it also works
+noteye: as a library which allows easily porting old ASCII roguelikes like
+noteye: ADOM into 21st century.
+noteye:
+noteye: Hydra Slayer is a Roguelike game focused on one thing: slaying
+noteye: Hydras. It is inspired by Greek mythology, Dungeon Crawl, MathRL
+noteye: seven day roguelike, and some mathematical puzzles about brave heroes
+noteye: slaying many headed beasts.

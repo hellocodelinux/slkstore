@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+bin2iso: bin2iso (BIN/CUE to ISO/WAV converter)
+bin2iso:
+bin2iso: bin2iso converts raw format (.bin/.cue) CD image files to ISO-9660 or
+bin2iso: .wav format. It's also (sometimes) capable of creating a .cue file for
+bin2iso: a .bin file whose .cue file has gone missong.
+bin2iso:
+bin2iso: Homepage: https://gitlab.com/bunnylin/bin2iso/
+bin2iso:
+bin2iso:
+bin2iso:
+bin2iso:

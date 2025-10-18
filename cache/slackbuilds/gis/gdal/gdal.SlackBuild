@@ -1,0 +1,187 @@
+#!/bin/bash
+
+# Slackware build script for GDAL
+
+# Copyright 2009 Marco Cecchetti <mrc.ild@gmail.com>
+# Copyright 2010-2018 David Spencer <baildon.research@googlemail.com>
+# Copyright 2019-2021 Benjamin Trigona-Harany <slackbuilds@jaxartes.net>
+# Copyright 2021-2025 Gregory J. L. Tourte <artourter@gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=gdal
+VERSION=${VERSION:-3.11.0}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+if [[ ${TESTBUILD:='NO'} == 'NO' ]]; then
+  TESTBUILDFLAGS='-DBUILD_TESTING=OFF'
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.?z*
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+  \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+WITHLIST=""
+
+# Request OpenCL support:
+if [ ${OPENCL:-no} = "yes" ]; then
+  WITHLIST+=" -DGDAL_USE_OPENCL=ON"
+else
+  WITHLIST+=" -DGDAL_USE_OPENCL=OFF"
+fi
+
+# Build JAVA bindings:
+if [ ${JAVA:-no} = "no" ]; then
+  WITHLIST+=" -DBUILD_JAVA_BINDINGS:BOOL=OFF"
+fi
+
+mkdir build
+
+( cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+    -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DCMAKE_INSTALL_DATAROOTDIR=share \
+    -DCMAKE_INSTALL_MANDIR=man \
+    -DCMAKE_INSTALL_DOCDIR=doc/$PRGNAM-$VERSION \
+    -DBUILD_CSHARP_BINDINGS:BOOL=OFF \
+    -DBUILD_PYTHON_BINDINGS:BOOL=ON \
+    -DBUILD_SHARED_LIBS:BOOL=ON \
+    -DGDAL_USE_ARCHIVE:BOOL=ON \
+    -DGDAL_USE_CFITSIO:BOOL=ON \
+    -DGDAL_USE_CRYPTOPP:BOOL=ON \
+    -DGDAL_USE_CURL:BOOL=ON \
+    -DGDAL_USE_EXPAT:BOOL=ON \
+    -DGDAL_USE_EXTERNAL_LIBS:BOOL=ON \
+    -DGDAL_USE_FREEXL:BOOL=ON \
+    -DGDAL_USE_GEOS:BOOL=ON \
+    -DGDAL_USE_GEOTIFF:BOOL=ON \
+    -DGDAL_USE_GEOTIFF_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_GIF:BOOL=ON \
+    -DGDAL_USE_GIF_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_HDF5:BOOL=ON \
+    -DGDAL_USE_ICONV:BOOL=ON \
+    -DGDAL_USE_JPEG:BOOL=ON \
+    -DGDAL_USE_JPEG12_INTERNAL:BOOL=ON \
+    -DGDAL_USE_JPEG_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_JSONC:BOOL=ON \
+    -DGDAL_USE_JSONC_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_LERC_INTERNAL:BOOL=ON \
+    -DGDAL_USE_LIBAEC:BOOL=ON \
+    -DGDAL_USE_LIBLZMA:BOOL=ON \
+    -DGDAL_USE_LIBXML2:BOOL=ON \
+    -DGDAL_USE_LZ4:BOOL=ON \
+    -DGDAL_USE_MYSQL:BOOL=ON \
+    -DGDAL_USE_NETCDF:BOOL=ON \
+    -DGDAL_USE_OPENCAD_INTERNAL:BOOL=ON \
+    -DGDAL_USE_OPENEXR:BOOL=ON \
+    -DGDAL_USE_OPENJPEG:BOOL=ON \
+    -DGDAL_USE_OPENSSL:BOOL=ON \
+    -DGDAL_USE_PCRE2:BOOL=ON \
+    -DGDAL_USE_PNG:BOOL=ON \
+    -DGDAL_USE_PNG_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_PODOFO:BOOL=ON \
+    -DGDAL_USE_POPPLER:BOOL=ON \
+    -DGDAL_USE_PUBLICDECOMPWT:BOOL=OFF \
+    -DGDAL_USE_QHULL_INTERNAL:BOOL=ON \
+    -DGDAL_USE_SHAPELIB_INTERNAL:BOOL=ON \
+    -DGDAL_USE_SPATIALITE:BOOL=ON \
+    -DGDAL_USE_SQLITE3:BOOL=ON \
+    -DGDAL_USE_TIFF:BOOL=ON \
+    -DGDAL_USE_TIFF_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_WEBP:BOOL=ON \
+    -DGDAL_USE_XERCESC:BOOL=ON \
+    -DGDAL_USE_ZLIB:BOOL=ON \
+    -DGDAL_USE_ZLIB_INTERNAL:BOOL=OFF \
+    -DGDAL_USE_ZSTD:BOOL=ON \
+    $WITHLIST \
+    $TESTBUILDFLAGS \
+    -DCMAKE_BUILD_TYPE=Release \
+    ..
+  make
+  [[ $TESTBUILD == "YES" ]] && make test
+  make install/strip DESTDIR=$PKG
+)
+
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+find $PKG/usr/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG/usr/man -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  CITATION COMMITTERS HOWTO-RELEASE LICENSE.TXT MIGRATION_GUIDE.TXT NEWS.md PROVENANCE.TXT SECURITY.md VERSION \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

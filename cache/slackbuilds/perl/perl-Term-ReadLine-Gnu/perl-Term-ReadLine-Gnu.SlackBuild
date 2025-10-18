@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Slackware build script for perl-Term-ReadLine-Gnu
+
+# Copyright 2013-2020 Andreas Voegele <email removed>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+# Now maintained by B. Watson <urchlay@slackware.uk>
+
+# 20250923 bkw: update for v1.47.
+# 20230706 bkw: update for v1.46, disable 'make test' by default.
+# 20230109 bkw: update for v1.45.
+# 20210802 bkw: take over as maintainer and upgrade for v1.42.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=perl-Term-ReadLine-Gnu
+VERSION=${VERSION:-1.47}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+SRCNAM="$(printf $PRGNAM | cut -d- -f2-)"
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xovf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# 20230706 bkw: 'make test' disabled by default because it hangs when
+# run in the background.
+perl Makefile.PL \
+  INSTALLDIRS=vendor \
+  INSTALLVENDORMAN1DIR=/usr/man/man1 \
+  INSTALLVENDORMAN3DIR=/usr/man/man3
+make
+[ "${MAKETEST:-no}" = "yes" ] && env INPUTRC=/dev/null make test
+make install DESTDIR=$PKG
+
+gzip -9 $PKG/usr/man/man?/*
+find $PKG -name perllocal.pod \
+       -o -name ".packlist" \
+       -o -name "*.bs" \
+     | xargs rm -f || true
+
+find $PKG -depth -type d -empty -delete || true
+find $PKG -name '*.so' -a -exec strip {} \+
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a Changes* README* $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

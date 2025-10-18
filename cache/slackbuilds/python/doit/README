@@ -1,0 +1,4 @@
+doit is a modern open-source build-tool written in python for
+building and managing custom work-flows. It can be used on systems
+test/integration automation, scientific computational pipelines,
+content generation, configuration management, and other contexts.

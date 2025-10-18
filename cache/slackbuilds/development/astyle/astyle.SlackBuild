@@ -1,0 +1,158 @@
+#!/bin/bash
+
+# Slackware build script for Artistic Style
+
+# Copyright 2020-2024 B. Watson <urchlay@slackware.uk>
+
+# Copyright 2017,2018 Nate Bargmann <email removed>
+
+# Ryan P.C. McQuen | Everett, WA | <email removed>
+
+# Formerly maintained by Daniel Jordan <email removed>
+#    - updated version number
+#    - added default variable options
+#    - auto detect ARCH
+#    - build and install shared libraries [bkw: say what?]
+#
+# Originally by Dugan Chen <email removed>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version, with the following exception:
+# the text of the GPL license may be omitted.
+
+# This program is distributed in the hope that it will be useful, but
+# without any warranty; without even the implied warranty of
+# merchantability or fitness for a particular purpose. Compiling,
+# interpreting, executing or merely reading the text of the program
+# may result in lapses of consciousness and/or very being, up to and
+# including the end of all existence and the Universe as we know it.
+# See the GNU General Public License for more details.
+
+# You may have received a copy of the GNU General Public License
+# along with this program (most likely, a file named COPYING). If
+# not, see <http://www.gnu.org/licenses/>.
+
+# 20250822 bkw: update for v3.1.12.
+# 20250613 bkw: update for v3.6.9.
+# 20241109 bkw: update for v3.6.4.
+# 20241003 bkw: update for v3.6.3.
+# 20240917 bkw: update for v3.6.2.
+# 20240909 bkw: update for v3.6.1.
+# 20240812 bkw: update for v3.6.
+# 20240313 bkw: update for v3.4.13.
+# 20231101 bkw: update for v3.4.10.
+# 20230918 bkw: update for v3.4.6, fix zsh completion.
+
+# 20230818 bkw:
+# - Update for v3.4.
+# - Upstream includes a man page now, use it instead of Debian's.
+# - Use sed instead of a patch, for privacy in the HTML files.
+# - Move the .ini files to /usr/share/astyle.
+# - Install the shell completions (new in 3.4).
+
+# 20200113 bkw:
+# - Take over maintenance.
+# - Add man page and privacy patch, BUILD=2.
+# - Get rid of "shared" from make command. We weren't installing the
+#   shared library anyway, despite the comment above from Daniel
+#   Jordan. The only thing that lists astyle as a dependency is ebe,
+#   and that's a runtime dep (it executes the astyle command, doesn't
+#   link the shared lib). If someone needs the shared lib, I can add
+#   it to the build, but for now I'm leaving it alone because the
+#   .so isn't versioned (upgrades may cause breakage).
+# - Simplify and tweak the script.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=astyle
+VERSION=${VERSION:-3.6.12}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
+cd $PRGNAM-$VERSION
+chown -R root:root .
+
+# Don't change this back to template please. Every file in the tarball
+# is +x, and *none* of them need to be.
+find -L .  -type d -a -exec chmod 755 {} + -o \
+           -type f -a -exec chmod 644 {} +
+
+DOCDIR=$PKG/usr/doc/$PRGNAM-$VERSION
+
+# This prevents the user's browser from trying to load images from
+# sourceforge, when viewing the *local* HTML docs in a browser. It's
+# based on a patch from Debian.
+sed -i 's,<img[^>]*sflogo\.[^>]*>,Artistic Style on SourceForge.net,' doc/*.html
+
+CFLAGS="$SLKCFLAGS -Wl,-s" \
+CXXFLAGS="$SLKCFLAGS -Wl,-s" \
+  make -C build/gcc release
+  make -C build/gcc install prefix=$PKG/usr SYSCONF_PATH=$DOCDIR
+
+mkdir -p $PKG/usr/man/man1
+gzip -9c < man/$PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+# 20230818 bkw: this stuff used to be in the doc dir. Makes more sense
+# to keep it in /usr/share... though I'll keep a symlink in the doc dir
+# for users of the old package.
+mkdir -p $PKG/usr/share/$PRGNAM
+cp -a file/* $PKG/usr/share/$PRGNAM
+ln -s ../../share/$PRGNAM $DOCDIR/file
+
+# 20230820 bkw: upstream added shell completion support.
+# 20230918 bkw: the zsh completion is broken, fix it.
+sed -i 's,"\(mode\[\),"--\1,' sh-completion/astyle.zsh
+mkdir -p $PKG/usr/share/bash-completion/completions \
+         $PKG/usr/share/zsh/site-functions \
+         $PKG/etc/fish/completions
+install -m0644 sh-completion/astyle.bash $PKG/usr/share/bash-completion/completions/astyle
+install -m0644 sh-completion/astyle.zsh  $PKG/usr/share/zsh/site-functions/_astyle
+install -m0644 sh-completion/astyle.fish $PKG/etc/fish/completions
+
+cp -a *.md $DOCDIR
+sed -i 's,\r,,' $DOCDIR/file/*
+
+cat $CWD/$PRGNAM.SlackBuild > $DOCDIR/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

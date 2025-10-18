@@ -1,0 +1,6 @@
+LDraw_data is a package of data-files needed by several utilities based
+on LDRAW.
+
+This SlackBuild script compiles a temporary program to create the
+index file.  Since it is only needed once, it is not copied to the
+created package.

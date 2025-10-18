@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+aaphoto: aaphoto (automatic color correction of photo)
+aaphoto:
+aaphoto: Auto Adjust Photo is a tiny command-line image manipulation
+aaphoto: tool for automatic color correction of photos. It tries to
+aaphoto: make the picture look better, by analyzing the input image
+aaphoto: and setting the most optimal contrast, gamma, color balance
+aaphoto: and saturation for it.
+aaphoto:
+aaphoto: Homepage: https://github.com/log69/aaphoto
+aaphoto:
+aaphoto:

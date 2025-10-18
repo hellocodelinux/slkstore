@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Slackware build script for heretic_shareware_data
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211020 bkw: BUILD=2
+# - only extract the files we actually install
+# - don't create *.1 *.2 files, saves almost 3MB in $TMP.
+# - include readme and license docs.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=heretic_shareware_data
+VERSION=${VERSION:-1.2}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir -p $PRGNAM-$VERSION
+cd $PRGNAM-$VERSION
+unzip -p $CWD/htic_v12.zip '*.1' '*.2' > htic.zip
+unzip -a -L htic.zip '*.wad' readme.txt license.doc
+mv license.doc license.doc.txt
+
+mkdir -p $PKG/usr/share/games/doom
+install -m0644 -oroot -groot heretic1.wad $PKG/usr/share/games/doom/
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+install -m0644 -oroot -groot *.txt $PKGDOC
+cat $CWD/README > $PKGDOC/README
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,19 @@
+Use git repo data (latest tag, current commit hash, etc) for building
+a version number according PEP 440.
+
+Features:
+
+* Does not require to change source code of the project
+* Tag-, file-, and callback-based versioning schemas are supported
+* Templates for tag, dev and dirty versions are separated
+* Templates support a lot of substitutions including git and
+  environment information
+* Well-documented
+
+NOTE: Will need to have PYTHONPATH set to use as slackware's tomli
+      package is too old and may cause problems.  It will need to see
+      python3-tomli-opt.  (only needed for python <3.11)
+
+PYVER=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+export PYTHONPATH=/opt/python$PYVER/site-packages
+

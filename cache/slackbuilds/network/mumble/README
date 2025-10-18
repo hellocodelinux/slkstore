@@ -1,0 +1,34 @@
+Mumble is a voice chat application for groups. While it can be used
+for any kind of activity, it is primarily intended for gaming. It
+can be compared to programs like Ventrilo or TeamSpeak. 
+
+If you have g15tools installed and want mumble to use it:
+    G15=yes ./mumble.SlackBuild
+
+If you don't want the mumble overlay:
+    OVERLAY=no ./mumble.SlackBuild
+
+If your system is x86_64 based, and you have the 32-bit multilib
+libraries, mumble will can build the 32-bit overlay
+library.
+
+    COMPAT32=yes ./mumble.SlackBuild
+
+Please note, you *must* have a multilibbed system for this to work.
+See the mumble documentation on how to use the mumble overlay. 
+
+Celt is no longer maintained, and dropped in is favor of opus.
+The bundled Celt is used for optional backware compatibility. To use 
+your own try:
+
+    CELT=no ./mumble.SlackBuild
+    
+Text-to-speech is the default (speechd and espeak). Disable with 
+
+    SPEECHD=no ./mumble.SlackBuild
+    
+Notes: 
+- This does not build the mumble server (murmur).
+- To enable speech, both speecd and espeak will need configuration.
+  This is left as an excercise to the reader.
+

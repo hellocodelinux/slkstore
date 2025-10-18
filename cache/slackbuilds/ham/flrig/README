@@ -1,0 +1,6 @@
+FLRIG is a transceiver control program for Amateur Radio use.
+It is designed to be used either stand alone or as an adjunct to FLDIGI.
+It does not use any 3rd party transceiver control libraries.
+The supported transceivers all have some degree of CAT. The FLRIG user
+nterface changes to accommodate the degree of CAT support available for
+the transceiver in use.

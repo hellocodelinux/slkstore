@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Startup script for the Keepalived daemon
+#
+# This is the modified version from the original for the
+# Slackware.
+#
+# This version was modified in 2010 by Nilton Moura,
+# the original author of the SlackBuild Script for keepalived.
+#
+# Sript simplified, removed dependency of optional sysvinit-functions
+# package and moved daemon options to /etc/default
+# in 2020 by Marek Wodzinski <majek@w7i.pl>
+
+# Source configuration file (we set KEEPALIVED_OPTIONS there)
+. /etc/default/keepalived
+
+start() {
+    echo "Starting keepalived"
+    /usr/sbin/keepalived ${KEEPALIVED_OPTIONS}
+}
+
+stop() {
+    echo "Stopping keepalived "
+    pkill -TERM keepalived 1>/dev/null 2>/dev/null
+}
+
+reload() {
+    echo "Reloading keepalived"
+    pkill -1  keepalived
+}
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    reload)
+        reload
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|reload|restart}"
+        exit 1
+esac

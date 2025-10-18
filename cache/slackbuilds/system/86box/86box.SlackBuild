@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# Slackware build script for 86box
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# Notes:
+
+# Version 4.x used to write the config file to the current directory.
+# Starting with 5.0, it stores configs in ~/.config/86box.
+
+# We now have rtmidi in the repo. The build doesn't autodetect it and
+# disable it if it's missing, we have to help it out with -DRTMIDI=OFF
+# if needed. It's OK, it'll use FluidSynth for MIDI playback if there's
+# no rtmidi.
+
+# The linbox-qt5 frontend, despite its name, seems to require qt6 (pyside6).
+# The sl86 fronend looks too simple to be useful.
+# The other frontends are mac/windows only.
+# Anyway, it has a nice Qt GUI, I don't see why it needs a frontend.
+
+# 20250914 bkw: update for v5.1.
+# 20250829 bkw: update for v5.0.
+# 20240925 bkw: update for v4.2.1.
+# 20240812 bkw: update for v4.2.
+# 20240311 bkw: update for v4.1.
+# - submitted a build for rtmidi, so it's now supported here as an
+#   optional dep.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=86box
+SRCNAM=86Box
+VERSION=${VERSION:-5.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+# 20250829 bkw: Starting with version 5.0, SSE2 is required at
+# runtime, for x86 and x86_64. If we're somehow building on an ancient
+# CPU that lacks SSE2, warn the user, but don't stop the build.
+# There is probably a way to patch it to build without SSE2 on x86,
+# but I'm not spending a lot of time to figure it out because I doubt
+# anyone really needs it.
+check_sse2() {
+  grep -q '\<sse2\>' /proc/cpuinfo && return
+  cat <<EOF
+
+********************************************************************
+* WARNING: 86box requires SSE2 extensions, but you are building on a
+* system without SSE2. If you install the resulting package on this
+* system, it will fail with "Illegal Instruction" errors.
+*
+* Press ^C within 5 seconds to abort the build, or wait 5 seconds to
+* continue.
+********************************************************************
+
+EOF
+  sleep 5
+}
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686 -msse2"
+  check_sse2
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686 -msse2"
+  check_sse2
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+tar xvf $CWD/roms-$VERSION.tar.gz
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# 20240311 bkw: rtmidi still not autodetected in 4.1.
+# 20250829 bkw: or 5.0 either.
+if [ "${RTMIDI:-yes}" != "yes" ] || ! pkg-config --exists rtmidi; then
+  RTMIDI="-DRTMIDI=OFF"
+fi
+
+mkdir -p build
+cd build
+  cmake \
+    $RTMIDI \
+    -DCMAKE_C_FLAGS="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release ..
+  make
+  make install/strip DESTDIR=$PKG
+cd ..
+
+# Allow running "86box", lowercase B, to match the package name.
+ln -s $SRCNAM $PKG/usr/bin/$PRGNAM
+
+# This mv will be fast, src and dest are always on the same FS.
+mkdir -p $PKG/usr/share/$SRCNAM
+mv roms-$VERSION $PKG/usr/share/$SRCNAM/roms
+
+# Upstream ships desktop/icons, but 'make install' doesn't install them.
+mkdir -p $PKG/usr/share/applications
+cp -a src/unix/assets/net.86box.86Box.desktop $PKG/usr/share/applications
+
+mkdir -p $PKG/usr/share/metainfo
+cp -a src/unix/assets/net.86box.86Box.metainfo.xml $PKG/usr/share/metainfo
+
+for i in src/unix/assets/[0-9]*x*/; do
+  dir=$PKG/usr/share/icons/hicolor/$( basename $i )/apps
+  mkdir -p $dir
+  cp -a $i/*.png $dir
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/net.86box.86Box.png \
+      $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# Make the slack-desc show whether optional rtmidi support is built in.
+WITH=WITHOUT
+objdump -p $PKG/usr/bin/$PRGNAM | grep -q 'NEEDED.*librtmidi' && WITH="WITH"
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a AUTHORS COPYING *.md $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed "s,@WITH@,$WITH," < $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

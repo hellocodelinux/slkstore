@@ -1,0 +1,6 @@
+The VMware Horizon Client for Linux allows you to use your
+Slackware box as a thin client and lets you connect to your company's
+Virtual Desktop Infrastructure using the proprietary VMware View
+protocol.
+
+This build script installs the Debian binary package.

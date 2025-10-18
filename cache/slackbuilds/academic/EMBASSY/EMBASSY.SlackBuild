@@ -1,0 +1,448 @@
+#!/bin/bash
+
+# Slackware build script for EMBASSY
+
+# Copyright 2011-2022  Petar Petrov slackalaxy@gmail.com
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=EMBASSY
+VERSION=${VERSION:-6.6.0} # Keep this the same version as EMBOSS
+BUILD=${BUILD:-4}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+# where to look for libraries
+LIBDIRPATH="-Wl,-rpath,/usr/lib${LIBDIRSUFFIX}/EMBOSS"
+
+# EMBASSY components and their versions
+CBSTOOLS=CBSTOOLS-1.0.0.650
+CLUSTALOMEGA=CLUSTALOMEGA-1.1.0
+DOMAINATRIX=DOMAINATRIX-0.1.650
+DOMALIGN=DOMALIGN-0.1.650
+DOMSEARCH=DOMSEARCH-0.1.650
+EMNU=EMNU-1.05.650
+ESIM4=ESIM4-1.0.0.650
+HMMER=HMMER-2.3.2.650
+IPRSCAN=IPRSCAN-4.3.1.650
+MEME=MEME-4.7.650
+MSE=MSE-3.0.0.650
+MYEMBOSS=MYEMBOSS-6.5.1
+MYEMBOSSDEMO=MYEMBOSSDEMO-6.5.0
+PHYLIPNEW=PHYLIPNEW-3.69.650
+SIGNATURE=SIGNATURE-0.1.650
+STRUCTURE=STRUCTURE-0.1.650
+TOPO=TOPO-2.0.650
+VIENNA=VIENNA-1.7.2.650
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir $TMP/$PRGNAM-$VERSION
+cd $TMP/$PRGNAM-$VERSION
+
+# Extract the components
+tar xvf $CWD/$CBSTOOLS.tar.gz
+tar xvf $CWD/$CLUSTALOMEGA.tar.gz
+tar xvf $CWD/$DOMAINATRIX.tar.gz
+tar xvf $CWD/$DOMALIGN.tar.gz
+tar xvf $CWD/$DOMSEARCH.tar.gz
+tar xvf $CWD/$EMNU.tar.gz
+tar xvf $CWD/$ESIM4.tar.gz
+tar xvf $CWD/$HMMER.tar.gz
+tar xvf $CWD/$IPRSCAN.tar.gz
+tar xvf $CWD/$MEME.tar.gz
+tar xvf $CWD/$MSE.tar.gz
+tar xvf $CWD/$MYEMBOSS.tar.gz
+tar xvf $CWD/$MYEMBOSSDEMO.tar.gz
+tar xvf $CWD/$PHYLIPNEW.tar.gz
+tar xvf $CWD/$SIGNATURE.tar.gz
+tar xvf $CWD/$STRUCTURE.tar.gz
+tar xvf $CWD/$TOPO.tar.gz
+tar xvf $CWD/$VIENNA.tar.gz
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Build CBSTOOLS
+cd $TMP/$PRGNAM-$VERSION/$CBSTOOLS
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build CLUSTALOMEGA
+cd $TMP/$PRGNAM-$VERSION/$CLUSTALOMEGA
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build DOMAINATRIX
+cd $TMP/$PRGNAM-$VERSION/$DOMAINATRIX
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build DOMALIGN
+cd $TMP/$PRGNAM-$VERSION/$DOMALIGN
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build DOMSEARCH
+cd $TMP/$PRGNAM-$VERSION/$DOMSEARCH
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build EMNU
+cd $TMP/$PRGNAM-$VERSION/$EMNU
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build ESIM4
+cd $TMP/$PRGNAM-$VERSION/$ESIM4
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build HMMER
+cd $TMP/$PRGNAM-$VERSION/$HMMER
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build IPRSCAN
+cd $TMP/$PRGNAM-$VERSION/$IPRSCAN
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build MEME
+cd $TMP/$PRGNAM-$VERSION/$MEME
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build MSE
+cd $TMP/$PRGNAM-$VERSION/$MSE
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build MYEMBOSS
+cd $TMP/$PRGNAM-$VERSION/$MYEMBOSS
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linuxx
+make
+make install DESTDIR=$PKG
+
+# Build MYEMBOSSDEMO
+cd $TMP/$PRGNAM-$VERSION/$MYEMBOSSDEMO
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build PHYLIPNEW
+cd $TMP/$PRGNAM-$VERSION/$PHYLIPNEW
+CFLAGS="$SLKCFLAGS -fcommon $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS -fcommon $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build SIGNATURE
+cd $TMP/$PRGNAM-$VERSION/$SIGNATURE
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build STRUCTURE
+cd $TMP/$PRGNAM-$VERSION/$STRUCTURE
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build TOPO
+cd $TMP/$PRGNAM-$VERSION/$TOPO
+CFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+# Build VIENNA
+cd $TMP/$PRGNAM-$VERSION/$VIENNA
+# -std=gnu89 fixes build with gcc-5.2 (inline functions HairpinE and LoopEnergy)
+CFLAGS="$SLKCFLAGS -std=gnu89 $LIBDIRPATH" \
+CXXFLAGS="$SLKCFLAGS -std=gnu89 $LIBDIRPATH" \
+LDFLAGS="-L/usr/lib${LIBDIRSUFFIX}/EMBOSS" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX}/EMBOSS \
+  --bindir=/usr/lib${LIBDIRSUFFIX}/EMBOSS/bin \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION/CBSTOOLS \
+  --build=$ARCH-slackware-linux
+make
+make install DESTDIR=$PKG
+
+mv $PKG/usr/share/PHYLIPNEW $PKG/usr/share/EMBOSS
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+cat $CWD/CONTENTS > $PKG/usr/doc/$PRGNAM-$VERSION/CONTENTS
+
+rm -f $PKG/usr/lib*/*.la
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

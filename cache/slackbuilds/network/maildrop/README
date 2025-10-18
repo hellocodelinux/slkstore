@@ -1,0 +1,7 @@
+maildrop (mail delivery agent with filtering abilities)
+
+maildrop is the mail filter/mail delivery agent that's used
+by the Courier Mail Server. This is a standalone build of
+the maildrop mail filter that can be used with other mail
+servers. If desired it can be used as a 'drop in' replacement
+for Procmail.

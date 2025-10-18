@@ -1,0 +1,90 @@
+Elinks is an advanced and well-established feature-rich text mode web
+(HTTP/FTP/..) browser. Elinks can render both frames and tables, is
+highly customizable, and can be extended via Lua or Guile scripts. It
+is very portable and runs on a variety of platforms. It also has
+(very limited) JavaScript support via SpiderMonkey (js185).
+
+There are a number of options that can be used to add support for
+other protocols etc. To enable or disable an option use the following
+method:
+
+MOUSE=no ./elinks.SlackBuild
+
+Several options can be combined together.
+
+Category       Description                         Default Value
+
+System:
+
+FASTMEM        Direct use of system alloc          no
+CGI            Local CGI support                   no
+CCOMBINING     Unicode combining characters        no
+UTF8           UTF-8 support                       yes
+IPV6           IPv6 support                        yes
+HTMLHL         HTML highlighting using DOM engine  no
+LZMA           LZMA encoding support               no
+
+UI:
+
+MOUSE          Mouse support                       yes
+GPM            GPM (mouse) support                 yes
+EXMODE         Exmode (CLI) interface              no
+
+Colours:
+
+COLS88         88 Colours                          no
+COLS256        256 Colours                         no
+COLSTRUE       True Colours                        no
+
+Scripting:
+
+GUILE                                              no
+PERL                                               no
+PYTHON                                             no
+LUA                                                yes
+ECMA           (SpiderMonkey Javascript Engine)    yes
+
+Protocols:
+
+BITTORRENT                                         no
+DATA                                               yes
+FSP                                                no
+FTP                                                yes
+FINGER                                             no
+GOPHER (use internal gopher code, see note below)  no
+NNTP                                               no
+SMB                                                no
+
+Note that Unicode combining characters is marked as experimental.
+
+Contributed Patches:
+
+Thanks goes to B. Watson for the following two patches:
+
+No Suspend Patch
+
+Elinks sometimes has problems resuming if it has been suspended with ^Z.
+To apply a patch that disables ^Z, ^S and ^Q suspend/pause/resume keys
+so that they are available to bind in elinks:
+
+  NO_SUSPEND=yes
+
+No Connect Patch.
+
+Sometimes when quitting and another client is running on the same
+session-ring, the process will freeze and require killing manually.
+This patch solves that by making elinks use '-no-connect 1' by default.
+It won't be possible to open links in new windows with this, but using
+URI passing is a workaround.
+
+  NO_CONNECT=yes
+
+Auto-detected Dependencies:
+
+js185: SpiderMonkey (can be turned off in options).
+tre:   regexp support in searches.
+
+Other included patches help make the internal gopher support usable.  By
+default elinks will hand gopher URLs to lynx if the GOPHER option isn't
+set.  Using the internal gopher client has the advantage of having
+combined http and gopher bookmarks, and a more uniform interface.

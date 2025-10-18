@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+    |-----handy-ruler------------------------------------------------------|
+xrdp: xrdp (Remote Desktop Server for Linux)
+xrdp:
+xrdp: xrdp provides a graphical login to remote machines using Microsoft
+xrdp: Remote Desktop Protocol (RDP). xrdp accepts connections from a
+xrdp: variety of RDP clients: FreeRDP, rdesktop, NeutrinoRDP and Microsoft
+xrdp: Remote Desktop Client (for Windows, Mac OS, iOS and Android).
+xrdp:
+xrdp: RDP transport is encrypted using TLS by default.
+xrdp:
+xrdp: Homepage: http://www.xrdp.org/
+xrdp:

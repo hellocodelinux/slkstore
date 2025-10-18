@@ -1,0 +1,4 @@
+LilyPond is a music typesetter.  It produces beautiful
+sheet music using a description file as input.
+
+extractpdfmark is an optional dependency.

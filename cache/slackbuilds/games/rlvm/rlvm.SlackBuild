@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Slackware build script for rlvm
+
+# Copyright 2015 Melvin Mawhin, Graz, Austria
+#
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20220502 bkw: Modified by SlackBuilds.org, BUILD=2:
+# - put locale stuff in /usr/share/locale.
+# - create and populate Slackware doc directory.
+# - rewrite part of the script to use a loop instead of copypasta.
+# - create doinst.sh: update icon cache and desktop database.
+# - abs path to exe in .desktop (remove /usr/bin/ symlink).
+# - strip executable.
+# - explain where to get msgothic.ttc in README.
+# Note to maintainer: consider patching the code to look for msgothic.ttc
+# in /usr/share/fonts/TTF/, since that is the standard place to find TTF
+# and TTC fonts in Slackware.
+
+# 20220221 bkw: Modified by SlackBuilds.org: fix build on 15.0.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM="rlvm"
+VERSION=${VERSION:-0.14}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i686 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SRC_FILE=$PRGNAM-$VERSION.tar.gz
+SRC_FLDR=$PRGNAM-$VERSION/
+
+set -e
+
+rm -fr $TMP/$SRC_FLDR $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+tar xvf $CWD/$SRC_FILE || tar xvf $CWD/release-$VERSION.tar.gz
+cd $SRC_FLDR
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+# 20220502 bkw: in case someone don't have /usr/games in $PATH:
+sed -i '/^Exec/s,=,=/usr/games/,' src/platforms/gtk/rlvm.desktop
+
+# 20220221 bkw: C++ infelicities.
+sed -i '1i#include <iostream>' src/systems/base/gan_graphics_object_data.cc
+sed -i '1i#include <memory>' src/systems/base/system.h
+
+# 20220221 bkw: ancient python2 scons stuff, 2to3 actually works here:
+SCONSFIX="$( find . -type f -a -name SCons\* )"
+SCONSFIX+=" site_scons/site_tools/rlvm.py"
+2to3 --no-diffs -nw $SCONSFIX
+
+scons --release
+
+mkdir -p ${PKG}/usr/games
+install -s -m0755 build/release/$PRGNAM $PKG/usr/games
+
+for i in resources/[0-9]*/; do
+  px=$( basename $i )
+  dir=$PKG/usr/share/icons/hicolor/${px}x${px}/apps
+  mkdir -p $dir
+  cp -a $i/$PRGNAM.png $dir
+done
+
+mkdir -p ${PKG}/usr/share/locale
+cp -R build/locale/* $PKG/usr/share/locale
+
+mkdir -p ${PKG}/usr/share/applications
+cp src/platforms/gtk/$PRGNAM.desktop $PKG/usr/share/applications
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a *.txt *.TXT doc/* $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p ${PKG}/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l n -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

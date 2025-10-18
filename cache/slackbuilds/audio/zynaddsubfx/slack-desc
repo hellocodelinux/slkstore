@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+           |-----handy-ruler------------------------------------------------------|
+zynaddsubfx: zynaddsubfx (a software synthesizer)
+zynaddsubfx:
+zynaddsubfx: ZynAddSubFX is a fully featured open source software synthesizer
+zynaddsubfx: capable of making a countless number of instruments, from some common
+zynaddsubfx: heard from expensive hardware to interesting sounds that you'll boost
+zynaddsubfx: to an amazing universe of sounds.
+zynaddsubfx:
+zynaddsubfx: Beside the standalone application, lv2 and vst plugins are provided.
+zynaddsubfx:
+zynaddsubfx: Homepage: https://zynaddsubfx.sourceforge.io/
+zynaddsubfx:

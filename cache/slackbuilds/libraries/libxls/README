@@ -1,0 +1,9 @@
+libxls - Read XLS files from C
+
+This is libxls, a C library for reading Excel files in the nasty old
+binary OLE format, plus a command-line tool for converting XLS to CSV
+(named, appropriately enough, xls2csv).
+
+Note: The command-line tool is, instead, named libxls2csv by this
+SlackBuild script to avoid conflict with xls2csv tool from catdoc
+package.

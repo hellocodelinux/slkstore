@@ -1,0 +1,12 @@
+Freedink is a free role-playing game. You take control of
+Dink Smallwood and guide him through his many adventures.
+There are many battles to be fought and riddles to be solved.
+You can install additional adventures through additional D-Mods
+which are available at
+
+  https://www.dinknetwork.com
+
+For optional dependencies see README.SBo,
+especially if you want to play MIDIs with 'fluidsynth' and
+'fluid-soundfont' (recommended).
+

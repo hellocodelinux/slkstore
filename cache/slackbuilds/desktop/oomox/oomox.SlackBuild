@@ -1,0 +1,142 @@
+#!/bin/bash
+
+# Slackware build script for oomox
+
+# Copyright 2017-2018 Leonardo Citrolo, Italy
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=oomox
+SRCNAM=themix-gui
+VERSION=${VERSION:-1.15.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+ARCVER=${ARCVER:-7ff5b36c287fd50a5910a67a255a3d6bec58b679}
+ARCHDROIDVER=${ARCHDROIDVER:-1.0.2}
+BASE16VER=${BASE16VER:-d022b9daa5c233a08a8d3b94fd534a3041e3a8c1}
+GNOMECOLORSVER=${GNOMECOLORSVER:-5.5.3}
+MATERIAVER=${MATERIAVER:-20180922}
+OOMOXVER=${OOMOXVER:-1.9.1}
+OOMOXIFYVER=${OOMOXIFYVER:-1.0.1}
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+make -f po.mk install
+rm -f po/*.po~
+
+mkdir -p $PKG/opt/oomox
+cp -a colors locale oomox_gui plugins po terminal_templates \
+  gui.sh \
+  $PKG/opt/oomox
+
+# Begin Plugins Installation
+tar xvf $CWD/arc-theme-$ARCVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/theme_arc/arc-theme
+
+tar xvf $CWD/archdroid-icon-theme-$ARCHDROIDVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/icons_archdroid
+
+tar xvf $CWD/base16-builder-$BASE16VER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/base16
+
+tar xvf $CWD/gnome-colors-icon-theme-$GNOMECOLORSVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/icons_gnomecolors
+( cd $PKG/opt/oomox/plugins/icons_gnomecolors
+  rm -fr gnome-colors-icon-theme
+  mv gnome-colors gnome-colors-icon-theme )
+
+tar xvf $CWD/oomoxify-$OOMOXIFYVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/export_oomoxify
+
+tar xvf $CWD/materia-theme-$MATERIAVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/theme_materia/materia-theme
+
+mkdir -p $PKG/opt/oomox/plugins/theme_oomox/gtk-theme
+tar xvf $CWD/$PRGNAM-gtk-theme-$OOMOXVER.tar.gz --strip-components=1 \
+  -C $PKG/opt/oomox/plugins/theme_oomox/gtk-theme
+
+rm -fr $PKG/opt/oomox/plugins/*/.git* \
+  $PKG/opt/oomox/plugins/*/*/.git* \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/.editorconfig \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/.*.yml \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/{D,d}ocker* \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/maintenance* \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/screenshot* \
+  $PKG/opt/oomox/plugins/theme_oomox/gtk-theme/test*
+
+( cd $PKG/opt/oomox/plugins
+  chown -R root:root .
+  find -L . -type d -exec chmod 755 {} \;
+  find -L . -type f -exec chmod 644 {} \;
+  find -L . -type f \( -name '*.sh' -o -name '*.py' \) -exec chmod 755 {} \;
+)
+# End of Plugins Installation
+
+mkdir -p $PKG/usr/bin
+cp -a packaging/bin/* $PKG/usr/bin
+
+mkdir -p $PKG/usr/share/appdata
+cp -a packaging/com.github.themix_project.Oomox.appdata.xml $PKG/usr/share/appdata
+
+mkdir -p $PKG/usr/share/applications
+cp -a packaging/com.github.themix_project.Oomox.desktop $PKG/usr/share/applications
+
+mkdir -p $PKG/usr/share/icons/hicolor/symbolic/apps
+cp -a packaging/com.github.themix_project.Oomox-symbolic.svg \
+  $PKG/usr/share/icons/hicolor/symbolic/apps/com.github.themix_project.Oomox-symbolic.svg
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a CREDITS LICENSE README.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

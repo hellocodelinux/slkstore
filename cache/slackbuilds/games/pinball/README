@@ -1,0 +1,8 @@
+pinball (open source pinball simulator)
+
+The Emilia Pinball project is an open source pinball simulator
+intended for Linux machines, by Henrik Enqvist.
+
+slibtool users should use 'clibtool-shared' with pinball which will
+install the libtool archive (.la) files. Pinball will fail to load any
+tables when they are missing.

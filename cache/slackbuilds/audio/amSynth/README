@@ -1,0 +1,36 @@
+amsynth is an analog modelling (a.k.a virtual analog) software
+synthesizer.
+
+It mimics the operation of early analog subtractive synthesizers
+with classic oscillator waveforms, envelopes, filter, modulation and
+effects.
+
+The aim is to make it easy to create and modify sounds.
+
+Features
+--------
+
+ * Dual oscillators (sine / saw / square / noise) with hard sync
+ * 12/24 dB/oct resonant filter (lowpass / highpass / bandpass / notch)
+ * Mono / poly / legato keyboard modes
+ * Dual ADSR envelope generators (filter & amplitude)
+ * LFO which can modulate the oscillators, filter, and amplitude
+ * Distortion and reverb
+ * Hundreds of presets
+
+
+There are currently several different ways to run amsynth:
+
+ * Stand-alone application using JACK, ALSA or OSS
+ * DSSI plug-in
+ * LV2 plug-in
+ * VST plug-in
+
+This package uses POSIX filesystem capabilities to execute with
+elevated privileges (required for realtime audio processing). This
+may be considered a security/stability risk. Please read
+http://www.slackbuilds.org/caps/ for more information. To disable
+capabilities, pass SETCAP=no to the script.
+
+Optional dependencies, autodetected at build time:
+jack, lash, dssi, pandoc

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+glfw3: glfw3 (OpenGL, OpenGL ES, Vulkan, window and input library)
+glfw3:
+glfw3: GLFW is an Open Source, multi-platform library for OpenGL, OpenGL ES
+glfw3: and Vulkan development on the desktop. It provides a simple API for
+glfw3: creating windows, contexts and surfaces, receiving input and events.
+glfw3:
+glfw3: Homepage: https://www.glfw.org
+glfw3:
+glfw3:
+glfw3:
+glfw3:

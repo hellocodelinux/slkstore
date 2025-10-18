@@ -1,0 +1,67 @@
+RetroArch is the reference frontend for the libretro API. Popular
+examples of implementations for this API includes videogame system
+emulators and game engines, but also more generalized 3D programs.
+These programs are instantiated as dynamic libraries. We refer to these
+as "libretro cores".
+
+libretro is an API that exposes generic audio/video/input callbacks. A
+frontend for libretro (such as RetroArch) handles video output, audio
+output, input and application lifecycle. A libretro core written in
+portable C or C++ can run seamlessly on many platforms with very
+little/no porting effort.
+
+While RetroArch is the reference frontend for libretro, several other
+projects have used the libretro interface to include support for
+emulators and/or game engines. libretro is completely open and free for
+anyone to use.
+
+RetroArch will require at least one of the libretro cores to play any
+games.
+
+Optional dependencies:
+  jack libsixel mbedtls nvidia-cg-toolkit
+
+To build debugging symbols for RetroArch use:
+  DEBUG=yes ./RetroArch.SlackBuild
+
+If building debugging symbols asan can also be built:
+  DEBUG=yes ASAN=yes ./RetroArch.SlackBuild
+
+Discord integration can be enabled with:
+  DISCORD=yes
+
+If pulseaudio is installed it can be disabled during the build with:
+  PULSE=no ./RetroArch.SlackBuild
+
+The Qt frontend can be disabled with:
+  QT=no ./RetroArch.SlackBuild
+
+The materialui menu driver can be disabled with:
+  GLUI=no ./RetroArch.SlackBuild
+
+The ozone menu driver can be disabled with:
+  OZONE=no ./RetroArch.SlackBuild
+
+The rgui menu driver can be disabled with:
+  RGUI=no ./RetroArch.SlackBuild
+
+The xmb menu driver can be disabled with:
+  XMB=no ./RetroArch.SlackBuild
+
+All of the menu drivers can be disabled with:
+  MENU=no ./RetroArch.SlackBuild
+
+Alternatively pulseaudio can be disabled later in RetroArch's
+configuration.
+
+Retroarch optionally supports using OpenGL ES 2 and OpenGL ES 3 instead
+of OpenGL which will require video card and driver support. This can be
+done by building RetroArch with:
+  GLES=yes ./RetroArch.SlackBuild
+or
+  GLES3=yes ./RetroArch.SlackBuild
+
+For additional notes, please see README.SLACKWARE.
+
+For more information on RetroArch or libretro please visit:
+  https://docs.libretro.com/

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+    |-----handy-ruler------------------------------------------------------|
+vifm: vifm (an ncurses-based file manager with Vim-like everything)
+vifm:
+vifm: Vifm is a file manager with curses interface, which provides Vim-like
+vifm: environment for managing objects within file systems, extended with
+vifm: some useful ideas from mutt.  If you use vi, Vifm gives you complete
+vifm: keyboard control over your files without having to learn a new set of
+vifm: commands.
+vifm:
+vifm: Vim users: A vifm.vim plugin is included in /usr/share/vifm/vim/.
+vifm: Read /usr/doc/vifm-$VERSION/README_vim.txt for usage information.
+vifm:

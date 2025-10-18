@@ -1,0 +1,5 @@
+gis-weather is a customizable weather widget with many features, that
+supports 3 different service providers: gismeteo.com, openweathermap.org
+and yr.no
+
+Note: for best display results, X compositing should be enabled.

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Slackware build script for bless
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230819 bkw: update for v0.6.3.
+
+# 20230102 bkw: BUILD=3
+# - get rid of useless junk from doc dir.
+
+# 20211210 bkw: BUILD=2
+# - add patch from Debian's 0.6.0-7 to fix saving preferences.
+# - don't include useless skeleton of bless-manual.omf in package.
+# - don't use gconf from help_script.sh, it broke. just open the
+#   HTML help with xdg-open.
+# - fix the 'select layout' dialog, now you can see & load system layouts.
+# - new-style icon (singular, 48x48).
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=bless
+VERSION=${VERSION:-0.6.3}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# Compiled .net code is "anycpu" by default.
+# I see no reason to use lib64 for this. It would mean having separate
+# 32-bit and 64-bit packages, even though the actual object code is
+# noarch. Also, no CFLAGS because, no C... since I'm not a mono/C#
+# expert, I dunno what the equivalent optimization flags should be
+# (or if they even exist) so we'll go with whatever upstream does.
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/${PRGNAM}_$VERSION.orig.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# Make bless act like all other hex editors on the planet by NOT starting
+# up in Insert mode. I wouldn't have patched this, except that bless
+# doesn't auto-save the Insert/Overwrite state across sessions. You can
+# set the default via Edit/Preferences, but it doesn't remember the last
+# state if you just press Insert to toggle it.
+sed -i '/Default\.Editmode/s,Insert,Overwrite,' data/default-preferences.xml
+
+# 20230819 bkw: make it look in the right place for its own layout files.
+# Debian does this with a patch (it's their only patch for 0.6.3) but I
+# prefer to use sed.
+sed -i '/FileResourcePath\.GetDataPath("data")/s,"data",".",' \
+       src/gui/dialogs/LayoutSelectionDialog.cs
+
+meson setup build -Dprefix=/usr -Dtests=false
+ninja -C build
+DESTDIR=$PKG ninja -C build install
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+ln -s ../../share/help/C/bless $PKGDOC/html
+cp -a AUTHORS COPYING NEWS README $PKGDOC
+
+# The help script needed help.
+PKGHELP=$PKG/usr/share/$PRGNAM/help_script.sh
+cat $CWD/help_script.sh > $PKGHELP
+chmod 755 $PKGHELP
+
+# Man page from Debian. Not much to it, but not much was needed.
+mkdir -p $PKG/usr/man/man1
+gzip -9c < $CWD/$PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+PIXMAPS=$PKG/usr/share/pixmaps
+mkdir -p $PIXMAPS
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PIXMAPS/$PRGNAM.png
+
+# 20230819 bkw: dup icon
+rm -f $PKG/usr/share/bless/bless-48x48.png
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/bless/bless-48x48.png
+
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,23 @@
+xcowsay (display a cute cow and speech bubble)
+
+xcowsay displays a cute cow and message on your desktop. Inspired by
+the original cowsay.
+
+xcowsay includes all these amazing features:
+
+ * Fully configurable!
+ * Calculates display time from amount of text.
+ * Dream mode - display images in the bubble.
+ * Can draw thought and speech bubbles.
+ * Daemon mode! Send your cow messages over DBus!
+ * Three different sized cows provided.
+ * fortune(6) wrapper xcowfortune: cow will deliver pearls of wisdom!
+ * Replace the naffness that is xmessage(1).
+ * Should work with any window manager.
+ * Supports UTF-8 characters properly.
+ * Use alternative non-cow images if you like.
+
+If you're using older hardware and have problems with this, you may
+have better results with xcowsay-1.4. To do this, get the old source:
+https://github.com/nickg/xcowsay/releases/download/v1.4/xcowsay-1.4.tar.gz
+and run the script with VERSION=1.4 in the environment.

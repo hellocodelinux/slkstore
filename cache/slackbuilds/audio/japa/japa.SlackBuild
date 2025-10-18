@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Slackware build script for japa
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240908 bkw: update for v0.9.4.
+# 20211129 bkw: BUILD=2, new-style icons, update man page.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=japa
+VERSION=${VERSION:-0.9.4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG/usr/{bin,man/man1} $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+if [ "${FORCE_SLACK_CFLAGS:-no}" = "yes" ]; then
+  sed -i \
+	  -e '/march=native/d' \
+	  -e "s,-O2,$SLKCFLAGS," \
+	  source/Makefile
+fi
+
+sed -i 's,pkgconf,pkg-config,' source/Makefile
+
+make -C source PREFIX=/usr
+make -C source install PREFIX=$PKG/usr
+strip $PKG/usr/bin/$PRGNAM
+
+# man page written for this SlackBuild.
+gzip -c9 < $CWD/$PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+# the 32x32 icon comes from Debian.
+# the 48x48 icon is the 32x32 one, centered in a 48x48 transparent PNG.
+mkdir -p $PKG/usr/share/icons/hicolor/{32x32,48x48}/apps
+convert $CWD/$PRGNAM.xpm \
+        $PKG/usr/share/icons/hicolor/32x32/apps/$PRGNAM.png
+convert -background none -extent 48x48 -gravity center \
+        $CWD/$PRGNAM.xpm \
+        $PKG/usr/share/icons/hicolor/48x48/apps/$PRGNAM.png
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+cat $CWD/$PRGNAM.xpm > $PKG/usr/share/pixmaps/$PRGNAM.xpm
+
+# desktop files written for this SlackBuild
+mkdir -p $PKG/usr/share/applications
+for i in $PRGNAM $PRGNAM-alsa; do
+  cat $CWD/$i.desktop > $PKG/usr/share/applications/$i.desktop
+done
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a AUTHORS COPYING README $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+if [ "${SETCAP:-yes}" = "yes" ]; then
+  cat $CWD/setcap.sh >> $PKG/install/doinst.sh
+  chown root:audio $PKG/usr/bin/$PRGNAM
+  chmod 0750 $PKG/usr/bin/$PRGNAM
+fi
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

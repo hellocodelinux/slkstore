@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# Slackware build script for Bear
+
+# Copyright 2023 Ivan Kovmir <i@kovmir.eu>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd "$(dirname "$0")" ; CWD=$(pwd)
+
+PRGNAM=Bear
+VERSION=${VERSION:-3.1.6}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+	case "$(uname -m)" in
+		i?86) ARCH=ia32 ;;
+		arm*) ARCH=aarch64 ;;
+		*) ARCH=$(uname -m) ;;
+	esac
+fi
+
+if [ -n "${PRINT_PACKAGE_NAME}" ]; then
+	echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+	exit 0
+fi
+
+TMP="${TMP:-/tmp/SBo}"
+PKG="$TMP/package-$PRGNAM"
+OUTPUT="${OUTPUT:-/tmp}"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf "$PKG"
+mkdir -p "$TMP" "$PKG" "$OUTPUT"
+cd "$TMP"
+rm -rf "$PRGNAM-$VERSION"
+tar xvf "$CWD/$PRGNAM-$VERSION.tar.gz"
+cd "$PRGNAM-$VERSION"
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+mkdir -p $TMP/$PRGNAM-build
+cd       $TMP/$PRGNAM-build
+
+cmake \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+  -DCMAKE_INSTALL_MANDIR=/usr/man \
+  -DCMAKE_INSTALL_DOCDIR=/usr/doc/$PRGNAM-$VERSION \
+  -DENABLE_UNIT_TESTS=OFF \
+  -DENABLE_FUNC_TESTS=OFF \
+  -DCMAKE_BUILD_TYPE=Release \
+  ../$PRGNAM-$VERSION
+
+make all
+make install/strip DESTDIR="$PKG"
+cd ..
+
+# There is an install/strip Makefile recipe, but sbopkglint still compalins.
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# The project does not respect -DCMAKE_INSTALL_MANDIR.
+# Ivan reported the issue, but it was not fixed.
+# https://github.com/rizsotto/Bear/issues/516
+mv "$PKG/usr/share/man" "$PKG/usr"
+rm -rf "$PKG/usr/share"
+
+# Remove useless garbage after the install Makefile recipe.
+rm "$PKG/usr/doc/$PRGNAM-$VERSION/CODE_OF_CONDUCT.md"
+rm "$PKG/usr/doc/$PRGNAM-$VERSION/CONTRIBUTING.md"
+rm "$PKG/usr/doc/$PRGNAM-$VERSION/INSTALL.md"
+mv "$PKG/usr/doc/$PRGNAM-$VERSION/COPYING"   "$PKG/usr/doc/$PRGNAM-$VERSION/LICENSE"
+mv "$PKG/usr/doc/$PRGNAM-$VERSION/README.md" "$PKG/usr/doc/$PRGNAM-$VERSION/repository-README.md"
+
+# Compress man pages.
+find "$PKG/usr/man" -type f -exec gzip {} +;
+
+mkdir -p "$PKG/install"
+cat "$CWD/$PRGNAM.SlackBuild" > "$PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild"
+cat "$CWD/README"             > "$PKG/usr/doc/$PRGNAM-$VERSION/README"
+cat "$CWD/slack-desc"         > "$PKG/install/slack-desc"
+
+cd "$PKG"
+# There's a "stage/" directory in the build dir that gets installed
+# to the $PKG dir, e.g.: $PKG/tmp/SBo/Bear-3.1.6/stage
+# Remove the unwanted parent of this "stage/" dir inside the $PKG.
+# https://github.com/rizsotto/Bear/issues/625
+# https://github.com/rizsotto/Bear/issues/627
+rm -r $(find . -type d -name stage | cut -d '/' -f2)
+/sbin/makepkg -l y -c n "$OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"

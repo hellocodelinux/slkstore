@@ -1,0 +1,14 @@
+PRGNAM="gretl"
+VERSION="2022a"
+HOMEPAGE="https://gretl.sourceforge.net"
+DOWNLOAD="https://downloads.sourceforge.net/gretl/gretl-2022a.tar.xz \
+	  https://ponce.cc/slackware/sources/repo/gretl/2022a/gretl-ref.pdf \
+	  https://ponce.cc/slackware/sources/repo/gretl/2022a/gretl-guide.pdf"
+MD5SUM="21ca11178c3373222944daebdd5f1612 \
+	faa9858bb8fb516a882aa28e365e99f8 \
+	2b995eeb8a82b7962e2e279c3a457625"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES="lapack"
+MAINTAINER="R. S. Ananda Murthy"
+EMAIL="rsamurti@gmail.com"

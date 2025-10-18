@@ -1,0 +1,201 @@
+#!/bin/bash
+
+# Slackware build script for yamagi-quake2
+
+# Copyright 2012 Dugan Chen Canada
+# Copyright 2020-2025 Ruoh-Shoei LIN
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Includes components from the Arch Linux AUR builds.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=yamagi-quake2
+VERSION=${VERSION:-8.60}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+CTFVER=${CTFVER:-1.12}
+XATRIXVER=${XATRIXVER:-2.16}
+ROGUEVER=${ROGUEVER:-2.15}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG $TMP/{quake2-$VERSION,ctf-$CTFVER,quake2-xatrix-$XATRIXVER,quake2-rogue-$ROGUEVER}
+mkdir -p $TMP $PKG $OUTPUT
+
+# Quake 2
+
+cd $TMP
+tar xvf $CWD/quake2-$VERSION.tar.xz
+cd quake2-$VERSION
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" \
+  make \
+  WITH_RPATH=no \
+  WITH_SYSTEMWIDE=yes
+
+mkdir -pv $PKG/usr/{bin,share/games/quake2/{ctf,xatrix,rogue}}
+install -dm755 $PKG/usr/share/games/quake2
+cp -a release/* -t $PKG/usr/share/games/quake2
+install -Dm644 stuff/yq2.cfg -t $PKG/usr/share/games/quake2/baseq2
+install -Dm644 stuff/icon/Quake2.png -t $PKG/usr/share/pixmaps
+install -Dm644 stuff/icon/Quake2.svg -t $PKG/usr/share/icons/hicolor/scalable/apps
+install -Dm755 $CWD/quake2.sh $PKG/usr/bin/quake2
+install -Dm644 $CWD/quake2.desktop -t $PKG/usr/share/applications
+
+# CTF (Three Wave Capture the Flag) Support
+
+cd $TMP
+tar xvf $CWD/quake2-ctf-$CTFVER.tar.xz
+cd quake2-ctf-$CTFVER
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" \
+  make \
+  WITH_RPATH=no \
+  WITH_SYSTEMWIDE=yes
+
+install -Dm755 release/game.so -t $PKG/usr/share/games/quake2/ctf
+install -Dm755 $CWD/ctf.sh $PKG/usr/bin/quake2-ctf
+
+# Mission Pack 1 The Reckoning support
+
+cd $TMP
+tar xvf $CWD/quake2-xatrix-$XATRIXVER.tar.xz
+cd quake2-xatrix-$XATRIXVER
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" \
+  make \
+  WITH_RPATH=no \
+  WITH_SYSTEMWIDE=yes
+
+install -Dm755 release/game.so -t $PKG/usr/share/games/quake2/xatrix
+install -Dm755 $CWD/xatrix.sh $PKG/usr/bin/quake2-xatrix
+
+# Mission Pack 2 Ground Zero support
+
+cd $TMP
+tar xvf $CWD/quake2-rogue-$ROGUEVER.tar.xz
+cd quake2-rogue-$ROGUEVER
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \;
+
+CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" \
+  make \
+  WITH_RPATH=no \
+  WITH_SYSTEMWIDE=yes
+
+install -Dm755 release/game.so -t $PKG/usr/share/games/quake2/rogue
+install -Dm755 $CWD/rogue.sh $PKG/usr/bin/quake2-rogue
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Documentation
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION/{ctf-$CTFVER,quake2-xatrix-$XATRIXVER,quake2-rogue-$ROGUEVER}
+
+cd $TMP
+
+cp -a \
+  quake2-$VERSION/{CHANGELOG,LICENSE,README.md,stuff/yq2.cfg,doc} \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+
+cp -a \
+  quake2-ctf-$CTFVER/{CHANGELOG,LICENSE,README.md} \
+  $PKG/usr/doc/$PRGNAM-$VERSION/ctf-$CTFVER
+
+cp -a \
+  quake2-xatrix-$XATRIXVER/{CHANGELOG,LICENSE,README.md} \
+  $PKG/usr/doc/$PRGNAM-$VERSION/quake2-xatrix-$XATRIXVER
+
+cp -a \
+  quake2-rogue-$ROGUEVER/{CHANGELOG,LICENSE,README.md} \
+  $PKG/usr/doc/$PRGNAM-$VERSION/quake2-rogue-$ROGUEVER
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

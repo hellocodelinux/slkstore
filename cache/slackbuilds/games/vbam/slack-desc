@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+    |-----handy-ruler------------------------------------------------------|
+vbam: vbam (cross-platform gameboy/gbc/gba emulator)
+vbam:
+vbam: VisualBoyAdvance-M is a Nintendo Game Boy Advance Emulator with high
+vbam: compatibility with commercial games. It emulates the Nintendo Game Boy
+vbam: Advance hand held console, in addition to the original Game Boy hand
+vbam: held systems and its Super and Color variants. VBA-M is a continued
+vbam: development of the now inactive VisualBoy Advance project, with many
+vbam: improvements from various developments of VBA.
+vbam:
+vbam: Build options: wxWidgets=@WXYN@, lirc=@LIRCYN@, SFML=@SFYN@.
+vbam:

@@ -1,0 +1,29 @@
+Etherpad lite is a really-real time collaborative editor spawned from
+the Hell fire of Etherpad. We're reusing the well tested Etherpad
+easysync library to make it really realtime. Etherpad Lite is based on
+node.js so is much lighter and more stable than the original Etherpad.
+Our hope is that this will encourage more users to use and install a
+realtime collaborative editor. A smaller, manageable and well
+documented codebase makes it easier for developers to improve the code
+and contribute towards the project.
+
+Warning: This SlackBuild requires network access when it runs, meaning
+it downloads files from the Internet with root access. You should
+decide for yourself whether or not you think this is a good idea.
+
+See etherpad lite in action at http://slackpad.org
+
+Optional Dependency
+
+abiword (with AbiCommand plugin) is required to import/export pads.
+
+Groupname and Username
+
+You must have the 'etherpad' group and user to run this script,
+for example:
+
+  groupadd -g 264 etherpad
+  useradd -u 264 -g 264 -c "Etherpad lite" -m etherpad
+
+
+See README.SLACKWARE for some additional Slackware notes.

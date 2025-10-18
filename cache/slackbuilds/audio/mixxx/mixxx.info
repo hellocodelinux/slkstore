@@ -1,0 +1,14 @@
+PRGNAM="mixxx"
+VERSION="2.5.3"
+HOMEPAGE="https://www.mixxx.org"
+DOWNLOAD="https://github.com/mixxxdj/mixxx/archive/2.5.3/mixxx-2.5.3.tar.gz \
+          https://github.com/mixxxdj/libkeyfinder/archive/2.2.8/libkeyfinder-2.2.8.zip \
+          https://github.com/xsco/libdjinterop/archive/0.24.3/libdjinterop-0.24.3.tar.gz"
+MD5SUM="ff974efdd66ef80a909fd5bf322fed6d \
+        020820804fd3e02bb8385943dceb688b \
+        6eca3d37816a2936367dc4a6e9621a6a"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES="chromaprint faad2 googlebenchmark hidapi libebur128 libmodplug libmp4v2 libshout lilv microsoft-gsl opencore-amr portaudio portmidi protobuf3 rubberband soundtouch"
+MAINTAINER="Matteo Bernardini"
+EMAIL="ponce@slackbuilds.org"

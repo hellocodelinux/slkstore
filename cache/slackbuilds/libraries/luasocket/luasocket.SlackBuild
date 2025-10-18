@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Slackware build script for luasocket
+
+# Copyright 2013-2014, Andrew Tkalia <anddt@yandex.ua>, Ukraine, Kyiv
+# All rights reserved.
+#
+# Maintained by Gerardo Zamudio <gerardo.zamudio@linux.com>
+# 
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20241023 bkw: Modified by SlackBuilds.org, BUILD=2:
+# - build for lua 5.4 and lua51.
+# - install samples/ and etc/ uncompressed in the doc dir (takes an extra
+#   ~800KB of disk space, which isn't worth trying to optimize away).
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=luasocket
+VERSION=${VERSION:-3.1.0}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SLKCFLAGS="-O2 -fPIC" # on all platforms we need PIC
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS+=" -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS+=" -march=i686 -mtune=i686"
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+runmake() {
+  local cmod=$( pkg-config $1 --variable INSTALL_CMOD )
+  local lmod=$( pkg-config $1 --variable INSTALL_LMOD )
+  local incs=$( pkg-config $1 --variable INSTALL_INC )
+
+  make clean
+  make -j1 \
+    MYCFLAGS="$SLKCFLAGS" \
+    INC_PATH=-I$incs \
+    INSTALL_TOP_LDIR=$PKG/$lmod \
+    INSTALL_TOP_CDIR=$PKG/$cmod \
+    LUAINC=$incs \
+    INSTALL_EXEC="install -s -m0755" \
+    linux install install-unix
+}
+
+runmake lua
+pkg-config --exists lua51 && runmake lua51
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a docs/*.* FIX LICENSE CHANGELOG.md README.md samples etc test $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+rm $PKGDOC/*.ppt
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

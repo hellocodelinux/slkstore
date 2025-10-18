@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=XSpaceWarp
+Comment=Live long and prosper!
+Categories=Game;
+Exec=/usr/games/xspacewarp
+Icon=xspacewarp
+StartupNotify=false

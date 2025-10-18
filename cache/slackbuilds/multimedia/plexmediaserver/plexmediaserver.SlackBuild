@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Slackware build script for "plexmediaserver".
+
+# Copyright 2014-2015 Lionel Young <lionelyoung@gmail.com>
+# Copyright 2015-2017 Marcel Saegebarth <marc@mos6581.de>
+# Copyright 2017-2020 Kevin Matthew <kevin@kevinmatthew.com>
+# Copyright 2020-2025 Stu Miller <slackbuilds@go4it2day.com>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# * Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20230528 bkw: modified by SlackBuilds.org:
+# - use standard ARCH (not i386). note that this is cosmetic (the package
+#   contents do not change, only the filename of the .tgz package).
+# - speed up find and strip stuff (build now runs ~3.2x faster).
+# - fix permission on .desktop file.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=plexmediaserver
+VERSION=${VERSION:-1.42.2.10156_f737b826c}
+PKG_VERSION=$(echo $VERSION | tr _ -)
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  DEBARCH="i386"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  DEBARCH="i386"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  DEBARCH="amd64"
+  LIBDIRSUFFIX="64"
+else
+  echo "Package for $(uname -m) architecture is not available."
+  exit 1
+fi
+
+PLEX_USER=${PLEX_USER:-279}
+PLEX_GROUP=${PLEX_GROUP:-279}
+
+set -e
+
+# Bail if user or group isn't valid on your system
+if ! getent passwd plex 1>/dev/null 2>/dev/null; then
+  cat << EOF
+
+  You must have a plex user to run this script
+
+  # groupadd -g $PLEX_USER plex
+  # useradd -u $PLEX_USER -d /var/lib/$PRGNAM -s /bin/false -g plex plex
+
+EOF
+
+  exit 1
+elif ! getent group plex 1>/dev/null 2>/dev/null; then
+  cat << EOF
+
+  You must have a plex group to run this script
+  # groupadd -g $PLEX_GROUP plex
+
+EOF
+  exit 1
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir $PRGNAM-$VERSION
+ar xv $CWD/${PRGNAM}_${PKG_VERSION}_${DEBARCH}.deb data.tar.xz
+tar xvf data.tar.xz -C $PRGNAM-$VERSION
+rm -f data.tar.xz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} + \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} +
+
+mkdir -p $PKG/usr/lib/
+mv usr/lib/plexmediaserver $PKG/usr/lib
+
+# 20230528 bkw: This strip command is *way* faster than the find|grep|xargs
+# stuff (runs in about 1 sec, vs. over a minute) and has the same effect.
+strip --strip-unneeded \
+      $PKG/usr/lib/$PRGNAM/* \
+      $PKG/usr/lib/$PRGNAM/lib/*.so* \
+      $PKG/usr/lib/$PRGNAM/Resources/Python/lib/python*/site-packages/*/*.so \
+      2>/dev/null || true
+
+DESKTOP=usr/share/applications/$PRGNAM.desktop
+install -D -m0644 $DESKTOP $PKG/$DESKTOP
+sed -i -e "s/x-www-browser/xdg-open/" $PKG/$DESKTOP
+
+mkdir -p $PKG/etc/rc.d
+cat $PKG/usr/lib/$PRGNAM/lib/$PRGNAM.init > $PKG/etc/rc.d/rc.$PRGNAM.new
+chmod 0644 $PKG/etc/rc.d/rc.$PRGNAM.new
+
+mkdir -p $PKG/etc/default
+cat $PKG/usr/lib/plexmediaserver/lib/plexmediaserver.default > $PKG/etc/default/$PRGNAM.new
+chmod 0644 $PKG/etc/default/$PRGNAM.new
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/var/lib/$PRGNAM
+chown -R $PLEX_USER:$PLEX_GROUP $PKG/var/lib/$PRGNAM
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+mtpaint: mtpaint (Mark Tyler's Painting Program)
+mtpaint:
+mtpaint: mtPaint is a GTK+ painting program which is scratch is aimed to
+mtpaint: be simple and easy to use. It can edit indexed palette or 24 bit
+mtpaint: RGB images and offers basic painting and palette manipulation
+mtpaint: tools. It also can handle JPEG, GIF, TIFF, BMP, XPM, and XBM
+mtpaint: files.
+mtpaint:
+mtpaint: Home: http://mtpaint.sourceforge.net/
+mtpaint:
+mtpaint:

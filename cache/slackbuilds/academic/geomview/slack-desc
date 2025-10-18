@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+geomview: geomview (3D geometrical package)
+geomview:
+geomview: Geomview is an interactive 3D viewing program for Unix. It lets you
+geomview: view and manipulate three-dimensional objects: you use the mouse to
+geomview: rotate, translate, zoom in and out, etc. Geomview can be used as a
+geomview: standalone viewer for static objects (it supports a variety of file
+geomview: formats) or as a display engine for other programs which produce
+geomview: dynamically changing geometry.
+geomview:
+geomview: Homepage: http://www.geomview.org
+geomview:

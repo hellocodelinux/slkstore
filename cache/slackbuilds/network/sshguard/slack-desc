@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+sshguard: sshguard (SSH brute-force attack protection)
+sshguard:
+sshguard: sshguard protects hosts from brute-force attacks against SSH and other
+sshguard: services. It aggregates system logs and blocks repeat offenders using
+sshguard: one of several firewall backends, including iptables, ipfw, and pf.
+sshguard:
+sshguard: Homepage: https://www.sshguard.net/
+sshguard:
+sshguard:
+sshguard:
+sshguard:

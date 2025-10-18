@@ -1,0 +1,238 @@
+#!/bin/bash
+
+# Slackware build script for yabridge
+
+# Copyright 2022 Martin Bångens Sweden
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd "$(dirname "$0")" || exit 1 ; CWD=$(pwd)
+
+PRGNAM=yabridge
+VERSION=${VERSION:-5.1.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+ARG_CLAP=${ARG_CLAP:-NO}
+ARG_VST3=${ARG_VST3:-YES}
+ARG_WINEDBG=${ARG_WINEDBG:-NO}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [[ "$ARG_CLAP" = "YES" || "$ARG_CLAP" = "true" ]]; then
+  ARG_CLAP="true"
+else
+  ARG_CLAP="false"
+fi
+
+if [[ "$ARG_VST3" = "YES" || "$ARG_VST3" = "true" ]]; then
+  ARG_VST3="true"
+else
+  ARG_VST3="false"
+fi
+
+if [[ "$ARG_WINEDBG" = "YES" || "$ARG_WINEDBG" = "true" ]]; then
+  BUILDTYPE="debug"
+  ARG_WINEDBG="true"
+else
+  BUILDTYPE="release"
+  ARG_WINEDBG="false"
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ -n "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+if [ "$ARCH" = "arm" ]; then
+  echo "This script only supports x86 for now but Slackware ARM and ARM64 is happening FIXME"
+  exit 1
+fi
+
+which wine &>/dev/null
+WINE_IN_PATH=$?
+which wine64 &>/dev/null
+WINE64_IN_PATH=$?
+
+if [ "$ARCH" = "i586" ] || [ "$ARCH" = "i686" ]; then
+  LIBDIRSUFFIX=""
+  if ((WINE_IN_PATH)); then
+    echo "This  script look for wine in PATH and needs it for compiling and using yabridge on i586"
+    exit 1
+  fi
+elif [ "$ARCH" = "x86_64" ]; then
+  LIBDIRSUFFIX="64"
+  if ((WINE_IN_PATH)) || ((WINE64_IN_PATH)); then
+    echo "This  script look for wine and wine64 in PATH and needs them both for compiling and using yabridge on x86_64"
+    exit 1
+  fi
+fi
+
+export PATH="/opt/rust/bin:$PATH"
+if [ -z "$LD_LIBRARY_PATH" ]; then
+   export LD_LIBRARY_PATH="/opt/rust/lib$LIBDIRSUFFIX"
+else
+   export LD_LIBRARY_PATH="/opt/rust/lib$LIBDIRSUFFIX:$LD_LIBRARY_PATH"
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf "$PKG"
+mkdir -p "$TMP" "$PKG" "$OUTPUT"
+cd "$TMP"
+rm -rf "$PRGNAM-$VERSION"
+tar xvf "$CWD/$PRGNAM-$VERSION.tar.gz"
+cd "$PRGNAM-$VERSION"
+echo -e "\Unpacking documentation, cargo dependencies and vstsdk meson.build"
+tar xvf "$CWD/yabridge-docs-plus-build-$VERSION.tar.gz"
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+patch -p1 < "$CWD/load_posix_spawn_addclosefrom_np.diff"
+patch -p1 < "$CWD/fix_change_path.diff"
+
+#Build only capitalized
+sed -i "s|bitsery_dep = dependency('bitsery', version : '>=5.2.0')|bitsery_dep = dependency('Bitsery', version : '>=5.2.0')|g" meson.build
+sed -i "s|bitsery_dep = dependency('bitsery', 'Bitsery', version : '>=5.2.0')|bitsery_dep = dependency('Bitsery', version : '>=5.2.0')|g" meson.build
+
+mv yabridge-docs-plus-build/vst3sdk subprojects/vst3
+
+if [ "$ARCH" = "i586" ] || [ "$ARCH" = "i686" ]; then
+  meson setup \
+    build \
+    --cross-file=cross-wine.conf \
+    --buildtype=$BUILDTYPE \
+    --unity=on \
+    --unity-size=1000 \
+    --wrap-mode=nodownload \
+    -Dbitbridge=true \
+    -Dclap=$ARG_CLAP \
+    -Dvst3=$ARG_VST3 \
+    -Dwinedbg=$ARG_WINEDBG \
+    -Dsystem-asio=true \
+    -Dbuild.cpp_args='-m32' \
+    -Dbuild.cpp_link_args='-m32'
+elif [ "$ARCH" = "x86_64" ]; then
+  meson setup \
+    build \
+    --cross-file=cross-wine.conf \
+    --buildtype=$BUILDTYPE \
+    --unity=on \
+    --unity-size=1000 \
+    --wrap-mode=nodownload \
+    -Dbitbridge=true \
+    -Dclap=$ARG_CLAP \
+    -Dvst3=$ARG_VST3 \
+    -Dwinedbg=$ARG_WINEDBG \
+    -Dsystem-asio=true
+else
+  echo "Unsupported architecture"
+fi
+
+# Build yabridge
+# The unity build takes can take up to 2 GB of RAM per target, so if the
+# system does not have enough RAM to build everything at once we'll limit the
+# number of concurrent jobs
+# NOTE: The `LANG=C` is needed because apparently the `pt_BR.UTF-8` locale
+#       changes `Mem:` to `Mem.:`, so who knows what other locales might do
+total_memory=$(env LANG=C free --gibi --si | awk '/^Mem:/ { print $2 }')
+num_jobs=$((total_memory / 4))
+echo -e "\n$total_memory gigabytes of RAM detected, limiting the number of build jobs to $num_jobs\n"
+ninja -C build -j"$num_jobs"
+
+cd ./tools/yabridgectl
+
+# Offline build
+# This makes cargo target the locale identical copy of reflink in vendor source directory
+sed -i 's|{ git = "https://github.com/nicokoch/reflink", rev = "e8d93b465f5d9ad340cd052b64bbc77b8ee107e2" }|"0.1.3"|g' Cargo.toml
+sed -i 's|git+https://github.com/nicokoch/reflink?rev=e8d93b465f5d9ad340cd052b64bbc77b8ee107e2#e8d93b465f5d9ad340cd052b64bbc77b8ee107e2|registry+https://github.com/rust-lang/crates.io-index|g' Cargo.lock
+CARGO_HOME=../../yabridge-docs-plus-build/cargo/CARGO_HOME cargo build --release --locked --all-features --offline --target-dir=target
+
+cd ../../build
+
+install -dm755 "$PKG/usr/bin"
+if [ "$ARCH" = "i586" ] || [ "$ARCH" = "i686" ]; then
+  install yabridge-host-32.exe{,.so} "$PKG/usr/bin"
+  install -dm755 "$PKG/usr/lib"
+  install libyabridge-vst2.so "$PKG/usr/lib"
+  install libyabridge-chainloader-vst2.so "$PKG/usr/lib"
+  if [ $ARG_VST3 = "true" ]; then
+    install libyabridge-vst3.so "$PKG/usr/lib"
+    install libyabridge-chainloader-vst3.so "$PKG/usr/lib"
+  fi
+  if [ $ARG_CLAP = "true" ]; then
+    install libyabridge-clap.so "$PKG/usr/lib"
+    install libyabridge-chainloader-clap.so "$PKG/usr/lib"
+  fi
+elif [ "$ARCH" = "x86_64" ]; then
+  install yabridge-host.exe{,.so} "$PKG/usr/bin"
+  install yabridge-host-32.exe{,.so} "$PKG/usr/bin"
+  install -dm755 "$PKG/usr/lib64"
+  install libyabridge-vst2.so "$PKG/usr/lib64"
+  install libyabridge-chainloader-vst2.so "$PKG/usr/lib64"
+  if [ $ARG_VST3 = "true" ]; then
+    install libyabridge-vst3.so "$PKG/usr/lib64"
+    install libyabridge-chainloader-vst3.so "$PKG/usr/lib64"
+  fi
+  if [ $ARG_CLAP = "true" ]; then
+    install libyabridge-clap.so "$PKG/usr/lib64"
+    install libyabridge-chainloader-clap.so "$PKG/usr/lib64"
+  fi
+fi
+
+install ../tools/yabridgectl/target/release/yabridgectl "$PKG/usr/bin"
+
+cd ..
+
+find "$PKG" -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p "$PKG/usr/doc/$PRGNAM-$VERSION"
+ cp -a \
+   README.md \
+   docs/architecture.md \
+   COPYING \
+   CHANGELOG.md \
+   "$PKG/usr/doc/$PRGNAM-$VERSION"
+cp tools/yabridgectl/README.md "$PKG/usr/doc/$PRGNAM-$VERSION/README-yabridgectl.md"
+cat "$CWD/$PRGNAM.SlackBuild" > "$PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild"
+cp -a yabridge-docs-plus-build/html/* "$PKG/usr/doc/$PRGNAM-$VERSION"
+
+mkdir -p "$PKG/install"
+cat "$CWD/slack-desc" > "$PKG/install/slack-desc"
+
+cd "$PKG"
+/sbin/makepkg -l y -c n "$OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"

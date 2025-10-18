@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=(X)MedCon
+GenericName=Medical Image Conversion
+Exec=xmedcon
+Icon=xmedcon
+Categories=Graphics;
+MimeType=application/dicom;

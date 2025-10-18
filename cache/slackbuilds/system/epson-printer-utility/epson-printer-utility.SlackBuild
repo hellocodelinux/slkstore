@@ -1,0 +1,205 @@
+#!/bin/bash
+
+# Slackware build script for epson-printer-utility
+
+# Copyright 2020-2024 Tim Dickson
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#thanks to B.Watson for support on this build. :-)
+
+# 20220301 bkw: Modified by SlackBuilds.org, BUILD=4:
+# - fix build on 15.0.
+# - add qt4 as a dependency, and modify the script to use it.
+# - fix weird libtool issue (libcutils.la wasn't being built).
+# - stop writing to $CWD. use a top-level build dir instead.
+# - fix hardcoded /usr/lib64 in rm command (fix build on 32-bit)!
+# in 1.1.2 epson updated things so it actually works with qt5 now.
+# 20240131 update to 1.1.3
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=epson-printer-utility
+VERSION=${VERSION:-1.1.3}
+EXTRABIT=1
+TARNAM=$PRGNAM-$VERSION-$EXTRABIT.src.tgz
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+TOPDIR=$TMP/$PRGNAM-$VERSION-build
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $TOPDIR
+mkdir -p $TOPDIR
+cd $TOPDIR
+
+#lets get the source tarball from the rpm and clean up the bits we don't need
+ln -s $CWD/$PRGNAM-$VERSION-$EXTRABIT.src.rpm .
+rpm2tgz $PRGNAM-$VERSION-$EXTRABIT.src.rpm
+rm $PRGNAM-$VERSION-$EXTRABIT.src.rpm
+tar xzf $TARNAM
+rm $TARNAM
+tar xzf epson-printer-utility.tar.gz
+tar xzf epson-backend.tar.gz
+cd $PRGNAM
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+echo "patch configure.ac"
+#remove automake error, fix udev typo and fix qt source paths
+sed -i '/^AM_INIT_AUTOMAKE/a AM_PROG_AR()' configure.ac
+sed -i 's_/ect_/etc_g' configure.ac
+sed -i 'sZ/opt/Qt/5.15.0/gcc_64/includeZ/usr/include/qt5Zg' configure.ac
+
+aclocal
+autoreconf --install --force
+#patch things to point to the correct dir
+echo "patch makefile.am configs"
+sed -i "sZ/x86_64-linux-gnu/qt5Z/qt5Zg" EPSCommonLib/Makefile.am
+sed -i "sZ/x86_64-linux-gnu/qt5Z/qt5Zg" PrinterUtility/Makefile.am
+
+CC=/usr/bin/c++ \
+CXX=/usr/bin/c++ \
+CFLAGS="$SLKCFLAGS -fpermissive" \
+CXXFLAGS="$SLKCFLAGS -fpermissive" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --datarootdir=/usr/share \
+  --disable-static \
+  --build=$ARCH-slackware-linux
+
+##patch hardcoded path in Main.cpp so it can find language files
+echo "patch Main.cpp to fix language file paths"
+sed -i "s_/opt/epson_/usr/share/epson_g" PrinterUtility/Main.cpp
+make
+make install DESTDIR=$PKG
+#as make install doesn't do much we sort it out manually
+mkdir -p $PKG/usr/bin
+cp -a PrinterUtility/epson-printer-utility $PKG/usr/bin/
+#udev rule to allow set permissions so any user can monitor the printer.
+mkdir -p $PKG/etc/udev/rules.d
+cp -a support-tool/79-udev-epson.rules $PKG/etc/udev/rules.d/
+mkdir -p $PKG/usr/share/epson-printer-utility/resource/Languages
+mv $PKG/usr/resource/Languages/*.qm $PKG/usr/share/epson-printer-utility/resource/Languages/
+rm -r $PKG/usr/resource
+mkdir -p $PKG/usr/share/pixmaps
+cp PrinterUtility/Images/AppIcon.png $PKG/usr/share/pixmaps/epson-printer-utility.png
+#=====now for backend.
+cd $TOPDIR/epson-backend
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+#i don't think next line is needed. Seems to work without it.
+aclocal
+#next line is needed to make things work with 1.1.3
+touch m4-macros
+autoreconf --install --force
+
+CC=/usr/bin/gcc \
+CXX=/usr/bin/c++ \
+CFLAGS="$SLKCFLAGS -Wno-unused-but-set-variable -Wno-unused-function -Wno-implicit-function-declaration -Wno-pointer-sign -Wno-unused-variable" \
+CXXFLAGS="$SLKCFLAGS -fpermissive" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --disable-static \
+  --build=$ARCH-slackware-linux
+
+#we need to patch the source
+sed -i "1 i #include <stdlib.h>\n#include <string.h>" daemon/epmnt.c
+make
+make install DESTDIR=$PKG
+mkdir -p $PKG/etc/rc.d
+cp $CWD/rc.ecbd $PKG/etc/rc.d/rc.ecbd.new
+#the utility won't work without the daemon, so reduce steps admin has to do to get
+#things working on a clean install.
+chmod +x $PKG/etc/rc.d/rc.ecbd.new
+
+mkdir -p $PKG/usr/share/applications
+cp $CWD/epson-printer-utility.desktop $PKG/usr/share/applications
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS COPYING NEWS README $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh >$PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

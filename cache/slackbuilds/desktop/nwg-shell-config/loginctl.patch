@@ -1,0 +1,217 @@
+diff -ur a/nwg_shell_config/locker.py b/nwg_shell_config/locker.py
+--- a/nwg_shell_config/locker.py	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/locker.py	2024-02-05 04:12:34.622061369 -0500
+@@ -54,9 +54,9 @@
+     "gtklock-logout-command": "swaymsg exit",
+     "gtklock-playerctl": False,
+     "gtklock-powerbar": False,
+-    "gtklock-poweroff-command": "systemctl -i poweroff",
+-    "gtklock-reboot-command": "systemctl reboot",
+-    "gtklock-suspend-command": "systemctl suspend",
++    "gtklock-poweroff-command": "loginctl -i poweroff",
++    "gtklock-reboot-command": "loginctl reboot",
++    "gtklock-suspend-command": "loginctl suspend",
+     "gtklock-time-format": "%H:%M:%S",
+     "gtklock-userinfo": False,
+     "gtklock-userswitch-command": ""
+diff -ur a/nwg_shell_config/main_hyprland.py b/nwg_shell_config/main_hyprland.py
+--- a/nwg_shell_config/main_hyprland.py	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/main_hyprland.py	2024-02-05 04:13:01.636587679 -0500
+@@ -991,9 +991,9 @@
+ 
+         "pb-exit": "hyprctl dispatch exit",
+         "pb-lock": "nwg-lock",
+-        "pb-poweroff": "systemctl -i poweroff",
+-        "pb-reboot": "systemctl reboot",
+-        "pb-sleep": "systemctl suspend",
++        "pb-poweroff": "loginctl -i poweroff",
++        "pb-reboot": "loginctl reboot",
++        "pb-sleep": "loginctl suspend",
+ 
+         "gen-use-settings": True,
+         "gen-border_size": 1,
+@@ -1084,7 +1084,7 @@
+         "lockscreen-background-source": "local",  # unsplash | local
+         "lockscreen-custom-cmd": "",
+         "lockscreen-timeout": 1200,
+-        "sleep-cmd": "systemctl suspend",
++        "sleep-cmd": "loginctl suspend",
+         "sleep-timeout": 1800,
+         "resume-cmd": "",
+         "before-sleep": "",
+@@ -1103,15 +1103,15 @@
+         "gtklock-logout-command": "swaymsg exit",
+         "gtklock-playerctl": False,
+         "gtklock-powerbar": False,
+-        "gtklock-poweroff-command": "systemctl -i poweroff",
+-        "gtklock-reboot-command": "systemctl reboot",
+-        "gtklock-suspend-command": "systemctl suspend",
++        "gtklock-poweroff-command": "loginctl -i poweroff",
++        "gtklock-reboot-command": "loginctl reboot",
++        "gtklock-suspend-command": "loginctl suspend",
+         "gtklock-time-format": "%H:%M:%S",
+         "gtklock-userinfo": False,
+         "gtklock-userswitch-command": "",
+         "update-indicator-on": False,
+         "update-indicator-interval": 30,
+-        "update-command": "nwg-system-update"
++        "update-command": ""
+     }
+     global settings
+     if os.path.isfile(settings_file):
+diff -ur a/nwg_shell_config/main_sway.py b/nwg_shell_config/main_sway.py
+--- a/nwg_shell_config/main_sway.py	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/main_sway.py	2024-02-05 04:13:29.141116586 -0500
+@@ -883,9 +883,9 @@
+ 
+         "pb-exit": "swaymsg exit",
+         "pb-lock": "nwg-lock",
+-        "pb-poweroff": "systemctl -i poweroff",
+-        "pb-reboot": "systemctl reboot",
+-        "pb-sleep": "systemctl suspend",
++        "pb-poweroff": "loginctl -i poweroff",
++        "pb-reboot": "loginctl reboot",
++        "pb-sleep": "loginctl suspend",
+ 
+         "panel-preset": "preset-0",
+         "panel-custom": "",
+@@ -950,15 +950,15 @@
+         "gtklock-logout-command": "swaymsg exit",
+         "gtklock-playerctl": False,
+         "gtklock-powerbar": False,
+-        "gtklock-poweroff-command": "systemctl -i poweroff",
+-        "gtklock-reboot-command": "systemctl reboot",
+-        "gtklock-suspend-command": "systemctl suspend",
++        "gtklock-poweroff-command": "loginctl -i poweroff",
++        "gtklock-reboot-command": "loginctl reboot",
++        "gtklock-suspend-command": "loginctl suspend",
+         "gtklock-time-format": "%H:%M:%S",
+         "gtklock-userinfo": False,
+         "gtklock-userswitch-command": "",
+         "update-indicator-on": False,
+         "update-indicator-interval": 30,
+-        "update-command": "nwg-system-update"
++        "update-command": ""
+     }
+     global settings
+     if os.path.isfile(settings_file):
+diff -ur a/nwg_shell_config/shell/custom b/nwg_shell_config/shell/custom
+--- a/nwg_shell_config/shell/custom	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/shell/custom	2024-02-05 04:10:32.872197968 -0500
+@@ -43,8 +43,8 @@
+   "gtklock-userinfo-under-clock": false,
+   "gtklock-powerbar-show-labels": true,
+   "gtklock-powerbar-linked-buttons": false,
+-  "gtklock-reboot-command": "systemctl reboot",
+-  "gtklock-poweroff-command": "systemctl -i poweroff",
++  "gtklock-reboot-command": "loginctl reboot",
++  "gtklock-poweroff-command": "loginctl -i poweroff",
+   "gtklock-playerctl-art-size": 64,
+   "gtklock-playerctl-position": "top-right",
+   "gtklock-playerctl-show-hidden": true
+diff -ur a/nwg_shell_config/shell/custom-hyprland b/nwg_shell_config/shell/custom-hyprland
+--- a/nwg_shell_config/shell/custom-hyprland	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/shell/custom-hyprland	2024-02-05 04:10:39.481081968 -0500
+@@ -47,8 +47,8 @@
+   "gtklock-userinfo-under-clock": false,
+   "gtklock-powerbar-show-labels": true,
+   "gtklock-powerbar-linked-buttons": false,
+-  "gtklock-reboot-command": "systemctl reboot",
+-  "gtklock-poweroff-command": "systemctl -i poweroff",
++  "gtklock-reboot-command": "loginctl reboot",
++  "gtklock-poweroff-command": "loginctl -i poweroff",
+   "gtklock-playerctl-art-size": 64,
+   "gtklock-playerctl-position": "top-right",
+   "gtklock-playerctl-show-hidden": true
+diff -ur a/nwg_shell_config/shell/settings b/nwg_shell_config/shell/settings
+--- a/nwg_shell_config/shell/settings	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/shell/settings	2024-02-05 04:12:02.006633660 -0500
+@@ -18,9 +18,9 @@
+   "browser": "",
+   "pb-exit": "swaymsg exit",
+   "pb-lock": "nwg-lock",
+-  "pb-poweroff": "systemctl -i poweroff",
+-  "pb-reboot": "systemctl reboot",
+-  "pb-sleep": "systemctl suspend",
++  "pb-poweroff": "loginctl -i poweroff",
++  "pb-reboot": "loginctl reboot",
++  "pb-sleep": "loginctl suspend",
+   "panel-preset": "preset-0",
+   "panel-custom": "",
+   "show-on-startup": true,
+@@ -90,13 +90,13 @@
+   "gtklock-logout-command": "swaymsg exit",
+   "gtklock-playerctl": false,
+   "gtklock-powerbar": false,
+-  "gtklock-poweroff-command": "systemctl -i poweroff",
+-  "gtklock-reboot-command": "systemctl reboot",
+-  "gtklock-suspend-command": "systemctl suspend",
++  "gtklock-poweroff-command": "loginctl -i poweroff",
++  "gtklock-reboot-command": "loginctl reboot",
++  "gtklock-suspend-command": "loginctl suspend",
+   "gtklock-time-format": "%H:%M:%S",
+   "gtklock-userinfo": false,
+   "gtklock-userswitch-command": "",
+   "update-indicator-on": true,
+   "update-indicator-interval": 30,
+-  "update-command": "nwg-system-update"
++  "update-command": ""
+ }
+\ No newline at end of file
+diff -ur a/nwg_shell_config/shell/settings-hyprland b/nwg_shell_config/shell/settings-hyprland
+--- a/nwg_shell_config/shell/settings-hyprland	2024-02-04 19:52:26.000000000 -0500
++++ b/nwg_shell_config/shell/settings-hyprland	2024-02-05 04:11:52.086807731 -0500
+@@ -16,9 +16,9 @@
+   "show-on-startup": true,
+   "pb-exit": "hyprctl dispatch exit",
+   "pb-lock": "nwg-lock",
+-  "pb-poweroff": "systemctl -i poweroff",
+-  "pb-reboot": "systemctl reboot",
+-  "pb-sleep": "systemctl suspend",
++  "pb-poweroff": "loginctl -i poweroff",
++  "pb-reboot": "loginctl reboot",
++  "pb-sleep": "loginctl suspend",
+   "gen-use-settings": true,
+   "gen-border_size": 1,
+   "gen-no_border_on_floating": false,
+@@ -103,7 +103,7 @@
+   "lockscreen-custom-cmd": "",
+   "lockscreen-timeout": 1200,
+   "screenshot": true,
+-  "sleep-cmd": "systemctl suspend",
++  "sleep-cmd": "loginctl suspend",
+   "sleep-timeout": 1800,
+   "resume-cmd": "",
+   "before-sleep": "",
+@@ -128,13 +128,13 @@
+   "gtklock-logout-command": "swaymsg exit",
+   "gtklock-playerctl": false,
+   "gtklock-powerbar": false,
+-  "gtklock-poweroff-command": "systemctl -i poweroff",
+-  "gtklock-reboot-command": "systemctl reboot",
+-  "gtklock-suspend-command": "systemctl suspend",
++  "gtklock-poweroff-command": "loginctl -i poweroff",
++  "gtklock-reboot-command": "loginctl reboot",
++  "gtklock-suspend-command": "loginctl suspend",
+   "gtklock-time-format": "%H:%M:%S",
+   "gtklock-userinfo": false,
+   "gtklock-userswitch-command": "",
+   "update-indicator-on": true,
+   "update-indicator-interval": 30,
+-  "update-command": "nwg-system-update"
++  "update-command": ""
+ }
+\ No newline at end of file
+diff -ur a/nwg_shell_config/ui_components.py b/nwg_shell_config/ui_components.py
+--- a/nwg_shell_config/ui_components.py
++++ b/nwg_shell_config/ui_components.py
+@@ -2184,7 +2184,7 @@
+                                                            entry_resume_cmd: 'swaymsg "output * dpms on"',
+                                                            entry_after_resume: 'swaymsg "output * enable"'})
+     elif os.getenv("HYPRLAND_INSTANCE_SIGNATURE"):
+-        defaults_btn.connect("clicked", restore_defaults, {entry_sleep_cmd: 'systemctl suspend'})
++        defaults_btn.connect("clicked", restore_defaults, {entry_sleep_cmd: 'loginctl suspend'})
+ 
+     grid.attach(defaults_btn, 1, 6, 1, 1)
+ 
+

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+beautysh: beautysh (beautifier for bash scripts)
+beautysh:
+beautysh: beautysh takes upon itself the hard task of beautifying Bash scripts
+beautysh: (yeesh). Processing Bash scripts is not trivial, they aren't like C or
+beautysh: Java programs - they have a lot of ambiguous syntax, and (shudder) you
+beautysh: can use keywords as variables. This means there will be some border
+beautysh: cases beautysh won't be able to process.
+beautysh:
+beautysh:
+beautysh:
+beautysh:

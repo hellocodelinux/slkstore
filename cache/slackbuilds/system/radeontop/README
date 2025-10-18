@@ -1,0 +1,5 @@
+radeontop is a monitoring utilty for viewing Radeon GPU utilization,
+showing both the total activity percentage and individual blocks.
+
+R600 and more recent cards are supported. radeontop works with both the
+open drivers and AMD Catalyst.

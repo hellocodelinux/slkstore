@@ -1,0 +1,198 @@
+#!/bin/bash
+
+# Slackware build script for higan
+
+# Based on bsnes SlackBuild by Erik Hanson <email removed>
+# Maintained by Gabriel Magno <email removed>
+# Modified by Johannes Schoepfer <email removed>
+# Modified again & now maintained by B. Watson <urchlay@slackware.uk>
+
+# Copyright 2013 Gabriel Magno, Belo Horizonte, MG, Brazil
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20230108 bkw: fix PRINT_PACKAGE_NAME.
+# 20211101 bkw: v106 BUILD=3
+# - revert to v106! someone other than me upgraded this for higan
+#   v110, but it turns out that v110 wouldn't actually play any games
+#   (UI would start up, but no way to map controllers). unless/until I
+#   straighten this out, this will remain at v106, which I've actually
+#   successfully played games with.
+# - new-style icons.
+# - better .desktop files.
+
+# 20200907 bkw: upstream source moved and changed to .tar.gz, get
+#               rid of p7zip dependency. BUILD=2.
+# 20200529 bkw: add "can't update version" note to README.
+# 20181211 bkw:
+# This update would not have happened without assistance and moral support
+# from Yossi Ne'eman. Thanks!
+# - Take over maintenance.
+# - Update for v106.
+# - Use the gtk frontend, not the *broken* qt one.
+# - Make OpenAL dep optional & autodetected (and OPENAL=no to force-disable).
+# - Add OSS (default no) and PULSE (default yes) env vars.
+# - Fix permissions of the stuff installed to /usr/share/higan: everything
+#   was executable, ugh.
+# - Install binary in /usr/games (it's a game system emulator, people).
+# - Update the README, include link to the semi-official doc site.
+# - Update slack-desc with current list of supported systems.
+# - Add man pages. Note to SBo admins: please don't remove my *.rst man
+#   page sources!
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=higan
+VERSION=${VERSION:-106}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+SRCNAM=${PRGNAM}_v${VERSION}-source
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+
+# Bletcherous permissions, please don't replace with template code.
+find . -type d -exec chmod 0755 {} \+
+find . -type f -exec chmod 0644 {} \+
+chown -R root:root .
+
+# Thanks to the Arch folks for these patches. -flags allows us to pass
+# custom CFLAGS, and -paths makes the emulator look in /usr/share/higan
+# for its support files if they're not found in ~/.local/share/higan.
+patch -p1 -i $CWD/higan-flags.diff
+patch -p1 -i $CWD/higan-paths.diff
+
+# 20181212 bkw: audio system stuff. Upstream doesn't give us a way to
+# disable these on the make command line, but hacking this file works:
+HACKFILE=higan/target-tomoko/GNUmakefile
+
+# Who actually uses OSS?
+if [ "${OSS:-no}" = "no" ]; then
+  sed -i '/^ *ruby /s,audio\.oss,,' $HACKFILE
+fi
+
+# Prepare for 15.0's pure-alsa-system option.
+if [ "${PULSE:-yes}" = "no" ] || ! [ -e /usr/bin/pulseaudio ]; then
+  sed -i '/^ *ruby /s,audio\.pulse[^ ]*,,g' $HACKFILE
+fi
+
+# Upstream *should* autodetect this, but doesn't.
+if [ "${OPENAL:-yes}" = "no" ] || ! pkg-config --exists openal; then
+  sed -i '/^ *ruby /s,audio\.openal,,' $HACKFILE
+fi
+
+# 20181212 bkw: switch from hiro=qt to hiro=gtk. I have no idea why the
+# original author chose qt... the qt frontend is known to be buggy in v106
+# (per upstream's git log). Issues I ran into were segfaulting on exit,
+# and sometimes the Settings tabs wouldn't get painted... which are both
+# mentioned as known issues in the git log. There are some post-106
+# commits that may fix the qt issues; we'll see, when 107 is released.
+
+CXXFLAGS="$SLKCFLAGS" \
+make -C icarus \
+  prefix=/usr \
+  platform=linux \
+  hiro=gtk
+
+CXXFLAGS="$SLKCFLAGS" \
+make -C $PRGNAM \
+  prefix=/usr \
+  platform=linux \
+  hiro=gtk
+
+mkdir -p $PKG/usr/games \
+  $PKG/usr/share/applications \
+  $PKG/usr/share/$PRGNAM \
+  $PKG/usr/share/pixmaps
+
+install -s -m 755 $PRGNAM/out/$PRGNAM icarus/out/icarus $PKG/usr/games/
+cp -dr $PRGNAM/systems/* $PKG/usr/share/$PRGNAM/
+
+for px in 16 32 48 64 128; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -resize $size $PRGNAM/data/$PRGNAM.png $dir/$PRGNAM.png
+  convert -resize $size icarus/data/icarus.png $dir/icarus.png
+done
+
+for i in $PRGNAM icarus; do
+  ln -s ../icons/hicolor/48x48/apps/$i.png $PKG/usr/share/pixmaps/$i.png
+  cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
+done
+
+# Man pages by B. Watson. higan.6 is basically the higan-cli.md from the
+# git repo, reformatted as RST & converted to a man page. icarus.6 was
+# written from scratch (and doesn't have much to say, you'll notice).
+mkdir -p $PKG/usr/man/man6
+for i in $PRGNAM icarus; do
+  gzip -9c < $CWD/$i.6 > $PKG/usr/man/man6/$i.6.gz
+done
+
+# Sadly there are no docs in v106. I found a docs/ dir in git, but it's not
+# in the release 7z archive. Apparently this is because the git archive is
+# somehow unofficial...?
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

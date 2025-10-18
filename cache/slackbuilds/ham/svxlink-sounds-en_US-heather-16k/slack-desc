@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                                |-----handy-ruler------------------------------------------------------|
+svxlink-sounds-en_US-heather-16k: svxlink-sounds-en_US-heather-16k (sound files for svxlink)
+svxlink-sounds-en_US-heather-16k:
+svxlink-sounds-en_US-heather-16k: The SvxLink project is developing a flexible, general purpose
+svxlink-sounds-en_US-heather-16k: voice services system for ham radio use.
+svxlink-sounds-en_US-heather-16k: This is the english voices language pack matching release 24.02 of
+svxlink-sounds-en_US-heather-16k: SvxLink.
+svxlink-sounds-en_US-heather-16k:
+svxlink-sounds-en_US-heather-16k: Home page http://www.svxlink.org
+svxlink-sounds-en_US-heather-16k:
+svxlink-sounds-en_US-heather-16k:
+svxlink-sounds-en_US-heather-16k:

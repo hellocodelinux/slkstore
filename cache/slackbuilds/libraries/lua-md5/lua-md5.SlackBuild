@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Slackware build script for lua-md5
+
+# Copyright 2014 Matteo Bernardini <ponce@slackbuilds.org>, Pisa, Italy
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20241022 bkw: Modified by SlackBuilds.org, BUILD=3:
+# - support both lua (5.4) and lua51.
+
+# 20220424 bkw: Modified by SlackBuilds.org, BUILD=2:
+# - fix doc permissions.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=lua-md5
+SRCNAM=md5
+VERSION=${VERSION:-1.2}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+DOCS="doc/us/* README"
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.?z* || tar xvf $CWD/v$VERSION.tar.?z*
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find . -type f -exec chmod 644 {} + -o -type d -exec chmod 755 {} +
+
+# Added upstream patches to make it buildable
+# https://github.com/keplerproject/md5/commit/d6719be4d52ca06e29bc5dd92c98fd03538ecec9
+patch -p1 < $CWD/d6719be.patch
+
+# https://github.com/keplerproject/md5/commit/3ee141422f30f45d841bb21be90474dd1fb68a67
+patch -p1 < $CWD/3ee1414.patch
+
+runmake() {
+  make clean
+
+  # can't use --cflags below, the -I is hardcoded in the Makefile
+  make \
+    WARN="$SLKCFLAGS" \
+    LUA_INC=$( pkg-config $1 --variable INSTALL_INC )
+
+  strip src/*.so
+  make install \
+    LUA_LIBDIR=$PKG/$( pkg-config $1 --variable INSTALL_CMOD ) \
+    LUA_DIR=$PKG/$( pkg-config $1 --variable INSTALL_LMOD )
+}
+
+runmake lua
+[ -x /usr/bin/lua5.1 ] && runmake lua51
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+install -m0644 $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

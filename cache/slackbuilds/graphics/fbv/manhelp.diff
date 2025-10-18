@@ -1,0 +1,48 @@
+diff -wNaur fbv-1.0c/fbv.1 fbv-1.0c.patched/fbv.1
+--- fbv-1.0c/fbv.1	2024-12-03 08:01:22.000000000 -0500
++++ fbv-1.0c.patched/fbv.1	2025-01-16 03:37:59.510083511 -0500
+@@ -1,4 +1,4 @@
+-.TH fbv 1 "2001-02-18"
++.TH fbv 1 "2025-01-16"
+ .\" Some roff macros, for reference:
+ .\" .nh        disable hyphenation
+ .\" .hy        enable hyphenation
+@@ -84,6 +84,16 @@
+ h	Help and image information
+ .TE
+ 
++Keystrokes are read from standard input. Normally this is the user's
++terminal, but pipes and redirection also work. This allows for things
++like:
++.PP
++echo emq | fbv --noinfo --noclear image.jpg
++.PP
++ ...which will display image.jpg (enlarged and rotated 90 degrees), then exit, leaving
++the image visible. The "q" in the echo command is actually redundant, as
++fbv will exit on stdin EOF.
++
+ .SH AUTHOR
+ Tomasz 'smoku' Sterna  <tomek@smoczy.net>
+ .br
+diff -wNaur fbv-1.0c/main.c fbv-1.0c.patched/main.c
+--- fbv-1.0c/main.c	2024-12-03 08:01:22.000000000 -0500
++++ fbv-1.0c.patched/main.c	2025-01-16 03:38:51.046078661 -0500
+@@ -606,8 +606,8 @@
+ 		   "Available options:\n"
+ 		   "  -h, --help          Show this help\n"
+ 		   "  -a, --alpha         Use the alpha channel (if applicable)\n"
+-		   "  -c, --dontclear     Do not clear the screen before and after displaying the image\n"
+-		   "  -u, --donthide      Do not hide the cursor before and after displaying the image\n"
++		   "  -c, --noclear       Do not clear the screen before and after displaying the image\n"
++		   "  -u, --nohide        Do not hide the cursor before and after displaying the image\n"
+ 		   "  -i, --noinfo        Supress image information\n"
+ 		   "  -f, --shrink        Shrink (using a simple resizing routine) the image to fit onto screen if necessary\n"
+ 		   "  -k, --colorshrink   Shrink (using a 'color average' resizing routine) the image to fit onto screen if necessary\n"
+@@ -636,6 +636,7 @@
+ 		   " m          : Rotate the image 90 degrees right\n"
+ 		   " p          : Disable all transformations\n"
+ 		   " h          : Help and image information\n"
++		   " q          : Quit\n"
+ 		   " Copyright (C) 2000 - 2004 Mateusz Golicz, Tomasz Sterna.\n"
+ 		   " Copyright (C) 2013 yanlin, godspeed1989@gitbub\n", name);
+ }

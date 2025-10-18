@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Slackware build script for cpmtools
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20250308 bkw: BUILD=2.
+# - fix bug reported by Zbigniew (--with-diskdefs).
+# - rename /usr/share/diskdefs to /usr/share/cpmtools.
+# - fix FILES paths in man pages.
+
+# 20230819 bkw: updated for v2.24.
+# 20221227 bkw: updated for v2.23.
+# 20201102 bkw:
+# - Updated for v2.21. Can't build older versions, sorry.
+# - Switch to freebsd distfile source, as upstream vanishes the old
+#   source immediately upon a new release.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=cpmtools
+VERSION=${VERSION:-2.24}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# 20250308 bkw: even though there's a --with-diskdefs option, the
+# install path doesn't respect it.
+sed -i "s,\(@datarootdir@.\)diskdefs,\1$PRGNAM," Makefile.in
+
+# 20250308 bkw: man pages have the same problem.
+sed -i "s,@DATADIR@/diskdefs,/usr/share/$PRGNAM/diskdefs," *.1.in
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --with-diskdefs=/usr/share/$PRGNAM/diskdefs \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux
+
+# 'make install' fails to create this:
+mkdir -p $PKG/usr/share/$PRGNAM
+
+make install DESTDIR=$PKG # binaries already stripped, yay!
+gzip $PKG/usr/man/man?/*.?
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a README NEWS COPYING $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

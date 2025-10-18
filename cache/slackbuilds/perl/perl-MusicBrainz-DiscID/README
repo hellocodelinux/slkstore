@@ -1,0 +1,7 @@
+perl-MusicBrainz-DiscID (calculate a disc ID from an audio CD)
+
+MusicBrainz::DiscID is an interface to the libdiscid library,
+which calculates a MusicBrainz disc ID from an audio CD in the
+CD-ROM drive.
+
+abcde can use MusicBrainz::DiscID to calculate disc IDs.

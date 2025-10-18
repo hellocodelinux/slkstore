@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Slackware build script for dis
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=dis
+VERSION=${VERSION:-0.6}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# no compiled code here
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+# my ($release, $commit) = split /_/, $version;
+# Who says perl is less readable than bash?
+RELEASE="$( echo $VERSION | cut -d_ -f1 )"
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$RELEASE
+tar xvf $CWD/$PRGNAM-$RELEASE.tar.gz
+cd $PRGNAM-$RELEASE
+chown -R root:root .
+chmod 644 *
+
+sed -i 's,Dissasseble,Disassemble,g' $PRGNAM README*
+
+patch -p1 < $CWD/usr_share.diff # look for .dop files also in /usr/share/dis
+
+# manual install
+mkdir -p $PKG/usr/bin $PKG/usr/share/$PRGNAM $PKG/usr/doc/$PRGNAM-$VERSION
+install -m0755 $PRGNAM $PKG/usr/bin
+install -m0644 *.dop $PKG/usr/share/$PRGNAM
+install -m0644 *.md $PKG/usr/doc/$PRGNAM-$VERSION
+
+# uh, and now manual (page) install. The man page was made from README.md
+# by the SlackBuild author.
+mkdir -p $PKG/usr/man/man1
+gzip -9c < $CWD/$PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

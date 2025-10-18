@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+limnoria: limnoria (Python IRC Bot)
+limnoria:
+limnoria: Limnoria is the project which continues development of Supybot since
+limnoria: 2010.
+limnoria:
+limnoria: Supybot is a robust (it doesn't crash), user friendly (it's easy to
+limnoria: configure) and programmer friendly (plugins are extremely easy to
+limnoria: write) Python IRC bot. It aims to be an adequate replacement for most
+limnoria: existing IRC bots. It includes a very flexible and powerful ACL
+limnoria: system for controlling access to commands, as well as more than 50
+limnoria: builtin plugins providing around 400 actual commands.

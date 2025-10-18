@@ -1,0 +1,89 @@
+kernel-xen.sh: This script builds the Linux Kernel for a Xen Hypervisor.
+
+* Kernel config files found here are based on generic Slackware ones with
+  some Xen settings enabled to get it going. Only x86_64 architecture is now
+  supported because Xen no longer builds a 32-bit VMM image. This readme is
+  by no means complete or a replacement for Linux Kernel and Xen docs.
+
+* To run "make menuconfig" before compiling Xen kernel, use:
+
+  MENUCONFIG=yes ./kernel-xen.sh
+
+* This script will also create an initrd image, with the following defaults:
+
+  ROOTMOD=ext4 ROOTFS=ext4 ROOTDEV=/dev/sda2 ./kernel-xen.sh
+
+* Booting LILO with mbootpack has shown to be unreliable, and the easiest
+  method is to use EXTLINUX from Syslinux package. In this example, device
+  /dev/sda1 would have an ext2 filesystem mounted to /boot.
+
+  !!! Make sure to understand what are you doing at this point, you could
+      easily lose your data. Always create backups !!!
+
+  * To check and set the legacy BIOS bootable flag (bit 2 attribute):
+
+    sgdisk /dev/sda --attributes=1:show
+    sgdisk /dev/sda --attributes=1:set:2
+
+  * Install the binary:
+
+    mkdir /boot/extlinux
+    extlinux --install /boot/extlinux
+    dd if=/usr/share/syslinux/gptmbr.bin of=/dev/sda
+    cp -a /usr/share/syslinux/mboot.c32 /boot/extlinux/
+
+  * Edit the /boot/extlinux/extlinux.conf file:
+
+    default XenLinux
+    prompt 1
+    timeout 50
+    label XenLinux
+      kernel mboot.c32
+      append /xen.gz --- /vmlinuz-xen root=/dev/sda2 nomodeset --- /initrd-xen.gz
+
+* When using GRUB, /boot/grub/menu.lst should looks something like this:
+
+  title Slackware XenLinux 15.0
+    root (hd0,0)
+    kernel /boot/xen.gz dom0_mem=524288 console=vga
+    module /boot/vmlinuz-xen root=/dev/sda2 ro console=tty0 nomodeset
+    module /boot/initrd-xen.gz
+
+* Booting Xen on a native EFI system (non-BIOS legacy mode) is probably the
+  best option, but the only clean solution at this time requires a modified
+  binutils package. More experienced user can add "x86_64-pep" to the list of
+  enabled targets and build/replace binutils on their system. Subsequently,
+  building Xen will then also create a Xen EFI binary.
+
+  * To make things a bit easier, a copy of Xen EFI binary can be found here:
+
+    http://slackware.hr/~mario/xen/xen-4.20.1.efi.gz
+
+  !!! Make sure to understand what are you doing at this point, you could
+      easily lose your data. Always create backups !!!
+
+  * In this example, partition /dev/sda1 with EF or EF00 type, and do:
+
+    mkfs.vfat /dev/sda1
+    mkdir /boot/efi
+    mount /dev/sda1 /boot/efi
+
+  * Copy/unpack EFI binary to /boot/efi/EFI/BOOT/bootx64.efi and edit
+    /boot/efi/EFI/BOOT/bootx64.cfg file to add these:
+
+    [global]
+    default=XenLinux
+    [XenLinux]
+    options=dom0_mem=min:512M,max:512M,512M
+    kernel=vmlinuz-xen root=/dev/sda2 ro console=tty0 nomodeset
+    ramdisk=initrd-xen.gz
+
+* Many more boot options are supported, this readme covers only some examples!
+
+* Troubleshooting dom0 crashes, freezes, blank screen at boot, etc:
+
+  * Set an out-of-range device id, eg. fbcon=map:9 (Look for more in /proc/fb)
+  * Blacklist framebuffer devices (Look in dmesg/lsmod)
+  * Compile Linux kernel with CONFIG_FB=n
+  * Use a serial cable to see early boot messages
+  * Use another VGA card :-)

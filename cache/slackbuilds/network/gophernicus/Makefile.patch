@@ -1,0 +1,74 @@
+diff -Naur gophernicus-2.5v101/Makefile gophernicus-2.5v101.patched/Makefile
+--- gophernicus-2.5v101/Makefile	2018-07-22 16:36:57.869250006 -0400
++++ gophernicus-2.5v101.patched/Makefile	2018-07-22 17:18:45.765186289 -0400
+@@ -20,10 +20,10 @@
+ DOCS    = LICENSE README INSTALL TODO ChangeLog README.Gophermap gophertag
+ 
+ INSTALL = PATH=$$PATH:/usr/sbin ./install-sh -o 0 -g 0
+-DESTDIR = /usr
++DESTDIR =
+ OSXDEST = /usr/local
+-SBINDIR = $(DESTDIR)/sbin
+-DOCDIR  = $(DESTDIR)/share/doc/$(PACKAGE)
++SBINDIR = $(DESTDIR)/usr/sbin
++DOCDIR  = $(DESTDIR)/usr/doc/$(PACKAGE)-$(VERSION)
+ 
+ ROOT    = /var/gopher
+ OSXROOT = /Library/GopherServer
+@@ -51,7 +51,7 @@
+ #
+ # Platform support, compatible with both BSD and GNU make
+ #
+-all:
++all: headers
+ 	@case `uname` in \
+ 		Darwin)	$(MAKE) ROOT="$(OSXROOT)" DESTDIR="$(OSXDEST)" $(BINARY); ;; \
+ 		Haiku)	$(MAKE) EXTRA_LIBS="-lnetwork" $(BINARY); ;; \
+@@ -61,7 +61,7 @@
+ generic: $(BINARY)
+ 
+ withwrap:
+-	$(MAKE) EXTRA_CFLAGS="-DHAVE_LIBWRAP" EXTRA_LIBS="-lwrap" $(BINARY)
++	$(MAKE) EXTRA_CFLAGS="-DHAVE_LIBWRAP" EXTRA_LIBS="-lwrap -lnsl" $(BINARY)
+ 
+ 
+ #
+@@ -87,7 +87,7 @@
+ $(NAME).c: $(NAME).h $(HEADERS)
+ 	
+ $(BINARY): $(OBJECTS)
+-	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) $(OBJECTS) $(EXTRA_LIBS) -o $@
++	$(CC) $(LDFLAGS) $(OBJECTS) $(EXTRA_LDFLAGS) $(EXTRA_LIBS) -o $@
+ 
+ .c.o:
+ 	$(CC) -c $(CFLAGS) $(EXTRA_CFLAGS) -DVERSION="\"$(VERSION)\"" -DCODENAME="\"$(CODENAME)\"" -DDEFAULT_ROOT="\"$(ROOT)\"" $< -o $@
+@@ -180,12 +180,9 @@
+ 	@echo
+ 
+ install-root:
+-	if [ ! -d "$(ROOT)" -o ! -f "$(ROOT)/$(MAP)" ]; then \
+-		mkdir -p $(ROOT); \
+-		$(INSTALL) -m 644 $(MAP) $(ROOT); \
+-		ln -s $(DOCDIR) $(ROOT)/docs; \
+-	fi
+-	@echo
++	mkdir -p $(DESTDIR)/$(ROOT)
++	$(INSTALL) -m 644 $(MAP) $(DESTDIR)/$(ROOT)
++	ln -s /usr/doc/$(PACKAGE)-$(VERSION) $(DESTDIR)/$(ROOT)/docs
+ 
+ install-inetd:
+ 	@echo
+@@ -202,11 +199,8 @@
+ 	@echo
+ 
+ install-xinetd:
+-	if [ -d "$(XINETD)" -a ! -f "$(XINETD)/$(NAME)" ]; then \
+-		sed -e "s/@HOSTNAME@/`hostname`/g" $(NAME).xinetd > $(XINETD)/$(NAME); \
+-		[ -x /sbin/service ] && /sbin/service xinetd reload; \
+-	fi
+-	@echo
++	mkdir -p $(DESTDIR)/$(XINETD)
++	sed -e "s/@HOSTNAME@/`hostname`/g" $(NAME).xinetd > $(DESTDIR)/$(XINETD)/$(NAME).new
+ 
+ install-osx:
+ 	if [ -d "$(LAUNCHD)" -a ! -f "$(LAUNCHD)/$(PLIST)" ]; then \

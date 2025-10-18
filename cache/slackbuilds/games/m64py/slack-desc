@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+m64py: m64py (A GUI frontend for Mupen64Plus)
+m64py:
+m64py: M64Py is a Qt5 front-end (GUI) for Mupen64Plus, a cross-platform
+m64py: plugin-based Nintendo 64 emulator. Front-end is written in Python
+m64py: and it provides a user-friendly interface over the Mupen64Plus
+m64py: shared library.
+m64py:
+m64py: Homepage: https://github.com/mupen64plus/mupen64plus-ui-python
+m64py:
+m64py:
+m64py:

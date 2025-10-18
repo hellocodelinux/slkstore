@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+amSynth: amSynth (analogue modelling synthesizer)
+amSynth:
+amSynth: It mimics the operation of early analog subtractive synthesizers.
+amSynth: The aim is to make it easy to create and modify sounds.
+amSynth:
+amSynth: * Dual oscillators (sine/saw/square/noise) with hard sync
+amSynth: * 12/24 dB/oct resonant filter (low-pass/high-pass/band-pass/notch)
+amSynth: * Dual ADSR envelope generators (filter & amplitude)
+amSynth: * LFO which can modulate the oscillators, filter, and amplitude
+amSynth: * Distortion and reverb
+amSynth: * Hundreds of presets

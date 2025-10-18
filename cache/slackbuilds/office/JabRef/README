@@ -1,0 +1,6 @@
+JabRef is an open source bibliography reference manager, with native
+BibTeX and BibLaTeX support. JabRef helps you collect, edit, organize,
+and cite your work. As of version 5, JabRef is bundled with its own
+Java runtime.
+
+This is a repackaging of the .deb release.

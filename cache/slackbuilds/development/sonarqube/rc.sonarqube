@@ -1,0 +1,44 @@
+#!/bin/sh
+
+PIDDIR="/var/run/sonarqube"
+RUNAS="sonar"
+SCRIPT="/sbin/sonar.sh"
+export SONAR_JAVA_PATH="/usr/lib64/java/bin/java"
+
+case "$1" in
+
+    'console')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'start')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'stop')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'force-stop')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'restart')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'status')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    'dump')
+        su ${RUNAS} -c "PIDDIR=${PIDDIR} ${SCRIPT} $*"
+        ;;
+
+    *)
+        echo "Usage: $0 { console | start | stop | force-stop | restart | status | dump }"
+        exit 1
+        ;;
+esac
+
+exit 0

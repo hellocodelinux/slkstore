@@ -1,0 +1,31 @@
+#!/bin/sh
+
+userresources=$HOME/.Xresources
+usermodmap=$HOME/.Xmodmap
+sysresources=/etc/X11/xinit/.Xresources
+sysmodmap=/etc/X11/xinit/.Xmodmap
+
+# Merge in defaults and keymaps
+[ -f $sysresources ] && /usr/bin/xrdb -merge $sysresources
+[ -f $sysmodmap ] && /usr/bin/xmodmap $sysmodmap
+[ -f $userresources ] && /usr/bin/xrdb -merge $userresources
+[ -f $usermodmap ] && /usr/bin/xmodmap $usermodmap
+
+# Create default user directory & populate it if needed
+mkdir -p ${HOME}/.icewm
+for FILE in keys menu preferences shutdown startup toolbar winoptions ; do 
+  if [ ! -e ${HOME}/.icewm/${FILE} ]; then
+    cat /usr/share/icewm/${FILE} > ${HOME}/.icewm/${FILE} ;
+  fi
+done
+
+# Start IceWM
+icewmbg &
+icewmtray &
+
+if [ -z "$DESKTOP_SESSION" ]; then
+  dbus-launch --exit-with-session icewm-session
+else
+  exec icewm-session
+fi
+

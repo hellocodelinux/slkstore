@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Slackware build script for xvfb-run
+
+# Copyright 2020 Jan F, Chadima <email removed>
+# Copyright 2024 B. Watson <urchlay@slackware.uk>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+# 20241216 bkw:
+# - take over maintenance.
+# - switch to our own source tarball.
+# - expand README and slack-desc.
+
+# 20-05-2023: Updated to version 21.1.7 and cleaned up to adhere to 
+# sbopkglint standards. - Bob Funk
+# 20-12-2023: Updated to version 21.1.10
+# 08-05-2024: Updated to version 21.1.12
+
+# 20241216 bkw: Stop the stupid VERSION treadmill. Every new release
+# of Debian's xorg-server package causes a new release of xvfb, which
+# includes xvfb-run, *unchanged* from the previous version's (at least,
+# xvfb-run hasn't changed since 2018). This sucks because the download
+# URL we used was the .deb package, and they don't keep old versions. So
+# this script kept breaking, even though the actual code it packages is
+# the same. From now on, this will use a source tarball I create, and
+# won't need constant version updates.
+# VERSION is the date of the last change to either xvfb-run or xvfb-run.1
+# from Debian's changelog.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=xvfb-run
+VERSION=${VERSION:-20200114}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+mkdir -p $PKG/usr/{bin,man/man1}
+install -o root -g root -m0755 $PRGNAM $PKG/usr/bin/$PRGNAM
+gzip -9c < $PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cat README > $PKGDOC/README
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,475 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    width: 90%;
+    margin: 0 auto;
+}
+
+header {
+    background-color: #2c2c2c;
+    padding: 1rem 0;
+    border-bottom: 1px solid #444444;
+    flex-shrink: 0;
+        box-shadow: 2px 2px 4px #000000;
+
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+nav {
+   text-shadow: 2px 2px 4px #000000;
+}
+
+nav a {
+    color: #f0f0f0;
+    text-decoration: none;
+    margin-left: 1rem;
+}
+
+nav a:hover {
+    color: #a0a0a0;
+}
+
+.page-body {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+#sidebar {
+    width: 150px;
+    padding: 2rem;
+    background-color: #2c2c2c;
+    border-right: 1px solid #444444;
+    overflow-y: auto;
+    box-shadow: 2px 2px 4px #000000;
+}
+
+main {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+#sidebar::-webkit-scrollbar,
+main::-webkit-scrollbar {
+    width: 8px;
+}
+
+#sidebar::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track {
+    background: #2c2c2c;
+}
+
+#sidebar::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb {
+    background-color: #555555;
+    border-radius: 4px;
+    border: 2px solid #2c2c2c;
+}
+
+#sidebar h3 {
+    margin-top: 0;
+    color: #dadada;
+    border-bottom: 1px solid #444444;
+    padding-bottom: 10px;
+}
+
+.category-button {
+    display: block;
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+    box-sizing: border-box;
+    text-shadow: 2px 2px 4px #000000;
+    box-shadow: 2px 2px 4px #000000;
+
+}
+
+.category-button:hover,
+.category-button.active {
+    background-color: #5e5e5e;
+    border-color: #777777;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.product-card {
+    background-color: #2c2c2c;
+    border: 1px solid #444444;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    height: 200px;
+}
+
+.product-card h3 {
+    margin-top: 0;
+}
+
+footer {
+    padding: 0.5rem 0;
+    background-color: #2c2c2c;
+    border-top: 1px solid #444444;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+        box-shadow: 0px 0px 4px #000000;
+}
+
+footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+footer p {
+    margin: 0;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    width: 50%;
+    padding-left: 5px;
+    margin: 0 auto
+}
+
+.search-form input {
+    flex-grow: 1;
+    padding: 0.5rem;
+    border: 1px solid #444444;
+    border-radius: 10px;
+    margin-right: 0.5rem;
+    box-shadow: 2px 2px 4px #000000;
+}
+
+.search-form button {
+    padding: 0.5rem 1rem;
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #000000;
+
+}
+
+.search-form button:hover {
+    background-color: #4a4a4a;
+}
+
+.status-bar {
+    font-size: smaller;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+.copyright {
+    font-size: smaller;
+    color: #5bb5ff;
+}
+
+.logo {
+    font-size: xx-large;
+    font-weight: bold;
+    color: #5bb5ff;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+.product-title {
+    text-shadow: 2px 2px 4px #000000;
+}
+
+.product-desc {
+    color: #5bb5ff;
+    margin-top: -5px;
+}
+
+.product-size {
+    font-size: small;
+}
+
+.product-version {
+    font-size: small;
+    font-weight: lighter;
+    margin-top: -18px;
+}
+
+.category-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.category-products .product-card {
+    flex: 1 0 30%;
+    text-align: center;
+}
+
+.category-title {
+    color: #f0f0f0;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+.category-title a {
+    color: #f0f0f0;
+    text-shadow: 2px 2px 4px #000000;
+    text-decoration: none;
+}
+
+.category-title a:hover {
+    color: #a0c0ff;
+    text-decoration: none;
+}
+
+.banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #f0f0f0;
+    border-radius: 100px;
+    padding: 20px 40px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px #555555;
+}
+
+.theme-switch {
+    padding-left: 20px;
+    cursor: pointer;
+}
+
+.banner-te {
+    font-size: xx-large;
+    font-weight: bolder;
+}
+
+.banner-tex {
+    font-size: medium;
+}
+
+.banner-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-button {
+    margin-right: 10px;
+}
+
+.insta.installed {
+    background-color: #008000;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    float: right;
+    box-shadow: 0 0 5px #008000;
+}
+
+.insta.not-installed {
+    background-color: #808080;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    float: right;
+    box-shadow: 0 0 5px #808080;
+}
+
+.banner-right .icon {
+    height: 100px;
+    width: auto;
+}
+
+.product-icon {
+    width: 64px;
+    height: 64px;
+    transition: transform 0.3s ease;
+    margin-left: 15px;
+}
+
+.product-icon:hover {
+    transform: scale(1.2);
+}
+
+.product-link {
+    text-decoration: none;
+    color: #dadada;
+    box-shadow: 0 0 5px #000000;
+    display: inline-block;
+    transition: transform 0.2s, color 0.2s, box-shadow 0.2s;
+    border-radius: 10px;
+}
+
+.product-link:hover {
+    color: #ffffff;
+    transform: scale(1.01);
+    box-shadow: 0 0 5px #5bb5ff;
+}
+
+.precar {
+    font-size: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 70%;
+    margin: 0 auto;
+    justify-content: space-between;
+    border-radius: 100px;
+}
+
+.app-detail {
+    display: flex;
+    font-size: 14px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+    margin: 0 auto;
+    margin-top: 20px;
+}
+
+.app-install,
+.app-remove {
+    margin-left: 100%;
+    padding: 8px 16px;
+    margin: 5px 5px 5px 0;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: right;
+    align-items: right;
+    box-shadow: 2px 2px 4px #000000;
+}
+
+.app-install:hover,
+.app-remove:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+.app-install:enabled {
+    background-color: #2f7231;
+    color: #ffffff;
+}
+
+.app-install:enabled:hover {
+    background-color: #2f7231;
+}
+
+.app-remove:enabled {
+    background-color: #942a22;
+    color: #ffffff;
+}
+
+.app-remove:enabled:hover {
+    background-color: #942a22;
+}
+
+.app-install:disabled,
+.app-remove:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
+.app-detailx {
+    padding: 20px;
+    width: 70%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.app-detailx pre {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    color: #a0a0a0;
+}
+
+.app-title {
+    font-size: 18px;
+    padding: 20px;
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+.about {
+    font-size: 16px;
+    padding: 20px;
+    width: 70%;
+    margin: 30px auto;
+    border-radius: 20px;
+    text-align: center;
+    background-color: #121212;
+    color: #f0f0f0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 0 30px #ffffff1a;
+    border: 2px solid #333333;
+}
+
+.about h2 {
+    font-size: 26px;
+    color: #000000;
+    text-shadow:
+        0 0 5px #00ffff,
+        0 0 10px #00ffff,
+        0 0 20px #00ffff,
+        0 0 40px #00ffff,
+        0 0 80px #00ffff;
+    margin-bottom: 100px;
+}
+
+.about p,
+.about a,
+.about span {
+    font-size: 16px;
+    color: hsl(0, 0%, 100%);
+    text-shadow: 0 0 2px #00ffff, 0 0 5px #00ffff;
+    line-height: 1.6;
+}

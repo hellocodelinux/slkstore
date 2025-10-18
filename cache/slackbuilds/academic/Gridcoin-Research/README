@@ -1,0 +1,39 @@
+Gridcoin is an open source cryptocurrency (Ticker: GRC) which securely
+rewards volunteer computing performed on the BOINC platform. BOINC is
+an open source volunteer computing grid which combines the processing
+power of individual users for the purposes of scientific research.
+
+qrencode support is detected automatically; override with
+  QRENC=no ./Gridcoin-Research.SlackBuild
+
+Miniupnpc (available on SBo) is optional for UPnP support. Run script as
+  UPNP=yes ./Gridcoin-Research.SlackBuild
+
+You will need to edit the configuration file gridcoinresearch.conf
+in /etc/Gridcoin-Research/ and place it in your home directory
+~/.GridcoinResearch/ to provide the location of your boinc data
+and any other configurations that you require. For details, see
+https://wiki.gridcoin.us/Gridcoinresearch_config_file and in
+/usr/share/Gridcoin-Research-$VERSION/doc/
+
+Notes: 
+1. New gridcoinsettings.json file
+
+This file contains settings changed by the node while running and
+settings stored in this file override the read-only settings in the
+gridcoinresearch.conf file (see changelog and documentation).
+
+2. Berkeley DB update
+
+Previous versions built against Slackware's Berkeley DB version 4.8.
+Since [5.4.2.0] 2023-03-26, leisure, "LaVerne", upstream source
+includes Berkeley DB version 5.3 in tree and will standardize all
+wallet.dat files to the bdb 5.3 format. THIS IS VERY IMPORTANT!
+This ugrade will be completely transparent. Please review the 
+release notes on
+https://github.com/gridcoin-community/Gridcoin-Research/releases
+
+** NOTE: **
+While this is a LEISURE update, you are highly encouraged to upgrade.
+Included are additonal fixes and improvements releated to the recent
+inadvertent fork as a result of an inadvertent protocol change.

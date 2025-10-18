@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+gpodder: gpodder (Media aggregator and podcast client)
+gpodder:
+gpodder: gPodder is a media aggregator and podcast client written in Python.
+gpodder: It has a CLI called 'gpo' and also a GTK+ user interface that allows
+gpodder: the user to subscribe to RSS feeds for podcasts, videocasts, and
+gpodder: other similar content and download media files found in those feeds.
+gpodder: gPodder has system-tray notifications, remote access to gpodder.net
+gpodder: web services and optional support for Bluetooth and iPod
+gpodder: synchronization.
+gpodder: Homepage: https://gpodder.github.io/
+gpodder:

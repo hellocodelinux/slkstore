@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Slackware build script for Surfn
+
+# Copyright 2018-2020 Leonardo Citrolo, Italy
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20220312 bkw: Modified by SlackBuilds.org: fix VERSION/SRCVER mess.
+# VERSION must be a constant, and must match VERSION in the .info file.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=Surfn
+VERSION=${VERSION:-20.12_7}
+SRCVER=${SRCVER:-$( echo $VERSION | tr _ -)}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$SRCVER
+# It's better not to be verbose, there's an awful lot of files to extract
+echo "Extracting files..."
+tar xf $CWD/$PRGNAM-$SRCVER.tar.gz
+cd $PRGNAM-$SRCVER
+chown -R root:root .
+
+mkdir -p $PKG/usr/share/icons
+cp -a surfn-icons/$PRGNAM* $PKG/usr/share/icons
+find $PKG/usr/share/icons \
+  \( -name CREDITS \
+  -o -name LICENSE \
+  -o -name create-new-icon-theme.cache.sh \
+  -o -name icon-theme.cache \) -exec rm -f {} \;
+rm -f $PKG/usr/share/icons/Surfn/changelog \
+  $PKG/usr/share/icons/Surfn/LICENSE.txt
+find $PKG/usr/share/icons -type d -exec chmod 755 {} \;
+find $PKG/usr/share/icons -type f -exec chmod 644 {} \;
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a surfn-icons/Surfn/{changelog,CREDITS,LICENSE.txt} README.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+# 20200407 bkw: makepkg's symlink search and doinst.sh creation doesn't
+# scale well. This makes the build complete much faster, and create an
+# identical doinst.sh.
+find . -type l \
+  -printf '( cd %h ; rm -rf %f )\n( cd %h ; ln -sf %l %f )\n' -delete | \
+  sed 's,cd \./,cd ,' >> $PKG/install/doinst.sh
+
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

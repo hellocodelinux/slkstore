@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Slackware build script for sickchill
+
+# Copyright 2023-2024 Jeremy Hansen jebrhansen+SBo@gmail.com
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=sickchill
+VERSION=${VERSION:-2024.3.1}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+SICKUSER=${SICKUSER:-sickchill}
+SICKGROUP=${SICKGROUP:-sickchill}
+
+# The user and group accounts need to be created manually.
+# For slackbuilds.org, assigned sickchill uid/gid are 377/377
+# See http://slackbuilds.org/uid_gid.txt
+if ! grep -q ^$SICKGROUP: /etc/group > /dev/null; then
+  # Handle older versions of sickrage
+  if grep -q ^sickrage: /etc/group; then
+    echo "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "  You seem to have sickrage previously installed..."
+    echo "  If you want to switch to sickchill, change the group using:"
+    echo "    # groupmod -n sickchill sickrage"
+    echo "  Otherwise..."
+    echo "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+  fi
+  echo "  You must have a \"$SICKGROUP\" group to run this script."
+  echo "    # groupadd -g 377 $SICKGROUP"
+  exit 1
+elif ! grep -q ^$SICKUSER: /etc/passwd ; then
+  # Handle older versions of sickrage
+  if grep -q ^sickrage: /etc/passwd; then
+    echo "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "  You seem to have sickrage previously installed..."
+    echo "  If you want to switch to sickchill, change the user using:"
+    echo "    # groupmod -n sickchill sickrage"
+    echo "  Otherwise..."
+    echo "  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+  fi
+  echo "  You must have a \"$SICKUSER\" user to run this script."
+  echo "    # useradd -u 377 -g $SICKGROUP -d /var/lib/sickchill -s /bin/false $SICKUSER"
+  echo "  If you previously had sickrage installed, change the user using"
+  echo "    # usermod -l sickchill -g sickchill -d /var/lib/sickchill sickrage"
+  exit 1
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Correct python module names and remove version requirements
+sed -i 's|kodipydent-alt.*|kodipydent = "\*"|' pyproject.toml
+sed -i 's|new-rtorrent-python.*|rtorrent-python = "\*"|' pyproject.toml
+sed -i 's|python-twitter.*|twitter = "\*"|' pyproject.toml
+
+# Remove ipaddress module requirement as it's been included in python since 3.3
+sed -i '/ipaddress.*/d' pyproject.toml
+
+# Remove win-inet-pton requirement as it is for Windows
+sed -i '/win-inet-pton.*/d' pyproject.toml
+
+# Remove unnecessary validators version requirement
+sed -i 's|validators.*|validators = "\*"|' pyproject.toml
+
+python3 -m build --wheel --no-isolation
+python3 -m installer --destdir=$PKG dist/*.whl
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  COPYING.txt LICENSE.md README.md SECURITY.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/etc/rc.d/
+install -m 0644 $CWD/rc.sickchill $PKG/etc/rc.d/rc.sickchill.new
+install -m 0644 $CWD/sickchill.conf $PKG/etc/sickchill.conf.new
+install -dm 0755 --owner=$SICKUSER $PKG/var/lib/sickchill/
+install -m 0644 --owner=$SICKUSER $CWD/config.ini $PKG/var/lib/sickchill/config.ini.new
+install -dm 0755 --owner=$SICKUSER $PKG/var/log/sickchill/
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

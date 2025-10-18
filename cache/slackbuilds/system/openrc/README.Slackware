@@ -1,0 +1,42 @@
+After installing,
+
+1. Setup essential services:
+
+ # main tty
+ ln -s /etc/openrc/init.d/agetty /etc/openrc/init.d/agetty.tty1
+ /usr/sbin/rc-update add agetty.tty1 default
+
+ cp /etc/openrc/conf.d/agetty /etc/openrc/conf.d/agetty.tty1
+ echo 'agetty_options="--noclear"' >> /etc/openrc/conf.d/agetty.tty1
+
+ # additional ttys
+ for i in {2..6}; do
+   ln -s /etc/openrc/init.d/agetty /etc/openrc/init.d/agetty.tty${i}
+   /usr/sbin/rc-update add agetty.tty${i} default
+ done
+
+ # serial tty (for servers)
+ ln -s /etc/openrc/init.d/agetty /etc/openrc/init.d/agetty.ttyS0
+ /usr/sbin/rc-update add agetty.ttyS0 default
+
+ cp /etc/openrc/conf.d/agetty /etc/openrc/conf.d/agetty.ttyS0
+ echo 'agetty_options="--noclear"' >> /etc/openrc/conf.d/agetty.ttyS0
+
+2. Setup additional services
+
+ Checkout out the openrc-services package and instructions provided
+ there.
+
+3. Add the following to boot parameters (via /etc/lilo.conf for lilo
+ or /etc/default/grub for grub):
+
+ init=/usr/sbin/openrc-init
+
+Regenerate boot configuration ('lilo -v' or 'grub-mkconfig -o /boot/grub/grub.cfg')
+
+4. Reboot!
+
+## Note
+
+If migrating to OpenRC 0.39+ from previous versions, please check:
+https://docs.slackware.com/talk:howtos:general_admin:openrc#migrating_to_openrc_039_from_previous_versions

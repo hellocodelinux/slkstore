@@ -1,0 +1,31 @@
+hatari (Atari ST/STE/Falcon emulator)
+
+Hatari is an Atari ST/STE/Falcon emulator for Linux, BSD, BeOS, Mac OS
+X and other systems that are supported by the SDL library. The Atari
+ST was a 16/32 bit computer system which was first released by Atari
+in 1985. Using the Motorola 68000 CPU, it was a very popular computer
+having quite a lot of CPU power at that time.
+
+Unlike many other Atari ST emulators which try to give you a good
+environment for running GEM applications, Hatari tries to emulate the
+hardware of an ST as close as possible so that it is able to run most
+of the old ST games and demos.
+
+Optional dependencies:
+
+hatari_tos_roms - hatari includes a free ROM replacement called EmuTOS,
+but most applications (especially games) will require the real ROM
+images. *Highly* recommended.
+
+libcapsimage - Required if you want hatari to support KyroFlux IPF and
+CTR disk images. Recommended, but creates non-redistributable package
+(mixing GPL and no-commercial-use code). Autodetected.
+
+portaudio - Only used for emulated Falcon microphone support.
+            Autotetected.
+
+portmidi - May offer better MIDI support than the default ALSA raw MIDI
+           device support. Autodetected.
+
+Note: if you previously built hatari with SDL-1.2, be aware that support
+for SDL 1 was dropped in hatari 2.6.0, so your build will use SDL2.

@@ -1,0 +1,167 @@
+#!/bin/bash
+
+# Slackware build script for opendune
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211026 bkw: BUILD=2
+# - fix build on -current
+# - document PULSE=no option
+# 20180612 bkw: update for v0.9, script can no longer build 0.8
+# 20170531 bkw: BUILD=2, fix build on x86
+# 20170302 bkw: use long-format github URL
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=opendune
+VERSION=${VERSION:-0.9}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  MMX=${MMX:-maybe}
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  MMX=${MMX:-maybe}
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+SRCNAM=OpenDUNE
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# 20211026 bkw: patch from upstream git, fixes gcc version detection
+# for versions >= 10.x.
+patch -p1 < $CWD/gcc10fix.diff
+
+# 20170531 bkw: upstream uses #if defined(__i386__) to test for MMX,
+# which is wrong (should be checking __MMX__ instead). This only affects
+# x86 builds (not x86_64), and only if SDL 1 is used.
+patch -p1 < $CWD/mmx_bodge.diff
+
+if [ "$MMX" = "maybe" ]; then
+  if grep -q '\<mmx\>' /proc/cpuinfo; then
+    MMX="yes"
+  else
+    MMX="no"
+  fi
+  echo "=== autodected MMX: $MMX"
+fi
+
+if [ "$MMX" = "yes" ]; then
+  SLKCFLAGS="$SLKCFLAGS -mmmx"
+  echo "=== added -mmmx to SLKCFLAGS"
+fi
+
+# Fix compile issue with /usr/include/alsa/pcm.h (uses inline)
+sed -i 's,-ansi,,' config.lib
+
+# Install docs to Slack standard location
+sed -i "s,share/doc/$PRGNAM,doc/$PRGNAM-$VERSION," config.lib
+
+# Look in game dir for .ini file.
+sed -i "/\"data\//s,data,/usr/share/games/$PRGNAM," src/inifile.c
+
+# Allow building with ALSA instead of pulseaudio. There's no way to switch
+# between ALSA and Pulse at runtime, and many users prefer to avoid Pulse.
+WITHPULSE="with"
+if [ "${PULSE:-yes}" = "no" -o ! -x /usr/bin/pulseaudio ]; then
+  PULSEOPT="--without-pulse"
+  WITHPULSE="without"
+fi
+
+# The configure script autodetects SDL 2, but it doesn't check for
+# SDL2_image (assumes it's there if SDL2 is). So if someone's installed
+# SDL2 but not SDL2_image, the build will fail. Fix:
+if [ "${SDL2:-yes}" = "no" ]; then
+  SDLOPT="--without-sdl2"
+  SDLVER=1.2
+elif pkg-config --exists sdl2 && pkg-config --exists SDL2_image; then
+  SDLOPT="--with-sdl2"
+  SDLVER=2.0
+else
+  SDLOPT="--without-sdl2"
+  SDLVER=1.2
+fi
+
+# N.B. non-standard (non-autoconf) configure options here!
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  $PULSEOPT \
+  $SDLOPT \
+  --prefix-dir=/usr \
+  --install-dir=$PKG \
+
+make
+strip bin/$PRGNAM
+make install
+
+# Include shell script wrapper to start timidity if installed.
+mkdir -p $PKG/usr/libexec/$PRGNAM
+mv $PKG/usr/games/$PRGNAM $PKG/usr/libexec/$PRGNAM
+install -m0755 -oroot -groot $CWD/$PRGNAM.sh $PKG/usr/games/$PRGNAM
+
+# Include default .ini file with location of data files. data/
+# is always appended to whatever datadir is set to.
+INI=$PKG/usr/share/games/$PRGNAM/$PRGNAM.ini
+cat bin/$PRGNAM.ini.sample > $INI
+echo "datadir=/usr/share/games/$PRGNAM/data" >> $INI
+
+# This dir is where the .PAK files should go.
+mkdir -p $PKG/usr/share/games/$PRGNAM/data
+
+# .desktop written for this build
+mkdir -p $PKG/usr/share/applications
+cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
+
+# docs already installed, but include this:
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed -e "s,@S@,$SDLVER," \
+    -e "s,@P@,$WITHPULSE," \
+    $CWD/slack-desc \
+  > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

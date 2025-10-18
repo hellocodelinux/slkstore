@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# Slackware build script for the Python 3 version of matplotlib
+
+# Copyright 2011-2019 Serban Udrea <s.udrea@gsi.de>
+#                     Jeremy Hansen <jebrhansen+SBo -at- gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification,
+# is permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+# STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+# Written by Aleksandar Samardzic <asamardzic@gmail.com>
+# Updated to 0.99.1.2 by Joao Felipe Santos <joao.eel@gmail.com>
+# Patch for libpng borrowed from Arch Linux (no longer needed, 2019.01.31, S.U.)
+# Updated up to version 2.2.3 by Serban Udrea
+# Adapted for Python 3 by Jeremy Hansen
+# Updated to version 3.4.3 by Willy Sudiarto Raharjo <willysr@slackbuilds.org>
+# Updated to version 3.8.4 by Serban Udrea
+
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=python3-matplotlib
+SRCNAM=matplotlib
+VERSION=${VERSION:-3.8.4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+TARBALL_VERSION=${TARBALL_VERSION:-3.8.4} # Tarball may have wrong versioning
+ENABLE_TESTS=${ENABLE_TESTS:-N}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$TARBALL_VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$TARBALL_VERSION
+mkdir -p build
+tar -C build -xvf $CWD/freetype-2.6.1.tar.gz
+tar -C build -xvf $CWD/qhull-2020-src-8.0.2.tgz
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+ENABLE_TESTS=$(echo "$ENABLE_TESTS"|cut -b 1|tr a-z A-Z)
+# Use mplsetup.cfg to decide about the optional tests
+#
+cat mplsetup.cfg.template > mplsetup.cfg
+if [ "$ENABLE_TESTS" = "Y" ]
+then
+ cat mplsetup.cfg.template > mplsetup.cfg
+ sed -i "s|#tests = False|tests = True|" mplsetup.cfg
+fi
+
+# We need the newer versions of setuptools and setuptools-scm as
+# provided by the python3-setuptools-opt and python3-setuptools-scm-opt
+# SlackBuilds. Thus the following two lines of code:
+#
+PYVER=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+export PYTHONPATH=/opt/python$PYVER/site-packages
+
+# It looks like one needs to use a pyproject.toml file with a lowered
+# minimal version of numpy. Disabling build isolation doesn't seem to
+# work. The build process exits complaining that numpy is not at least
+# at version 2.0.0rc1. In the modified pyproject.toml file the minimum
+# version is set to the one installed by the python3-numpy-legacy
+# SlackBuild.
+#
+#
+sed -i 's|2.0.0rc1|1.24.4|' pyproject.toml
+
+python3 -m build --wheel --no-isolation # > ${CWD}/SETUP.OUTPUT 2>&1
+python3 -m installer --destdir "$PKG" dist/*.whl # > ${CWD}/INSTALL.OUTPUT 2>&1
+
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a INSTALL.rst README.md SECURITY.md PKG-INFO CITATION.bib \
+      CODE_OF_CONDUCT.md CITATION.bib CITATION.cff $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

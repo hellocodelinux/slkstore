@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+          |-----handy-ruler------------------------------------------------------|
+alienarena: alienarena (Ultra fast-paced arena FPS game)
+alienarena:
+alienarena: ALIEN ARENA is a fast paced arena FPS game with multiple modes,
+alienarena: mutators and level, wrapped in a macabre sci-fi theme that harkens
+alienarena: back to the classic themes of the 1950's.
+alienarena:
+alienarena: The game features 23 levels, which can be played competitively online
+alienarena: against other players, or practice offline against the built in
+alienarena: AI(bots).
+alienarena:
+alienarena: Homepage: https://www.alienarena.org/

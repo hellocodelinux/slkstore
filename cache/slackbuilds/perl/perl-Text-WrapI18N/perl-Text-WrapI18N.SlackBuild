@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Slackware build script for perl-Text-WrapI18N
+
+# Originally written 2014 Didier Spaier Paris, France
+# Now maintained by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20220110 bkw:
+# - take over maintenance.
+# - ARCH=noarch.
+# - simplify build.
+# - tweak README and slack-desc.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=perl-Text-WrapI18N
+VERSION=${VERSION:-0.06}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+SRCNAM="$(printf $PRGNAM | cut -d- -f2-)"
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+perl Makefile.PL \
+  PREFIX=/usr \
+  INSTALLDIRS=vendor \
+  INSTALLVENDORMAN3DIR=/usr/man/man3
+make
+make test
+make install DESTDIR=$PKG
+gzip $PKG/usr/man/man*/*
+
+find $PKG -name perllocal.pod -o -name ".packlist" -o -name "*.bs" | \
+  xargs rm -f || true
+find $PKG -depth -type d -empty -delete || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a Changes README $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

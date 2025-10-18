@@ -1,0 +1,15 @@
+squidclamav (Clamav ICAP service and redirector for Squid)
+
+SquidClamav is an antivirus for Squid proxy based on the award
+winning ClamAv anti-virus toolkit.
+
+Optional dependency: squidGuard
+
+
+Building and configuring squid
+------------------------------
+
+You must have built squid with the option "ICAP=yes", for example:
+  ICAP=yes ./squid.SlackBuild
+
+See README.SBo for squid.conf configuration.

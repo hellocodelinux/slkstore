@@ -1,0 +1,14 @@
+PRGNAM="ft2demos"
+VERSION="2.11.1"
+HOMEPAGE="http://www.freetype.org"
+DOWNLOAD="https://download-mirror.savannah.gnu.org/releases/freetype/ft2demos-2.11.1.tar.xz \
+          https://download-mirror.savannah.gnu.org/releases/freetype/freetype-2.11.1.tar.xz \
+          https://slackware.uk/~urchlay/src/freetype.subpixel.rendering.diff.gz"
+MD5SUM="9efff227779626d46c3d7334712c15a3 \
+        24e79233d607ded439ef36ff1f3ab68f \
+        2e307a3cab2ef1fc52580e817d857cd2"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES=""
+MAINTAINER="B. Watson"
+EMAIL="urchlay@slackware.uk"

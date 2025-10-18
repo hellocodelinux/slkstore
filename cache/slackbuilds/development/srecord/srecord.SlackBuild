@@ -1,0 +1,115 @@
+#!/bin/bash
+
+# Slackware build script for srecord
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230627 bkw: BUILD=2
+# - install shared lib with +x perm.
+# Note: I know there's a 1.65 release. But it has problems. Waiting on
+# 1.66 to see if it's any better.
+
+# 20210907 bkw: BUILD=2
+# - get rid of useless BUILDING.pdf
+# - move PDF docs directly into the doc dir (instead of a subdir of it)
+# - get rid of .la file
+# - make the script code easier to read (for me anyway)
+
+# 20140819 bkw: updated for v1.64, switched to regular sourceforge download
+# URL. Turns out the short URL on the main site will disappear whenever
+# there's a new release.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=srecord
+VERSION=${VERSION:-1.64}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+DOCDIR=/usr/doc/$PRGNAM-$VERSION
+PKGDOC=$PKG/$DOCDIR
+LIBDIR=/usr/lib$LIBDIRSUFFIX
+PKGLIB=$PKG/$LIBDIR
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --prefix=/usr \
+  --libdir=$LIBDIR \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=$DOCDIR \
+  --build=$ARCH-slackware-linux
+
+make
+make install DESTDIR=$PKG
+
+# don't need static lib, and --disable-static doesn't work
+rm -f $PKGLIB/*.a
+
+strip $PKG/usr/bin/* $PKGLIB/*.so.?.?.?
+chmod 755 $PKGLIB/*.so.?.?.?
+rm -f $PKGLIB/*.la
+
+gzip -9 $PKG/usr/man/man?/*
+
+mkdir -p $PKGDOC
+cp -a AUTHORS LICENSE README $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+# --docdir is ignored, too
+mv $PKG/usr/share/doc/$PRGNAM/* $PKGDOC
+rm -rf $PKG/usr/share $PKGDOC/BUILDING.pdf
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,266 @@
+#!/bin/bash
+
+# Slackware build script for alsa-tools
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# I am *not* going to create separate packages for each of the individual
+# tools, as some distros do. They're small enough that it's worth the
+# tiny bit of extra disk space for unused tools, to avoid the annoyances
+# of having to write and test 10 or 12 packages. For the same reason,
+# the firmware is being included in the package as well.
+# *** I agree.  --rworkman   :-)
+
+# Note to self: there are lots of duplicate files in both lib/firmware
+# and usr/share/alsa/firmware (though, not all of them are dups). Find
+# out whether it's OK for the usr/share ones to be symlinks to the
+# lib/firmware ones. Looked at Arch's alsa-firmware package, it's
+# the same way: dup files, not symlinks. For now, leave it alone;
+# it works.
+
+# 20241004 bkw: update for 1.2.11 (firmware still 1.2.4)
+# 20230706 bkw: fix build (heisenbug)
+# 20220402 bkw: BUILD=2, remove broken symlinks, empty /etc dir
+# 20210804 bkw: update for 1.2.5 (firmware 1.2.4)
+# 20200224 bkw: update for 1.2.2 (firmware 1.2.1)
+# 20181204 bkw: update for 1.1.7
+# 20180614 bkw: update for 1.1.6
+# 20171214 bkw: update for 1.1.5
+
+# 20170313 bkw:
+# - flip this changelog right-side-up :)
+# - stop spamming /root/.qt/
+# - not bumping BUILD, it's a trivial change
+
+# 20170126 bkw: update for 1.1.3
+# 20160109 rlw: update for 1.1.0
+# 20150505 bkw: update for 1.0.29
+
+# 20140823 bkw:
+# - Add usbcore.autosuspend=-1 to tascam howto
+# - Update for 1.0.28
+
+# 20140219 bkw: fix .desktop files so they validate
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=alsa-tools
+VERSION=${VERSION:-1.2.11}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+FIRMVER=${FIRMVER:-1.2.4}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+FIRMWARE=alsa-firmware
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+
+# first, alsa-tools itself... which is really a bunch of separate packages
+# that happen to be tarred up together.
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+
+# allow disabling all the GUI apps
+if [ "${GUI:-yes}" != "yes" ]; then
+  QT3=no
+  FLTK=no
+  rm -rf echomixer envy24control hdajackretask rmedigicontrol
+else
+  # 20241004 bkw: hdajackretask uses a couple of constants that
+  # aren't present in Slack 15's glib2-2.70.
+  # In -current's glib2, they are enum members that are both equal to 0.
+  # How many ways do you need to say "zero" in the C language?
+  # In case someone's running -current, only fix this if it's needed.
+  if ! pkg-config glib-2.0 --atleast-version=2.74; then
+    echo "===> glib2 version < 2.74, hdajackretask needs fix, applying"
+    sed -i -e '1i#define G_REGEX_DEFAULT 0' \
+           -e '1i#define G_REGEX_MATCH_DEFAULT 0' \
+           hdajackretask/apply-changes.c
+  else
+    echo "===> glib2 version >= 2.74, hdajackretask does not need fix"
+  fi
+fi
+
+# qlo10k1 depends on Qt3, which no longer ships with Slackware.
+# This supports the SBo qt3 build. It's not enough to source qt.sh,
+# the qt3 bin directories need to come first in $PATH too.
+# If you got your Qt3 from some other source, you may have to
+# fiddle with QTDIR and PATH yourself. The uic wrapper is to
+# prevent uic from writing in /root/.qt, and the ccache stuff
+# has no effect if ccache isn't in use.
+if [ -e /opt/kde3/lib$LIBDIRSUFFIX/qt3 -a "${QT3:-yes}" = "yes" ]; then
+  source /etc/profile.d/qt.sh
+  export PATH=/opt/kde3/lib$LIBDIRSUFFIX/qt3/bin:/opt/kde3/bin:$PATH
+  export UIC=$( pwd )/uic
+  cat <<EOF > uic
+#!/bin/sh
+echo "=== running uic wrapper"
+export CCACHE_DIR=${CCACHE_DIR:-$HOME/.ccache}
+export HOME=$( pwd )
+exec /opt/kde3/bin/uic "\$@"
+EOF
+  chmod +x uic
+else
+  rm -rf qlo10k1
+fi
+
+# hdspconf and hdspmixer depend on fltk. Don't build them if disabled or
+# not installed.
+if [ -e /usr/bin/fltk-config -a "${FLTK:-yes}" = "yes" ]; then
+  # 20200224 bkw: brokenness in 1.2.2, fixed in 1.2.5.
+  if [ "$VERSION" = "1.2.2" ]; then
+    sed -i 's,__u\(32\|64\),uint\1_t,g' hdspmixer/src/HDSPMixerWindow.cxx
+  fi
+else
+  rm -rf hdspconf hdspmixer
+fi
+
+# one loop to build them all. The -include stddef.h fixes qlo10k1 'ptrdiff_t doesn't
+# name a type' errors, and doesn't hurt anything else.
+# 20230706 bkw: add '| sort', so we don't depend on the order 'find' lists
+# things. specifically, lo10k1 must come before qlo10k1.
+for subdir in $( find . -name configure | sed -e 's,^\./,,' -e 's,/configure,,' | sort ); do
+  echo "===> $subdir"
+  cd $subdir
+
+  LDFLAGS="-L/usr/lib$LIBDIRSUFFIX" \
+  CFLAGS="$SLKCFLAGS" \
+  CXXFLAGS="$SLKCFLAGS -include stddef.h" \
+  ./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --mandir=/usr/man \
+    --docdir=/usr/doc/$PRGNAM-$VERSION \
+    --build=$ARCH-slackware-linux
+
+  make
+  make install-strip DESTDIR=$PKG
+
+  for doc in README AUTHORS COPYING ChangeLog NEWS TODO COPYING.LIB; do
+    [ -s "$doc" ] && cat "$doc" > $PKGDOC/$doc.$( basename $subdir ).txt
+  done
+  cd -
+done
+
+# second, build the firmware
+rm -rf $FIRMWARE-$FIRMVER
+tar xvf $CWD/$FIRMWARE-$FIRMVER.tar.bz2
+cd $FIRMWARE-$FIRMVER
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+ --prefix=/usr \
+ --libdir=/usr/lib${LIBDIRSUFFIX} \
+ --sysconfdir=/etc \
+ --localstatedir=/var \
+ --mandir=/usr/man \
+ --docdir=/usr/doc/$PRGNAM-$VERSION \
+ --with-hotplug-dir=/lib/firmware \
+ --build=$ARCH-slackware-linux
+
+make
+make install-strip DESTDIR=$PKG
+
+# hdspmixer.desktop and hdspconf.desktop fail desktop-file-validate.
+# We'll leave the deprecation warning for FilePattern, as it's just a
+# warning, and FilePattern might still be useful.
+[ -e $PKG/usr/share/applications/hdspmixer.desktop ] &&
+sed -i \
+  -e '/^Encoding/d' \
+  -e '/^FilePattern/s,$,;,' \
+  -e '/^Icon/s,\.png *$,,' \
+  -e '/^Categories/s,Application;,,' \
+  $PKG/usr/share/applications/hdspmixer.desktop \
+  $PKG/usr/share/applications/hdspconf.desktop
+
+# Niels Horn pointed out that some of the firmware shipped with this
+# package conflicts with Slackware's kernel-firmware package. The files
+# are identical, so just leave them out of this build.
+# 20181204 bkw: add a couple more files to this list.
+( cd $PKG/lib/firmware ; rm -rf ess korg sb16 yamaha ctspeq.bin ctefx.bin )
+
+# remove the hotplug scripts, since Slackware 13.37 & up doesn't use hotplug.
+# Instead, they've been converted to udev rules.
+rm -rf $PKG/etc/hotplug
+
+mkdir -p $PKG/lib/udev/rules.d
+cat $CWD/99-tascam.rules > $PKG/lib/udev/rules.d/99-tascam.rules
+
+cat COPYING > $PKGDOC/COPYING.firmware.txt
+cat README > $PKGDOC/README.firmware.txt
+
+# I wrote this doc when I got my US-122, might as well include it in
+# case it helps anyone.
+cat $CWD/tascam-us122-HOWTO > $PKGDOC/tascam-us122-HOWTO
+
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+find $PKG/usr/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG/usr/man -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+
+rm -f $PKG/usr/lib*/*.la
+
+# 20220402 bkw: the firmware tarball doesn't include this firmware,
+# but 'make install' creates *broken* symlinks to it.
+rm -rf $PKG/lib/firmware/turtlebeach/
+
+# 20220402 bkw: /etc is included in the package for no apparent reason.
+rmdir $PKG/etc
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+earlyoom: earlyoom (the early out-of-memory daemon)
+earlyoom:
+earlyoom: earlyoom is a userspace daemon that can be triggered earlier than the
+earlyoom: kernel's OOM-killer. It checks the amount of available memory and free
+earlyoom: swap up to 10 times a second (less often if there is a lot of free
+earlyoom: memory). By default if both are below 10%, it will kill the largest
+earlyoom: process (highest oom_score). The percentage value is configurable via
+earlyoom: command line arguments.
+earlyoom:
+earlyoom:
+earlyoom:

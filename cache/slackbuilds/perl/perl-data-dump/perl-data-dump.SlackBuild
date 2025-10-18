@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Slackware build script for perl-data-dump
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230105 bkw: BUILD=2, ARCH=noarch.
+# 20211012 bkw: update for v1.25.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=perl-data-dump
+VERSION=${VERSION:-1.25}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+SRCNAM=Data-Dump
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+perl Makefile.PL \
+  PREFIX=/usr \
+  INSTALLDIRS=vendor \
+  INSTALLVENDORMAN3DIR=/usr/man/man3
+make
+make test
+make install DESTDIR=$PKG
+gzip $PKG/usr/man/man3/*
+
+find $PKG -name perllocal.pod \
+  -o -name ".packlist" \
+  -o -name "*.bs" \
+  | xargs rm -f
+
+find $PKG -depth -type d -empty -delete || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a README* Changes $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

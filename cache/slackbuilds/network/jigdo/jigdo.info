@@ -1,0 +1,12 @@
+PRGNAM="jigdo"
+VERSION="0.8.1"
+HOMEPAGE="https://www.einval.com/~steve/software/jigdo/"
+DOWNLOAD="https://www.einval.com/~steve/software/jigdo/download/jigdo-0.8.1.tar.xz \
+          https://slackware.uk/~urchlay/src/debian-jigdo-mini-howto.html.gz"
+MD5SUM="de08a463f3b2c52089bfd582fed3cdff \
+        bfd371e320fa9b48bb86383e3b66341d"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES=""
+MAINTAINER="Matteo Bernardini"
+EMAIL="ponce@slackbuilds.org"

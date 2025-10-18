@@ -1,0 +1,28 @@
+Post installation steps:
+
+# Give execute permission to rc.tlp
+chmod +x /etc/rc.d/rc.tlp
+
+# Start the tlp service
+/etc/rc.d/rc.tlp start
+
+# Restart acpid
+/etc/rc.d/rc.acpid restart
+
+# Configure tlp to be run at startup
+Add the following to /etc/rc.d/rc.local
+
+if [ -x /etc/rc.d/rc.tlp ]; then
+  /etc/rc.d/rc.tlp start
+fi
+
+After removal of the package revert the above changes.
+Make sure to stop the service before uninstalling.
+
+If any hooks in /usr/lib/pm-utils/power.d/ have been enabled (disabled by default),
+the instructions in the developer documentation can be followed:
+
+https://web.archive.org/web/20180514003235/https://linrunner.de/en/tlp/docs/tlp-developer-documentation.html#installscripts
+
+TLP configuration moved from /etc/default/tlp to /etc/tlp.conf
+since version 1.3.0.

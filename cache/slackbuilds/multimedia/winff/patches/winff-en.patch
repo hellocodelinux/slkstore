@@ -1,0 +1,37 @@
+--- winff.en_GB.po	2023-10-03 19:20:47.000000000 +0530
++++ winff.en_GBn.po	2024-01-10 22:50:33.016503273 +0530
+@@ -73,8 +73,8 @@
+ 
+ #: tfrmabout.lblschwarz.caption
+ msgctxt "TFRMABOUT.LBLSCHWARZ.CAPTION"
+-msgid "Kyle Schwarz"
+-msgstr "Kyle Schwarz"
++msgid "Gyan Doshi"
++msgstr "Gyan Doshi"
+ 
+ #: tfrmabout.lblstoffberg.caption
+ msgid "Ian Stoffberg"
+@@ -82,17 +82,17 @@
+ 
+ #: tfrmabout.lblurlffmpeg.caption
+ msgctxt "TFRMABOUT.LBLURLFFMPEG.CAPTION"
+-msgid "http://ffmpeg.org"
+-msgstr "http://ffmpeg.org"
++msgid "https://ffmpeg.org"
++msgstr "https://ffmpeg.org"
+ 
+ #: tfrmabout.lblurlwinfforg.caption
+ msgctxt "TFRMABOUT.LBLURLWINFFORG.CAPTION"
+-msgid "http://www.winff.org"
+-msgstr "http://www.winff.org"
++msgid "https://github.com/WinFF/winff"
++msgstr "https://github.com/WinFF/winff"
+ 
+ #: tfrmabout.lblurlzeranoe.caption
+-msgid "http://ffmpeg.zeranoe.com"
+-msgstr "http://ffmpeg.zeranoe.com"
++msgid "https://www.gyan.dev/ffmpeg/"
++msgstr "https://www.gyan.dev/ffmpeg/"
+ 
+ #: tfrmabout.lblweatherford.caption
+ msgid "Matthew Weatherford"

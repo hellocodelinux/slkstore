@@ -1,0 +1,9 @@
+Lightspark is an open source Flash player implementation for playing
+files in the SWF format. Lightspark can run as a web browser plugin or
+as a standalone application.
+
+Lightspark supports SWF files written on all versions of the
+ActionScript language.
+
+Optional Dependency:
+gnash can optionally be used as fallback support.

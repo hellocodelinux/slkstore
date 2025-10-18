@@ -1,0 +1,28 @@
+ncspot (TUI Spotify client)
+
+ncspot is a cross-platform ncurses Spotify client written in Rust using
+librespot. It is heavily inspired by ncurses MPD clients, such as ncmpc.
+
+A premium Spotify account is needed to use the application; users will
+be prompted to log in to Spotify when running for the first time.
+
+Spotify credentials are stored separately for each user at
+~/.config/ncspot/credentials.toml. This file, as well as the
+~/.config/ncspot directory, is created automatically after logging in to
+Spotify through ncspot.
+
+ncspot can be configured using ~/.config/ncspot/config.toml on a per-
+user basis. See users.md in the doc directory for details.
+
+A list of active keybindings can be accessed in-application with:
+
+  :help
+
+ueberzugpp or ueberzug can serve as an optional dependency for album
+cover display. Use
+
+  COVERS=yes ./ncspot.SlackBuild
+
+to compile the feature in. Please note that upstream does not consider
+album cover display to be essential functionality, and it may not work
+in some terminal emulators and/or window managers.

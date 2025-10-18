@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=NeverNoid
+Comment=Clone of the Arkanoid arcade game
+Exec=/usr/games/nevernoid
+Type=Application
+Icon=nevernoid
+Categories=Game;ArcadeGame;

@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# Slackware build script for aflplusplus
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=aflplusplus
+SRCNAM=AFLplusplus
+VERSION=${VERSION:-4.04c}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# No SLKCFLAGS here, use upstream's flags (they know what they're doing).
+LIBDIRSUFFIX=""
+[ "$ARCH" = "x86_64" ] && LIBDIRSUFFIX="64"
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+DOCDIR=/usr/doc/$PRGNAM-$VERSION
+PKGDOC=$PKG/$DOCDIR
+
+runmake() {
+  make \
+    DESTDIR=$PKG \
+    PREFIX=/usr \
+    HELPER_PATH=/usr/lib$LIBDIRSUFFIX/$PRGNAM \
+    DOC_PATH=$DOCDIR \
+    MAN_PATH=/usr/man/man8 \
+    "$1"
+}
+
+# "make all" doesn't include qemu_mode (which gets built separately,
+# below). The other modes aren't built because they're a lot of effort
+# to build for not much gain:
+
+# coresight_mode: ARM64-only. Beyond the scope of this SBo build.
+# frida_mode: New and missing a lot of features. Also a PITA to build.
+# nyx_mode: Written in Rust. Too fast-moving of a target for me, sorry.
+# unicorn_mode: Looks interesting, but I don't need it, do you?
+
+# Anyone who wants to is welcome to submit SlackBuilds for the other
+# modes, though it'll take some care to keep them from conflicting
+# with this one: your script will have to build the main aflplusplus
+# stuff (make all), because the "modes" require it to be built first,
+# but your package should only install the mode-specific stuff (so you
+# can't just use "make install").
+
+runmake all
+runmake man
+
+# Make it use the qemu source provided by us, instead of doing a git
+# clone (which didn't work properly anyway). Also this disables -Werror
+# in the qemu build.
+patch -p1 < $CWD/build_qemu_support.diff
+
+# qemu mode is optional, only build if the source exists.
+QEMUVER="$( cat qemu_mode/QEMUAFL_VERSION )"
+QEMUSRC="$CWD/qemuafl-$QEMUVER.tar.xz"
+if [ -e "$QEMUSRC" ]; then
+  echo "=== QEMU source found, building qemu_mode"
+  WITHQEMU=WITH
+  ( cd qemu_mode
+    rm -rf qemuafl
+    tar xvf "$QEMUSRC"
+    NO_CHECKOUT=1 sh build_qemu_support.sh )
+else
+  echo "=== QEMU source NOT found, not building qemu_mode"
+  WITHQEMU=WITHOUT
+fi
+
+runmake install
+
+# 20211216 bkw: faster than the usual find|strip stuff. Maybe this
+# should be the new template.
+find $PKG/usr/bin $PKG/usr/lib* -type f -print0 | \
+  xargs -0 file -m /etc/file/magic/elf | \
+  grep -e "executable" -e "shared object" | \
+  grep ELF | \
+  cut -d: -f1 | \
+  xargs strip --strip-unneeded 2> /dev/null || true
+
+gzip $PKG/usr/man/man8/*.8
+
+rm -f $PKGDOC/INSTALL*              # useless.
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed "s,@WITHQEMU@,$WITHQEMU," $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

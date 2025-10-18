@@ -1,0 +1,12 @@
+dvdbackup is a tool to backup video DVDs from the command line.
+It has the advantages of being small, fast, and easy to use.
+
+By default, dvdbackup reformats the DVD title by replacing the
+underscores with spaces and converting to "Proper Case".
+To turn this "feature" off and retain the original VOLUME_ID
+formatting, pass CLOBBER="no" to the script.
+
+NOTE: Copyright laws vary from nation to nation, so bear in mind
+that this program is only intended for personal backups.
+
+libdvdcss is is an optional runtime dependency.

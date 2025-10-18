@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# Slackware build script for commandergenius
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240912 bkw: updated for 3.5.1
+# 20230111 bkw: updated for 3.2.0
+# 20211021 bkw: updated for 3.0.8
+# 20210310 bkw: updated for 2.7.7
+# 20201224 bkw: updated for 2.7.3
+# 20201111 bkw: updated for 2.6.3.1
+# 20201030 bkw: updated for 2.6.3
+# 20200302 bkw: updated for 2.3.9
+# 20191202 bkw: updated for 2.3.8
+# 20180911 bkw: updated for 2.2.3
+# 20180709 bkw: updated for 2.2.2
+# - upstream moved the project from github to gitlab. one nice side-effect
+#   of this is that the GsKit stuff is now included in the release tarball,
+#   which simplifies this script quite a bit. the downside of that is that
+#   this script can no longer build older versions.
+# - SDL2 and python3 are now required.
+
+# 20180101 bkw: updated for 2.0.0
+# 20171222 bkw: updated for 1.9.9.8beta
+# 20170826 bkw: updated for 1.9.9.5beta
+# 20170725 bkw: updated for 1.9.9.2beta
+# 20170301 bkw:
+# - updated for 1.9.8.7beta
+# - fix the build for the case where SDL2 is installed but SDL2_image is not.
+# - update man page (level= option, correct author's full name)
+# - use github long-form URL
+# 20170122 bkw: updated for 1.9.8.1beta.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=commandergenius
+VERSION=${VERSION:-3.5.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+# I wish upstream would pick a name and stick with it... they also use
+# ~/.CommanderGenius for user data, and their README mentions CGenius.
+SRCNAM="Commander-Genius"
+EXENAME="CGeniusExe"
+DESKTOP="cgenius.desktop"
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-v$VERSION
+# OSX and Windows stuff takes up 31MB in /tmp, no need to extract it.
+# Also don't extract the prebuilt icotool binary (ugh).
+tar xvf $CWD/$SRCNAM-v$VERSION.tar.bz2 \
+        --wildcards --exclude='*/dlls' --exclude='*/Build/Xcode' --exclude='*/icotool'
+cd $SRCNAM-v$VERSION
+chown -R root:root .
+
+# permissions are blethcherous, please don't revert to template here.
+find -L . -type f -a -exec chmod 644 '{}' '+'
+find -L . -type d -a -exec chmod 755 '{}' '+'
+
+# placate desktop-file-validate
+sed -i -e 's,Application;,,' \
+       -e 's,cg\.svg,'$PRGNAM',' \
+       share/$DESKTOP
+
+mkdir -p build
+cd build
+  cmake \
+    -DUSE_SDL2=yes \
+    -DDOCDIR=/usr/doc/$PRGNAM-$VERSION \
+    -DGAMES_SHAREDIR:STRING=/usr/share/games \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DMAN_INSTALL_DIR=/usr/man \
+    -DCMAKE_BUILD_TYPE=Release ..
+  make VERBOSE=1
+  make install/strip DESTDIR=$PKG
+cd ..
+
+# clean up the icon names
+for dir in $PKG/usr/share/icons/hicolor/*; do
+  px="$( basename $dir | cut -dx -f1 )"
+  mv $dir/apps/cg.$px.png $dir/apps/$PRGNAM.png
+done
+
+# upstream installs 2 identical-looking (but not byte-identical) icons
+rm -f $PKG/usr/share/games/$PRGNAM/CGLogo.png
+ln -s ../../icons/hicolor/512x512/apps/$PRGNAM.png \
+      $PKG/usr/share/games/$PRGNAM/CGLogo.png
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# grrrr. don't force command-line users to remember the name is CGeniusExe
+ln -s $EXENAME $PKG/usr/games/$PRGNAM
+
+# the High Quality Pack.
+cp -a hqp/* $PKG/usr/share/games/$PRGNAM
+mv $PKG/usr/share/games/$PRGNAM/Readme_hqp.txt $PKG/usr/doc/$PRGNAM-$VERSION
+
+# man page written for this SlackBuild.
+mkdir -p $PKG/usr/man/man6
+gzip -9c < $CWD/$PRGNAM.6 > $PKG/usr/man/man6/$PRGNAM.6.gz
+ln -s $PRGNAM.6.gz $PKG/usr/man/man6/$EXENAME.6.gz
+
+# most of the docs were already installed.
+cp -a COPYRIGHT $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,11 @@
+The SvxLink project is developing a flexible, general purpose voice
+services system for ham radio use.
+
+This package provides a set of sound files for use with svxlink
+server.  This is the english voices language pack matching release
+24.02 of SvxLink.
+
+To use this package as the default language add the following symlink:
+
+ln -s /usr/share/svxlink/sounds/en_US-heather-16k/ \
+      /usr/share/svxlink/sounds/en_US

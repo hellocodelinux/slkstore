@@ -1,0 +1,45 @@
+s6 is a small suite of programs for UNIX, designed to allow process
+supervision (a.k.a service supervision), in the line of daemontools and
+runit, as well as various operations on processes and daemons. It is
+meant to be a toolbox for low-level process and service administration,
+providing different sets of independent tools that can be used within or
+without the framework, and that can be assembled together to achieve
+powerful functionality with a very small amount of code.
+
+Examples of things you can do by assembling together several programs
+provided by s6 - besides process supervision:
+- syslogd functionality, using much less resources than the traditional
+  syslogd.
+- Reliable service readiness notification, which is the basis for
+  service dependency management.
+- Controlled privileged gain as with sudo, without using any suid
+  programs.
+- The useful parts of socket activation without having to change
+  application code or link servers against any specific library, and
+  without having to switch to any specific init system.
+
+NOTE:
+Upstream recommends building skarnet.org software with static libraries,
+as most of skarnet.org software are small enough that shared libraries
+are generally not worth using. Therefore, by default, shared libraries
+are not built and binaries are linked against the static versions of the
+skarnet.org libraries.
+
+If you want to also build the shared libraries, pass BUILD_SHARED=yes
+environment variable to this SlackBuild script like below:
+
+    BUILD_SHARED=yes ./s6.SlackBuild
+
+Similarly, to avoid building the static libraries, you can pass
+BUILD_STATIC=no to the script. For example, to only build the shared
+libraries and not the static ones, you can do something like:
+
+    BUILD_SHARED=yes BUILD_STATIC=no ./s6.SlackBuild
+
+If you just want to build and use skarnet.org software, building only
+the static libraries should be sufficient.
+
+If you want the binaries to be linked against the shared versions of the
+skarnet.org libraries, pass LINK_SHARED=yes to the script, i.e.,
+
+    LINK_SHARED=yes ./s6.SlackBuild

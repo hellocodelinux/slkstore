@@ -1,0 +1,17 @@
+Mutt is a small but very powerful text-based MIME mail client.  Mutt
+is highly configurable, and is well suited to the mail power user with
+advanced features like key bindings, keyboard macros, mail threading,
+regular expression searches and a powerful pattern matching language
+for selecting groups of messages.
+
+Optional dependencies:
+
+* notmuch - fast mail indexer for maildir
+* lua53 - Powerful, fast, light-weight, embeddable scripting language
+  NOTE: this won't work if you have multiple versions of lua installed.
+
+This script builds neomutt without optional support
+for idn2, notmuch, lua and kyotocabinet.
+You can be enabled with:
+
+# USENOTMUCH=yes USELUA=yes ./neomutt.SlackBuild

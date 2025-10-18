@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Slackware build script for jfsw_registered_data
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# This game is offered as a free download on both Steam and GoG. It also
+# was available from www.oldpcgaming.net from 2014 to late 2019, and
+# has been available on archive.org since late 2018.
+
+# 20211031 bkw: BUILD=3
+# - use iso-read to extract files from the iso, rather than loop-mounting.
+# - CREDITS.TXT => credits.txt.
+# - add OGGQUAL option.
+
+# 20200428 bkw: the old .7z from oldpcgaming.net has vanished along
+# with the site. Switched to a CD image from archive.org, in bin/cue
+# format. More work for this script to do, but as a nice bonus, we get
+# the CD audio tracks installed too.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=jfsw_registered_data
+VERSION=${VERSION:-1.2}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# Depending on what was used to do the download, the %XX hex escapes
+# might get interpreted or not, handle either name.
+SRCNAM="Shadow Warrior (USA)"
+ZIPNAME1="$SRCNAM.zip"
+ZIPNAME2="Shadow%20Warrior%20%28USA%29.zip"
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir -p $PRGNAM-$VERSION
+cd $PRGNAM-$VERSION
+
+[ -e "$CWD/$ZIPNAME1" ] && ZIPNAME="$ZIPNAME1" || ZIPNAME="$ZIPNAME2"
+unzip "$CWD/$ZIPNAME"
+chown -R root:root .
+chmod 644 *
+
+# The "source" file is a bin/cue cdrom image with multiple .bin files.
+# It took some effort to get bchunk to extract this correctly, and I've
+# moved the code into a separate script so that users of other distros
+# can possibly make use of it. In fact it's been tested on MacOSX :)
+sh $CWD/extract-shadow-warrior.sh "$SRCNAM.cue"
+
+GAMEDIR=$PKG/usr/share/games/jfsw
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $GAMEDIR $PKGDOC
+
+# We just extracted an iso image, now extract files from it.
+# Rather than loop-mounting the iso to extract the files, use
+# iso-read (part of Slackware's libcdio package).
+iso-read -i track01.iso -e swinst/sw.grp      -o $GAMEDIR/sw_registered.grp
+iso-read -i track01.iso -e swinst/credits.txt -o $PKGDOC/credits.txt
+iso-read -i track01.iso -e swinst/license.txt -o $PKGDOC/license.txt
+iso-read -i track01.iso -e sw.ico             -o $PKGDOC/sw.ico
+
+chmod 644 $PKGDOC/*
+sed -i 's,\r,,' $PKGDOC/*.txt
+
+# Done with the iso, now for the audio tracks (which have already been
+# converted to ogg).
+cp track??.ogg $GAMEDIR
+
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

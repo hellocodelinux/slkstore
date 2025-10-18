@@ -1,0 +1,220 @@
+#!/bin/bash
+
+# Slackware build script for zathura
+
+# Copyright 2010 Binh Nguyen <email removed>
+# Copyright 2024 B. Watson <urchlay@slackware.uk>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Note to self: run with BUILD_MAN=yes *once* per version update to
+# regenerate the man pages (requires sphinx).
+
+# 20240927 bkw: update for v0.5.8. turns out, upstream claims to
+# require newer versions of pango, glib2, etc than the code actually
+# needs. also, update for zathura-pdf-poppler 0.3.3.
+
+# 20240319 bkw: update for v0.5.4 and zathura-pdf-poppler 0.3.2.
+# These are the last versions that will build on Slackware 15.0
+# due to newer versions needing a newer pango.
+
+# 20230105 bkw: update for v0.5.1 and zathura-pdf-poppler 0.3.1.
+
+# 20221114 bkw:
+# - update for v0.5.1. zathura-pdf-poppler is still 0.3.0.
+# - fix bash/zsh/fish completion.
+# - change symlink name from pdf.so to libpdf.so (helps with completion).
+# - make zathura-pdf-poppler optional.
+# - update prebuilt man pages.
+# - stop installing duplicate man pages if Sphinx is installed.
+
+# 20210801 bkw:
+# - update for v0.4.8 and -current. build uses meson now, so this script
+#   can no longer build old zathura versions.
+# - removed dlopen hack and synctex fix, since they're no longer needed.
+# - this changelog was getting long, so move to ChangeLog.old.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=zathura
+VERSION=${VERSION:-0.5.8}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# zathura no longer includes PDF support in the core. Instead it uses
+# plugins. This build includes the default PDF plugin, without which zathura
+# is completely useless.
+PLUGIN=$PRGNAM-pdf-poppler
+PLUGINVER=${PLUGINVER:-0.3.3}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+fixperms() {
+  chown -R root:root .
+  find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+          \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+}
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+fixperms
+
+# 20240928 bkw: Fix things up to work with 15.0's old meson
+# and glib2 libraries. Upstream never bothers testing on versions
+# older than they happen to have installed, for the libs. For
+# meson, we're shipping prebuilt man pages anyway, and only
+# doc/meson.build uses new meson syntax (install_symlink), so
+# just don't use it.
+sed -i -e '/meson_version/s,>=0\.61,>=0.59,' \
+       -e '/glib-2.0/s,>=2.72,>=2.70,' \
+       -e '/gthread-2.0/s,>=2.72,>=2.70,' \
+       -e '/gmodule-no-export-2.0/s,>=2.72,>=2.70,' \
+       -e '/^subdir(.doc.)/d' \
+    meson.build
+
+# 20240928 bkw: "Secret" maintainer-only mode. You shouldn't need this.
+if [ "${BUILD_MAN:-no}" = "yes" ]; then
+  echo "===> generating man pages in $CWD/man"
+  mkdir -p $PKG/man
+  sphinx-build -b man -D version=$VERSION -D release=$VERSION doc/man $CWD/man
+  rm -rf $CWD/man/.doctrees
+else
+  echo "===> using prebuilt man pages in $CWD/man"
+fi
+
+# 20221114 bkw: Maik Wagner and Alexander Verbovetsky reported that
+# fish and bash completion weren't working, due to the symlink I use
+# to switch between the PDF plugins. This patch should fix it.
+patch -p1 < $CWD/fix_completion.diff
+
+mkdir build
+cd build
+  CFLAGS="$SLKCFLAGS" \
+  CXXFLAGS="$SLKCFLAGS" \
+  meson .. \
+    --buildtype=release \
+    --infodir=/usr/info \
+    --libdir=/usr/lib${LIBDIRSUFFIX} \
+    --localstatedir=/var \
+    --mandir=/usr/man \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    -Dstrip=true
+  "${NINJA:=ninja}"
+  DESTDIR=$PKG $NINJA install
+cd ..
+
+# man pages prebuilt on a Slackware box with Sphinx installed. I did
+# this to avoid a dependency on Sphinx (and its tree of 21 deps).
+rm -rf $PKG/usr/man # in case we had Sphinx already...
+for i in $CWD/man/*.*; do
+  dest="$PKG/usr/man/man$( echo $i | sed 's,.*\.,,' )"
+  mkdir -p "$dest"
+  gzip -9c < $i > "$dest/$( basename "$i" )".gz
+done
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a AUTHORS LICENSE README.md $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+# Include the API docs. Sphinx would be needed to build HTML or PDF docs, but
+# the doc sources are RST, which are perfectly human-readable already (though
+# less easy to navigate).
+cp -a doc/api $PKGDOC
+
+# Now build the plugin, unless the user disabled it.
+if [ "${POPPLER:-yes}" != "no" ]; then
+  INCLUDES="includes"
+  cd $TMP
+  rm -rf $PLUGIN-$PLUGINVER
+  tar xvf $CWD/$PLUGIN-$PLUGINVER.tar.gz
+  cd $PLUGIN-$PLUGINVER
+  fixperms
+  sed -i '/meson_version/s,>=0\.61,>=0.59,' meson.build
+
+  export PKG_CONFIG_PATH=$PKG/usr/lib$LIBDIRSUFFIX/pkgconfig:$PKG_CONFIG_PATH
+
+  mkdir build
+  cd build
+    CFLAGS="$SLKCFLAGS -I$PKG/usr/include" \
+    CXXFLAGS="$SLKCFLAGS -I$PKG/usr/include" \
+    meson .. \
+      --buildtype=release \
+      --infodir=/usr/info \
+      --libdir=/usr/lib${LIBDIRSUFFIX} \
+      --localstatedir=/var \
+      --mandir=/usr/man \
+      --prefix=/usr \
+      --sysconfdir=/etc \
+      -Dstrip=true \
+      -Dplugindir=/usr/lib$LIBDIRSUFFIX/$PRGNAM/pdf
+    "${NINJA:=ninja}"
+    DESTDIR=$PKG $NINJA install
+  cd ..
+
+  ln -s pdf/libpdf-poppler.so $PKG/usr/lib$LIBDIRSUFFIX/$PRGNAM/libpdf.so
+else
+  # if we don't include the plugin, we still want the empty plugin dir.
+  mkdir -p $PKG/usr/lib$LIBDIRSUFFIX/$PRGNAM
+  INCLUDES="DOES NOT include"
+fi
+
+mkdir -p $PKG/install
+sed "s,@INCLUDES@,$INCLUDES," $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

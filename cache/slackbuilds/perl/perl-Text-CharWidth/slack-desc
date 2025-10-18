@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                   |-----handy-ruler------------------------------------------------------|
+perl-Text-CharWidth: perl-Text-CharWidth (perl module)
+perl-Text-CharWidth:
+perl-Text-CharWidth: This perl module, Text::CharWidth, gets the number of columns occupied
+perl-Text-CharWidth: by a string on a terminal, which is not always equal to the number
+perl-Text-CharWidth: of characters, depending on the encoding in use. This is similar to
+perl-Text-CharWidth: wcwidth(3) and wcswidth(3) in C.
+perl-Text-CharWidth:
+perl-Text-CharWidth: This perl module is needed by Text::WrapI18N.
+perl-Text-CharWidth:
+perl-Text-CharWidth:
+perl-Text-CharWidth:

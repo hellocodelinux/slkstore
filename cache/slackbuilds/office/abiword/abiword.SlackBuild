@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# Slackware build script for abiword
+
+# Copyright 2007  Martin Lefebvre <dadexter@sekurity.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Thanks to Tim Goya for all of the hard work in making the 2.8.x releases
+# work correctly on Slackware
+# Now maintained by Robby Workman <rworkman@slackbuilds.org>
+
+# 20200622 bkw: updated for v3.0.4, which fixes the flickering issue.
+# abiword-docs hasn't seen a new release, we're still on 3.0.2 there.
+
+# 20220218 bkw: updated for v3.0.5, which keeps the build from breaking
+# if asio is installed. added a note to README about asio. also, remove
+# the .la file from the package. still no new abiword-docs release.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=abiword
+SRCNAM=AbiWord-release
+VERSION=${VERSION:-3.0.5}
+DOCSVER=3.0.2     # version of abiword-docs
+DOCTAR=3.0.1      # sigh, the tarball contains abiword-docs-3.0.1 still
+                  # (DOCTAR WHO?)
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+rm -rf abiword-docs-$DOCTAR
+tar xvf $CWD/abiword-docs-$DOCSVER.tar.gz
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+ -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+ -exec chmod 644 {} \+
+
+patch -p1 < $CWD/enchant-2.1.patch
+
+# 20200622 bkw: don't let abiword create /root/.config/abiword/profile
+# during the build process. Don't break ccache in the process.
+mkdir -p tmphome
+export CCACHE_DIR=${CCACHE_DIR:-$HOME/.ccache}
+export HOME=$( pwd )/tmphome
+
+CPPFLAGS="-I$TMP/$PRGNAM-$VERSION" \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
+./autogen.sh \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --disable-static \
+  --enable-shared \
+  --enable-clipart \
+  --enable-templates \
+  --enable-plugins \
+  --build=$ARCH-slackware-linux
+
+make
+make install-strip DESTDIR=$PKG
+
+# Now install the separate abiword-docs
+cd abiword-docs-$DOCTAR
+  PATH="$PKG/usr/bin:$PATH" \
+  PKG_CONFIG_PATH="$PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig:$PKG_CONFIG_PATH" \
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --mandir=/usr/man \
+    --docdir=/usr/doc/$PRGNAM-$VERSION \
+    --build=$ARCH-slackware-linux
+
+  LD_LIBRARY_PATH="$PKG/usr/lib${LIBDIRSUFFIX}:$LD_LIBRARY_PATH" \
+    PATH="$PKG/usr/bin:$PATH" \
+    make
+  make install DESTDIR=$PKG
+cd ..
+
+gzip -9 $PKG/usr/man/man*/*
+
+# 20200622 bkw: Skip useless docs. ChangeLog is a 0-byte placeholder,
+# INSTALL is generic GNU confgure instructions.
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a *.txt *.TXT AUTHORS COPYING README NEWS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+rm -f $PKG/usr/lib*/*.la
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

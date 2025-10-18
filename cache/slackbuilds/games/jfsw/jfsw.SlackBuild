@@ -1,0 +1,186 @@
+#!/bin/bash
+
+# Slackware build script for jfsw
+
+# Written by B. Watson (urchlay@slackware.uk)
+# Updated for Slackware 14.2 with the help of orbea <ovariegata@yahoo.com>
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211103 bkw:
+# - updated for 20210725_716e1e3 (latest git).
+# - combine all the source tarballs into one (see git2tarxz.sh).
+# - get rid of options for building with SDL1 and without fluidsynth.
+# - get rid of fixsegfault.diff, upstream fixed the bug.
+# - rebase the remaining patches (dont_use_jack.diff, twin_dragon_grp.diff)
+#   on this version. can't build the old versions any more, sorry.
+# - install the binary only as 'jfsw' (not 'sw'). this is because
+#   eduke32 now supports Shadow Warrior, and its binary is also 'sw'.
+#   which will be renamed to eduke32-sw or edsw or something like that.
+# - optionally (TOOLS=yes) install the tools (kextract, kgroup, etc).
+# - new-style icons.
+
+# 20180710 bkw: BUILD=2
+# - updated for 20180424_8fc2d54 (latest git).
+# - finally fix long-standing segfault bug.
+# - document new optional deps in README.
+# - make slack-desc show runtime library deps.
+# - remove freepats from REQUIRES. I've never been able to get
+#   jfsw to play music using them anyway.
+# - expand the section on the full-version sw.grp, move to
+#   separate README_game_data.txt. Found out about Wanton Destruction,
+#   it's now documented there too.
+# - add README_music.txt, explaining how to get the music working.
+#   turned out to be quite a lengthy project...
+# - expand README a bit, mention gog.com free download.
+# - allow fluidsynth builds to work even if fluidsynth built with JACK.
+# - add SDL2=no and FLUID=no build options.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=jfsw
+VERSION=${VERSION:-20210725_716e1e3}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.xz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# 20180712 bkw: if fluidsynth happens to have been built with optional
+# JACK support, it'll be the default driver and jfsw will try to use it.
+# This doesn't actually work.
+# 20211029 bkw: Slackware has fluidsynth now, it isn't built
+# with jack. But I'm leaving this in, because there might be a
+# fluidsynth-jack build after 15.0 releases.
+patch -p1 < $CWD/patches/dont_use_jack.diff
+
+# 20200428 bkw: add Twin Dragon td.grp to the list of supported GRP
+# files. Need this for the jfsw_twin_dragon build.
+patch -p1 < $CWD/patches/twin_dragon_grp.diff
+
+# 20211030 bkw: make the default video mode 24bpp, in the absence of a
+# config file. This is needed to make the HRP work OOTB. Specifically,
+# the launcher (on my system anyway) doesn't offer any 24bpp modes by
+# default, only 8 and 32. And the HRP *has to have* 24 (no, 32 won't
+# work). It's 2021, I don't think anyone's still using anything that
+# doesn't support 24bpp (at least not in a desktop/laptop PC running
+# Slackware). Thanks again to orbea for figuring this out.
+sed -i '/ScreenBPP *= *8/s,8,24,' src/config.c
+
+install_exe() {
+  install -s -m0755 -oroot -groot "$@"
+}
+
+runmake() {
+  echo "===> running: make " $@
+  make "$@" \
+    RELEASE=1 \
+    DATADIR=/usr/share/games/$PRGNAM \
+    CFLAGS="$SLKCFLAGS" \
+    CXXFLAGS="$SLKCFLAGS"
+}
+
+runmake
+
+# no 'make install' target
+mkdir -p $PKG/usr/games
+install_exe sw $PKG/usr/games/$PRGNAM
+install_exe build $PKG/usr/games/$PRGNAM-build
+
+# just for shiggles, include kenbuild in the package:
+make -C jfbuild
+mkdir -p $PKG/usr/libexec/$PRGNAM $PKG/usr/share/games/kenbuild
+install_exe jfbuild/kenbuild-data/game $PKG/usr/libexec/$PRGNAM/kenbuild
+install -m0755 -oroot -groot $CWD/kenbuild.sh $PKG/usr/games/kenbuild
+cp jfbuild/kenbuild-data/*.{map,h,dat} $PKG/usr/share/games/kenbuild
+
+if [ "${TOOLS:-no}" = "yes" ]; then
+  runmake -C jfbuild utils
+  # the set of available tools changes sometimes, don't let the build
+  # fail because one tool is gone in a new release.
+  for i in arttool kextract kgroup transpal wad2art wad2map; do
+    if [ -x jfbuild/$i ]; then
+      install_exe jfbuild/$i $PKG/usr/games/$i
+    else
+      echo "!!! $i didn't get built, investigate!"
+    fi
+  done
+fi
+
+# Data directory included in package, even though we don't include
+# data files. Why? Because the user might be grabbing sw.grp from
+# a retail CD-ROM, and if this dir doesn't exist, he might get
+# confused...
+mkdir -p $PKG/usr/share/games/$PRGNAM
+
+# There's an .ico icon, but it maxes out at 48x48.
+# This icon made from highres/screen/menu/2324.png in the highres pack,
+# by copying just the yinyang logo.
+for px in 16 32 48 64 128; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -resize $size $CWD/$PRGNAM.png $dir/$PRGNAM.png
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+DESKTOPDIR=$PKG/usr/share/applications
+mkdir -p $DESKTOPDIR
+for i in $CWD/desktop/*.desktop; do
+  cat $i > $DESKTOPDIR/$( basename $i )
+done
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a GPL.TXT README.md releasenotes.html $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+cat $CWD/README > $PKG/usr/doc/$PRGNAM-$VERSION/README_SBo.txt
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,3 @@
+Sakura is a simple gtk and vte based terminal emulator. It uses tabs
+to provide several terminals in one window and allows to change
+configuration options via a contextual menu. No more no less.

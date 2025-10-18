@@ -1,0 +1,9 @@
+wavbreaker is an open source WAV, MP2 and MP3 file splitter.
+
+It is a GTK3 gui application which takes WAV, MP2 and MP3 files and
+breaks them up into multiple sections. For MP2 and MP3 manipulation
+wavbreaker uses libmpg123.
+
+There is also a command line tool: 'wavcli' which has absorbed the
+functions of tools seen in previous releases of wavbreaker: 'wavinfo',
+'wavmerge' and 'wavgen'. Usage can be seen by running: 'wavecli --help'.

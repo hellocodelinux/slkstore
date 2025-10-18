@@ -1,0 +1,12 @@
+Proton Mail Bridge is a desktop application for paid users that runs in
+the background, encrypting and decrypting messages as they enter and
+leave your computer. It allows for full integration of your ProtonMail
+account with any program that supports IMAP and SMTP such as Microsoft
+Outlook, Mozilla Thunderbird and Apple Mail.
+
+Once you've installed and adder your account(s) to the Bridge you will
+need to configure your email client.  The setup guide for Thunderbird
+can be found here:
+https://proton.me/support/protonmail-bridge-clients-windows-thunderbird
+
+This script repackages the Debian binary provided by Proton AG.

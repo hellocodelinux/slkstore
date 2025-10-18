@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# Slackware build script for Tauon Music Box
+
+# Copyright 2019-2024 Pouria Rezaei <Pouria.rz@outlook.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Modified by the SlackBuilds.org project
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=tauonmb
+VERSION=${VERSION:-7.8.0}
+SRCNAM=Tauon
+BUILD=${BUILD:-4}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+SLACKVER=$(awk 'NR {print $2}' "/etc/slackware-version" | sed 's/[^+]//g')
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+KFVER=${KFVER:-131.1.0}
+MATAG=${MATAG:-4a5b74bef029b3592c54b6048650ee5f972c1a48}
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+RPC=${RPC:-no}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+
+cd $SRCNAM-$VERSION
+
+# - Replaced my own isounidecode with Unidecode.
+# - Pass libgme.
+# - Fixed custom theme bug.
+# - Reverted old days theme changer!
+patch -p1 < $CWD/config/fix-tauon-options.patch
+
+# Make libgme optional, isn't this messy already?
+if [ ! "${LIBGME:-no}" = "yes" ]; then
+  patch -p1 < "$CWD/config/obsolete-libgme.patch"
+fi
+
+# PHAZOR dependencies (Do not modify this part)
+mkdir -p src/phazor/{kissfft,miniaudio}
+tar xvf $CWD/kissfft-$KFVER.tar.gz --strip-components=1 -C src/phazor/kissfft
+tar xvf $CWD/miniaudio-$MATAG.tar.gz --strip-components=1 -C src/phazor/miniaudio
+
+chown -R root:root .
+find -L . \
+\( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+ -o -perm 511 \) -exec chmod 755 {} \; -o \
+\( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Compile PHAZOR (Do not modify this part)
+sh compile-phazor.sh
+
+# Compile translator
+python3 compile-translations.py
+rm -f locale/*/*/*.po
+
+case "$RPC" in
+    [yY][eE][sS]) 
+        patch -p1 < "$CWD/config/flatpak-rpc.diff"
+;;
+esac
+
+mkdir -p $PKG/opt/tauon-music-box
+mv assets extra lib locale t_modules templates theme CHANGELOG input.txt \
+   LICENSE tauon.py *.md $PKG/opt/tauon-music-box
+
+cd $PKG/opt/tauon-music-box
+
+# Patch by Reza Talebi <reza.talebi.73@outlook.com>
+# - Compatiblity for python3.9 on Slackware 15
+if [[ ! "$SLACKVER" == "+"  ]]; then
+	patch -p1 < "$CWD/config/python39.diff"
+fi
+
+mkdir -p $PKG/usr/bin
+install -m 0755 extra/$PRGNAM.sh $PRGNAM.sh
+ln -sf /opt/tauon-music-box/$PRGNAM.sh $PKG/usr/bin/tauon
+
+mkdir -p $PKG/usr/share/applications
+cp extra/$PRGNAM.desktop $PKG/usr/share/applications/
+mv locale $PKG/usr/share/
+
+mkdir -p $PKG/usr/share/icons/hicolor/{scalable,symbolic}/apps
+cp extra/$PRGNAM.svg $PKG/usr/share/icons/hicolor/scalable/apps/
+cp extra/$PRGNAM-symbolic.svg $PKG/usr/share/icons/hicolor/symbolic/apps/
+rm -fR extra
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mv *.md CHANGELOG LICENSE $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -p -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

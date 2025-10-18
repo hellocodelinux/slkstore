@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# Slackware build script for GoldenCheetah
+
+# Copyright 2018-2023 Kyle Guinn <elyk03@gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=goldencheetah
+SRCNAM=GoldenCheetah
+VERSION=${VERSION:-3.6}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$(uname -m)" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$(uname -m) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+DOCS="COPYING doc/user/GC3-Manual.pdf doc/user/GC3-FAQ.pdf"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+chmod -R u+w,go-w,a+rX-st .
+
+# GoldenCheetah statically links its own version of qwt, which is likely a fork
+# from around version 6.1.0 or 6.1.1.  The build system uses -L/-l flags to
+# refer to the static lib, but due to other -L flags and symlinked directories,
+# it might find the system qwt instead.  Replace the flags with a filename.
+sed -i 's|-L\(\$\${PWD}/\.\./qwt/lib\) -l\(qwtd\?\)|\1/lib\2.a|' src/src.pro
+
+# Use the system levmar if available.
+# Builtin copy is version 2.6 without lapack support.
+# TODO:  Replace other builtins (qzip?, qxt, lmfit).
+if [ -f /usr/include/levmar/levmar.h ]; then
+  sed -i 's|\.\./contrib/levmar[^ ]* *||g'     src/src.pro
+  echo "INCLUDEPATH += /usr/include/levmar" >> src/src.pro
+  echo "LIBS += -llevmar"                   >> src/src.pro
+fi
+
+# Copy the default config files, then modify them below.
+cp qwt/qwtconfig.pri.in qwt/qwtconfig.pri
+cp src/gcconfig.pri.in  src/gcconfig.pri
+
+# Set up the build configuration.
+sed -i 's|^#\(CONFIG += release\)\>|\1|'  src/gcconfig.pri
+sed -i 's|^#\(QMAKE_LEX  = flex\)\>|\1|'  src/gcconfig.pri
+sed -i 's|^#\(QMAKE_YACC = bison\)\>|\1|' src/gcconfig.pri
+
+# Use -b y to force bison >= 3.7 to copy y.tab.h's contents into y.tab.cpp
+# instead of #including it, since qmake's renaming to $base_yacc.{h,cpp}
+# breaks the #include.
+#echo "QMAKE_YACCFLAGS_MANGLE = -p $base -b y" >> src/gcconfig.pri
+#echo "QMAKE_YACC_HEADER = y.tab.h"            >> src/gcconfig.pri
+#echo "QMAKE_YACC_SOURCE = y.tab.cpp"          >> src/gcconfig.pri
+# But that breaks parallel builds (multiple build steps produce temporary files
+# with the same y.tab.{h,cpp} names).  Make the files available by both names.
+sed -i 's|^#\(QMAKE_MOVE =\) cp|\1 ln -sf|' src/gcconfig.pri
+
+# Required GSL support.
+echo "GSL_INCLUDES = $(pkg-config --cflags gsl)" >> src/gcconfig.pri
+echo "GSL_LIBS = $(pkg-config --libs gsl)"       >> src/gcconfig.pri
+
+# Enable optional dependencies found in stock Slackware.
+sed -i 's|^#\(ICAL_INSTALL =\).*|\1 /usr|'        src/gcconfig.pri
+sed -i 's|^#\(LIBUSB_INSTALL =\).*|\1 /usr|'      src/gcconfig.pri
+sed -i 's|^#\(LIBUSB_USE_V_1 = true\)\>|\1|'      src/gcconfig.pri
+sed -i 's|^#\(SAMPLERATE_INSTALL =\).*|\1 /usr|'  src/gcconfig.pri
+sed -i 's|^#\(CONFIG   += link_pkgconfig\)\>|\1|' src/gcconfig.pri
+sed -i 's|^#\(PKGCONFIG =\).*|\1|'                src/gcconfig.pri
+sed -i 's|^#\(LIBZ_INCLUDE =\).*|\1|'             src/gcconfig.pri
+sed -i 's|^#\(LIBZ_LIBS    = -lz\)\>|\1|'         src/gcconfig.pri
+sed -i 's|^\(DEFINES += GC_VIDEO_NONE\)\>|#\1|'   src/gcconfig.pri
+sed -i 's|^#\(DEFINES += GC_VIDEO_QT5\)\>|\1|'    src/gcconfig.pri
+
+# Optional Python support.  Regenerate the SIP files.
+echo "DEFINES += GC_WANT_PYTHON"                             >> src/gcconfig.pri
+echo "PYTHONINCLUDES = $(pkg-config --cflags python3-embed)" >> src/gcconfig.pri
+echo "PYTHONLIBS = $(pkg-config --libs python3-embed)"       >> src/gcconfig.pri
+rm -f src/Python/SIP/sip*
+make -C src/Python/SIP -f Makefile.hack
+
+# Optional KML support.
+if pkg-config --exists libkml; then
+  sed -i 's|^#\(KML_INSTALL =\).*|\1 /usr|' src/gcconfig.pri
+fi
+
+# Optional R support.
+if pkg-config --exists libR; then
+  sed -i 's|^#\(DEFINES += GC_WANT_R\)\>|\1|' src/gcconfig.pri
+fi
+
+qmake-qt5 \
+  -recursive \
+  QMAKE_CFLAGS_RELEASE="$SLKCFLAGS" \
+  QMAKE_CXXFLAGS_RELEASE="$SLKCFLAGS" \
+
+make
+install -D -m0755 -s src/GoldenCheetah $PKG/usr/bin/GoldenCheetah
+install -D -m0644 src/Resources/linux/51-garmin-usb.rules $PKG/lib/udev/rules.d/51-garmin-usb.rules
+
+# Generate desktop icon set
+convert -size 512x512 xc:none -fill white -draw "roundrectangle 15,16 487,486 52,52" \
+  src/Resources/images/gc.png -compose Over -composite -crop 475x473+14+15\! logo.png
+for RES in 16 22 24 32 48 64 128 256 512; do
+  mkdir -p $PKG/usr/share/icons/hicolor/${RES}x${RES}/apps
+  convert logo.png -resize ${RES}x${RES}\! $PKG/usr/share/icons/hicolor/${RES}x${RES}/apps/GoldenCheetah.png
+done
+
+mkdir -p $PKG/usr/share/applications
+cp $CWD/GoldenCheetah.desktop $PKG/usr/share/applications/
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

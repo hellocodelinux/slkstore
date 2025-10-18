@@ -1,0 +1,29 @@
+System for Automated Geoscientific Analyses (SAGA) is a Geographic 
+Information System software with immense capabilities for geodata 
+processing and analysis.
+
+SAGA supports the implementation of new functions with an effective 
+API. Functions are organised as modules in framework independent 
+Module Libraries and can be accessed via SAGA's Graphical User 
+Interface or various scripting environments (shell scripts, Python, 
+R and so on).
+
+SAGA can use these optional autodetected dependencies enabled if they 
+are found in the system: 
+libharu, OpenMP, OpenCV, qhull, vigra, pdal, postgresql/postgis, 
+libLAS, proj, hdf5. Previous issues given with OpenCV version 4 or 
+greater and vigra seem solved in last versions of SAGA.
+
+WARNINGS:
+1) Unlike earlier versions of SAGA, the build of last versions 
+   requires wxGTK3 => 3.1 that is not available in Slackbuilds.org at 
+   the moment. If you want to build this version of SAGA you have to 
+   install the package wxWidgets (also available in Slackbuilds.org).
+   If you have both wxGTK3 and wxWidgets installed in your system,
+   make sure that wxWidgets is installed after wxGTK.
+2) SAGA requires an ODBC driver in the system. It works both with 
+   iODBC (installed with the libiodbc package (included in Slackware 
+   15.0) and unixODBC (installed from the SBo's slackbuild). The build 
+   first searches for unixODBC then for iODBC. 
+3) unixODBC is a required dependency in 32 bit systems since the
+   libiodbc headers cause a build failure during the compilation.

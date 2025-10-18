@@ -1,0 +1,31 @@
+The MEME suite: motif based sequence analysis tools
+
+The MEME Suite allows the biologist to discover novel motifs in
+collections of unaligned nucleotide or protein sequences, and to perform
+a wide variety of other motif-based analyses. The Suite supports motif-
+based analysis of DNA, RNA and protein sequences. It provides motif
+discovery algorithms using both probabilistic (MEME) and discrete models
+(MEME), which have complementary strengths. It also allows discovery of
+motifs with arbitrary insertions and deletions (GLAM2). In addition to
+motif discovery, the MEME Suite provides tools for scanning sequences
+for matches to motifs (FIMO, MAST and GLAM2Scan), scanning for clusters
+of motifs (MCAST), comparing motifs to known motifs (Tomtom), finding
+preferred spacings between motifs (SpaMo), predicting the biological
+roles of motifs (GOMo), measuring the positional enrichment of sequences
+for known motifs (CentriMo), and analyzing ChIP-seq and other large
+datasets (MEME-ChIP).
+
+Check README.TESTS for runing the recommended tests on the compiled
+executables. Here, the tests *FAIL* on a 32bit system!
+
+Check README.DATABASES for more info or if you want to install
+meme-suite without the databases present at build time.
+
+To cite the full MEME suite:
+Timothy L. Bailey, Mikael Bodén, Fabian A. Buske, Martin Frith, Charles
+E. Grant, Luca Clementi, Jingyuan Ren, Wilfred W. Li, William S. Noble, 
+"MEME SUITE: tools for motif discovery and searching", Nucleic Acids
+Research, 37:W202-W208, 2009.
+
+To cite individual tools, please check the citation page:
+http://meme-suite.org/doc/cite.html

@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# Slackware build script for SLADE
+
+# Copyright 2015 Dugan Chen Canada
+# Copyright 2020 B. Watson
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20241017 bkw: BUILD=2, update for lua 5.4.
+# - no changes; just bump BUILD so people know to rebuild it.
+
+# 20230716 bkw: update for v3.2.4.
+# 20220616 bkw: update for v3.2.1.
+
+# 20220208 bkw:
+# - grr. add missing 'fmt' dep. my bad.
+# - autodetect wxWebView support in wxGTK3. also my bad.
+
+# 20211118 bkw:
+# - update for v3.2.0_b3. normally won't package a beta, but
+#   3.1.12a and 3.1.13 won't build, and life is too short.
+# - our wxGTK3 now has wxWebView, get rid of -DNO_WEBVIEW.
+# - /usr/share/slade3 moved to /usr/share/games/slade3.
+# - new- and old-style icons.
+# - add p7zip dep (the build process recompresses the .pk3).
+
+# 20201109 bkw: update for v3.1.12a
+# 20200416 bkw:
+# - take over maintenance
+# - update for v3.1.11
+# - binary in /usr/games
+# - install icon in right place, symlink to old location
+# - get rid of our .desktop file (upstream provides one now)
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=SLADE
+VERSION=${VERSION:-3.2.6}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# 20200416 bkw: game binaries do not belong in /usr/bin.
+sed -i 's,\<bin\>,games,' src/CMakeLists.txt
+
+# 20211118 bkw: pk3 file belongs in /usr/share/games/slade3.
+sed -i '/auto *dir_slade_pk3/s,=.*,= string("/usr/share/games/slade3/slade.pk3");,' \
+       src/Archive/ArchiveManager.cpp
+sed -i 's,share/slade3,share/games/slade3,' src/CMakeLists.txt
+
+# 20211118 bkw: I was gonna change the category in the .desktop file,
+# but looking at the spec, I don't see a GameEditor or similar.
+sed -i -e 's,  *$,,' -e 's,^Exec=,&/usr/games/,' *.desktop
+
+# 20200416 bkw: don't depend on unstable /usr/bin/wx-config symlink.
+# stupid thing insists on searching for wx-config in PATH, instead of
+# allowing us to explicitly give a full path and name for the script, so:
+WXCONF=/usr/lib$LIBDIRSUFFIX/wx/config/gtk3-unicode-3.2
+WXTMP=$( pwd )/wxtmp
+mkdir -p $WXTMP
+ln -s $WXCONF $WXTMP/wx-config
+
+# Note to self: don't try this:
+#    -DCMAKE_C_COMPILER=clang \
+#    -DCMAKE_CXX_COMPILER=clang++ \
+# It might compile OK but it will fail to run due to C++ ABI
+# version differences between the slade binary and the wx libraries.
+# We'd have to compile wxGTK3 with clang++ to make it work (and that
+# would break everything else using g++ and wxGTK3!)
+
+# Also, this build isn't ccache-able due to using precompiled headers
+# with g++ (see overly detailed discussion in games/mame). It's possible
+# to disable PCH, thus:
+#    -DNO_COTIRE=ON \
+# but this makes the build take 3x as long, if it's not cached. Since
+# a non-ccached build with cotire only takes me 5 minutes, I won't go
+# to extreme lengths here like I did for mame.
+
+# 20220208 bkw: I screwed up: I forgot wxGTK3 isn't always built with
+# webkit2gtk (so it doesn't always have wxWebView). slade doesn't
+# autodetect this, so detect it ourselves:
+# 20240928 bkw: Upstream upgraded to wx-3.2, meaning this now uses
+# wxWidgets rather than wxGTK3. Currently, webkit2gtk is listed
+# as a hard dep for wxWidgets, but this is actually incorrect: if
+# wxWidgets is built without webkit2gtk installed, it'll build fine,
+# minus wxWebView support, just like wxGTK3 would. This means wxWidgets
+# should be (and likely will be) changed so that webkit2gtk becomes an
+# optional dep... in which case, this code still applies:
+NO_WEBVIEW_OPT="ON"
+$WXTMP/wx-config --libs | grep -q webview && NO_WEBVIEW_OPT="OFF"
+echo "=== NO_WEBVIEW_OPT='$NO_WEBVIEW_OPT'"
+
+mkdir -p build
+cd build
+  cmake \
+    -DWITH_WXPATH=$WXTMP \
+    -DNO_WEBVIEW=$NO_WEBVIEW_OPT \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release ..
+  make VERBOSE=1
+  make install/strip DESTDIR=$PKG
+cd ..
+
+iconname=$( grep '^Icon=' $PKG/usr/share/applications/*.desktop | cut -d= -f2 )
+rm -rf $PKG/usr/share/icons
+for px in 16 32 48 64 128; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -resize $size dist/res/logo_icon.png $dir/$iconname.png
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$iconname.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a README.md LICENSE* $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

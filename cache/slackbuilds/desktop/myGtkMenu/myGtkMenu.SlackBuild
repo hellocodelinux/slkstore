@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Slackware build script for myGtkMenu
+
+# Original author: Hunter Sezen.
+# Modified and now maintained by B. Watson <urchlay@slackware.uk>.
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240903 bkw:
+# - new maintainer.
+# - update for v1.4 (fork by a different dev).
+# - have to host the 1.4 tarball myself, since it's on google drive, which
+#   isn't exactly wget/curl friendly.
+# - update README and slack-desc: this has been Gtk+3 since v1.3.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=myGtkMenu
+VERSION=${VERSION:-1.4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -eu
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir -p $PRGNAM-$VERSION
+# 20240904 bkw: exclude the precompiled binary.
+tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2 --exclude="$PRGNAM-$VERSION/$PRGNAM"
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+make CFLAGS="$SLKCFLAGS -Wl,-s"
+
+install -Dm0755 $PRGNAM $PKG/usr/bin/$PRGNAM
+install -Dm0644 icons/$PRGNAM.png \
+  $PKG/usr/share/icons/hicolor/32x32/apps/$PRGNAM.png
+install -Dm0644 icons/$PRGNAM.svg \
+  $PKG/usr/share/icons/hicolor/scalable/apps/$PRGNAM.svg
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a License.txt README $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+# 20240903 bkw: the example menu expects to be run from the source dir,
+# massage it into working correctly as part of a package. It's
+# *completely stupid* to include icons in the package just for
+# the example, so make it use icons that are in Slackware already.
+mkdir -p $PKG/usr/share/$PRGNAM/examples
+GI="gnome-icons"
+EX="/usr/share/icons/elementary-xfce"
+sed -e "s,$GI/access.png,$EX/apps/32/access.png," \
+    -e "s,$GI/folder.png,$EX/places/32/folder.png," \
+    -e "s,$GI/gnome-folder.png,$EX/places/32/gnome-folder.png," \
+    -e "s,$GI/media-optical.png,$EX/devices/32/media-optical.png," \
+    -e "s,$GI/sound.png,$EX/mimes/32/sound.png," \
+    -e "s,$GI/gnome-calc2.png,$EX/apps/32/accessories-calculator.png," \
+    -e "s,$GI/gnome-gimp.png,$EX/apps/32/gimp.png," \
+    -e "s,$GI/gnome-gmenu.png,$EX/apps/32/alacarte.png," \
+    -e "s,$GI/text-editor.png,$EX/apps/32/text-editor.png," \
+  < TestMenu.txt \
+  > $PKG/usr/share/$PRGNAM/examples/TestMenu.txt
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

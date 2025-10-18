@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# Slackware build script for gnu-unifont
+
+# Copyright 2010 crocket (crockabiscuit@gmail.com)
+# Copyright 2013-2015 LukenShiro, Italy
+# Copyright 2019-2022 Tomasz Bywalec
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=gnu-unifont
+VERSION=${VERSION:-15.0.01}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SRCNAM=unifont
+DOCFILES="ChangeLog COPYING INSTALL NEWS README"
+FONTFORMATS=${FONTFORMATS:-otf,ttf,pcf,psf,otb}
+
+contains()
+{
+    echo "$1" | grep -qi "\(^\|,\)$2\($\|,\)"
+}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+FONTSCOPIED=0
+
+cd font/precompiled
+
+if contains "$FONTFORMATS" "pcf"; then
+    mkdir -p $PKG/usr/share/fonts/misc
+    cp -a *.pcf.gz $PKG/usr/share/fonts/misc
+
+    FONTSCOPIED=1
+fi
+
+if contains "$FONTFORMATS" "otf"; then
+    mkdir -p $PKG/usr/share/fonts/OTF
+    cp -a *.otf $PKG/usr/share/fonts/OTF
+
+    FONTSCOPIED=1
+fi
+
+if contains "$FONTFORMATS" "ttf"; then
+    mkdir -p $PKG/usr/share/fonts/TTF
+    cp -a *.ttf $PKG/usr/share/fonts/TTF
+
+    FONTSCOPIED=1
+fi
+
+if contains "$FONTFORMATS" "psf"; then
+    mkdir -p $PKG/usr/share/kbd/consolefonts
+    cp -a *.psf.gz $PKG/usr/share/kbd/consolefonts
+
+    FONTSCOPIED=1
+fi
+
+if contains "$FONTFORMATS" "otb"; then
+    mkdir -p $PKG/usr/share/fonts/misc
+
+    # Find BDF and PCF fonts and convert them to OTB format.
+    # If a font exists in both formats then convert the file in BDF format,
+    # as this is the preferred input format for the 'fonttosfnt' tool.
+
+    echo *.bdf.gz | tr ' ' '\n' | sort | sed 's/\.bdf\.gz$//g' > bdf-fonts
+    echo *.pcf.gz | tr ' ' '\n' | sort | sed 's/\.pcf\.gz$//g' > pcf-fonts
+
+    comm -2 bdf-fonts pcf-fonts | tr -d '\t' | \
+    while read font_name; do
+        input_font_file="${font_name}.bdf.gz"
+        echo "Converting '$input_font_file' to OTB format."
+
+        zcat "$input_font_file" | \
+        fonttosfnt -o "$PKG/usr/share/fonts/misc/${font_name}.otb"
+    done
+
+    comm -13 bdf-fonts pcf-fonts | \
+    while read font_name; do
+        input_font_file="${font_name}.pcf.gz"
+        echo "Converting '$input_font_file' to OTB format."
+
+        fonttosfnt -o "$PKG/usr/share/fonts/misc/${font_name}.otb" \
+                   "$input_font_file"
+    done
+
+    FONTSCOPIED=1
+fi
+
+cd -
+
+if [ "$FONTSCOPIED" -eq 0 ]; then
+    echo
+    echo "No fonts selected to be included in the package."
+    echo "Please check value of the FONTFORMATS environment variable."
+    exit 1
+fi
+
+# Keep the fonts names unversioned
+find -L $PKG/usr/share -type f -name "*-$VERSION*" -exec rename -- "-$VERSION" '' {} \;
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCFILES $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

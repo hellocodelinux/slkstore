@@ -1,0 +1,119 @@
+README.Slackware
+================
+
+This file contains some specific instructions to complete the
+installation of zabbix_server on Slackware.
+
+zabbix-java has been moved to a separate package - zabbix_java_gateway
+
+Frontend is now also in a seperate package - zabbix_frontend as it might be installed on a seperate machine
+
+
+You will need to have a working installation of httpd and MariaDB (*) for
+zabbix_server to run. MariaDB server does not have to be on the same box as
+zabbix_server, but they need to be able to communicate and you will need at
+least the MariaDB client on the box that will run zabbix_server.
+
+(*) zabbix can work with MySQL and its forks and PostgreSQL
+databases, but these instructions are for MariaDB, as it is included with
+Slackware.
+
+0) Before running the SlackBuild script
+---------------------------------------
+
+0.1) zabbix group & user
+
+Before running the zabbix_server.SlackBuild script, you will need to create
+the 'zabbix' user and group. The script won't run if these do not exist.
+
+The suggested UID and GID is 228, but you can change this as needed:
+
+  # groupadd -g 228 zabbix
+  # useradd -u 228 -g zabbix -d /dev/null -s /bin/false zabbix
+
+1) Configuring zabbix_server
+----------------------------
+
+Very complete documentation is available online at:
+  https://www.zabbix.com/documentation/
+
+For those in a hurry, here are some basic steps to get zabbix up &
+running:
+
+1.1) Create initial database
+
+On your MariaDB server, connect with full privileges:
+
+  # mysql -u <your_user> -p<your_password>
+
+Create the zabbix database & user:
+
+  mysql> create database zabbix character set utf8mb4 collate utf8mb4_bin;
+  mysql> use mysql;
+  mysql> grant all privileges on zabbix.* to zabbix@<your_zabbix_server> identified by '<your_password>';
+  mysql> flush privileges;
+  mysql> quit
+
+(note: if your MariaDB server and zabbix server are the same, use "localhost"
+ for <your_zabbix_server>)
+
+On your zabbix server, connect to the new database:
+
+  # cd /usr/share/zabbix_server/database/mysql
+  # mysql -h <your_mysql_server> -u zabbix -p<your_password> zabbix
+
+In MariaDB, create the schema & add initial data:
+
+  mysql> source schema.sql;
+  mysql> source images.sql;
+  mysql> source data.sql;
+  mysql> quit
+
+
+1.2) zabbix_server configuration file
+
+A standard configuration file is installed as /etc/zabbix/zabbix_server.conf
+
+You will need to change at least the following lines:
+
+  DBHost=<your_mariadb_server>          (Change if MariaDB is not on localhost)
+  DBUser=zabbix                         ("root" doesn't sound like a good idea)
+  DBPassword=<your_password>            (Change as defined above)
+
+2) Start & Stop scripts for zabbix server
+-----------------------------------------
+
+2.1) Automatic startup and shutdown
+
+If you want to start zabbix_server on system bootup, include these lines in
+your /etc/rc.d/rc.local:
+
+  # Start zabbix_server
+  if [ -x /etc/rc.d/rc.zabbix_server ]; then
+    echo "Starting zabbix server..."
+    /etc/rc.d/rc.zabbix_server start
+  fi
+
+To guarantee a clean shutdown of zabbix_server, include this in
+/etc/rc.d/rc.local_shutdown:
+
+  # Stop zabbix_server
+  if [ -x /etc/rc.d/rc.zabbix_server ]; then
+    echo "Stopping zabbix server..."
+    /etc/rc.d/rc.zabbix_server stop
+  fi
+
+2.2) Make /etc/rc.d/rc.zabbix_server executable
+
+Additionally, you'll have to set the rc script to be executable just like
+any other Slackware rc script:
+
+  # chmod +x /etc/rc.d/rc.zabbix_server
+
+3) Starting zabbix server
+-------------------------
+
+Now you are ready to start zabbix_server by calling the startup script:
+
+  # /etc/rc.d/rc.zabbix_server start
+

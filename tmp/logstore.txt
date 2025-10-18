@@ -1,0 +1,103 @@
+[2025-10-18 02:36:43] inicio
+[2025-10-18 02:36:43] no hay cambios
+[2025-10-18 02:36:43] fin
+[2025-10-18 09:44:06] start
+[2025-10-18 09:44:06] cache directory created
+[2025-10-18 09:44:09] downloaded PACKAGES.TXT.gz
+[2025-10-18 09:44:09] no changes detected
+[2025-10-18 09:44:09] end
+[2025-10-18 09:50:03] start
+[2025-10-18 09:50:04] downloaded new slackbuilds tar GPG-KEY
+[2025-10-18 09:50:04] no changes detected
+[2025-10-18 09:50:04] end
+[2025-10-18 09:54:17] start
+[2025-10-18 09:54:18] slackbuilds up to date GPG-KEY
+[2025-10-18 09:54:18] no changes detected
+[2025-10-18 09:54:18] end
+[2025-10-18 09:54:59] start
+[2025-10-18 09:54:59] slackbuilds up to date GPG-KEY
+[2025-10-18 09:54:59] no changes detected
+[2025-10-18 09:54:59] end
+[2025-10-18 09:57:32] start
+[2025-10-18 09:57:33] slackbuilds up to date GPG-KEY
+[2025-10-18 09:57:33] no changes detected
+[2025-10-18 09:57:33] end
+[2025-10-18 09:58:15] start
+[2025-10-18 09:58:16] slackbuilds up to date GPG-KEY
+[2025-10-18 09:58:16] no changes detected
+[2025-10-18 09:58:16] end
+[2025-10-18 10:00:48] start
+[2025-10-18 10:00:48] slackbuilds up to date GPG-KEY
+[2025-10-18 10:00:48] no changes detected
+[2025-10-18 10:00:48] end
+[2025-10-18 10:02:35] start
+[2025-10-18 10:02:41] downloaded new version 15.0-20251018.1
+[2025-10-18 10:02:41] end
+[2025-10-18 10:05:17] start
+[2025-10-18 10:05:20] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:05:26] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:05:26] no changes detected
+[2025-10-18 10:05:26] end
+[2025-10-18 10:05:36] start
+[2025-10-18 10:05:36] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:05:36] no changes detected
+[2025-10-18 10:05:36] end
+[2025-10-18 10:06:04] start
+[2025-10-18 10:06:05] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:06:05] no changes detected
+[2025-10-18 10:06:05] end
+[2025-10-18 10:09:42] start
+[2025-10-18 10:09:42] cache created
+[2025-10-18 10:09:44] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:09:50] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:09:50] no changes detected
+[2025-10-18 10:09:50] end
+[2025-10-18 10:17:07] start
+[2025-10-18 10:17:14] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:17:14] no changes detected
+[2025-10-18 10:17:14] end
+[2025-10-18 10:31:09] start
+[2025-10-18 10:31:10] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:31:10] no changes detected
+[2025-10-18 10:31:10] end
+[2025-10-18 10:31:13] start
+[2025-10-18 10:31:13] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:31:13] no changes detected
+[2025-10-18 10:31:13] end
+[2025-10-18 10:31:56] start
+[2025-10-18 10:31:59] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:32:06] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:32:08] slackbuilds decompressed for 15.0-20251018.1
+[2025-10-18 10:32:08] rebuilding cache
+[2025-10-18 10:32:14] cache updated
+[2025-10-18 10:32:14] end
+[2025-10-18 10:37:39] start
+[2025-10-18 10:37:41] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:37:47] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:37:47] rebuilding cache
+[2025-10-18 10:37:53] cache updated
+[2025-10-18 10:37:53] end
+[2025-10-18 10:41:17] start
+[2025-10-18 10:41:17] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:41:17] no changes detected
+[2025-10-18 10:41:17] end
+[2025-10-18 10:43:25] start
+[2025-10-18 10:43:26] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:43:26] no changes detected
+[2025-10-18 10:43:26] end
+[2025-10-18 10:43:40] start
+[2025-10-18 10:43:42] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:43:50] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:44:48] start
+[2025-10-18 10:44:48] slackbuilds up to date 15.0-20251018.1
+[2025-10-18 10:44:48] rebuilding cache
+[2025-10-18 10:44:54] cache updated
+[2025-10-18 10:44:54] end
+[2025-10-18 10:48:01] start
+[2025-10-18 10:51:52] start
+[2025-10-18 10:51:54] downloaded PACKAGES.TXT.gz
+[2025-10-18 10:52:01] downloaded new slackbuilds 15.0-20251018.1
+[2025-10-18 10:52:03] extracted slackbuilds to cache/slackbuilds
+[2025-10-18 10:52:03] rebuilding cache
+[2025-10-18 10:52:09] cache updated
+[2025-10-18 10:52:09] end

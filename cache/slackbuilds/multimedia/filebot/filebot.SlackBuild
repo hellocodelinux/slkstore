@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Slackware build script for filebot
+#
+# Copyright 2016-2025 Jeremy Hansen <jebrhansen+SBo -at- gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=filebot
+SRCNAM=FileBot
+VERSION=${VERSION:-5.2.0}
+JNAVER=${JNAVER:-5.13.0}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  LIBDIRSUFFIX=""
+  JNAARCH="x86"
+elif [ "$ARCH" = "x86_64" ]; then
+  LIBDIRSUFFIX="64"
+  JNAARCH="x86-64"
+elif [ "$ARCH" = "arm" ]; then
+  LIBDIRSUFFIX=""
+  JNAARCH="arm"
+elif [ "$ARCH" = "aarch64" ]; then
+  LIBDIRSUFFIX=""
+  JNAARCH="aarch64"
+else
+  echo "Package for $(uname -m) architecture is not available."
+  exit 1
+fi
+
+set -eu
+
+rm -rf $PKG $TMP/jna
+mkdir -p $TMP $PKG $OUTPUT $TMP/jna
+cd $TMP/jna
+unzip $CWD/jna-$JNAVER.jar
+cd $PKG
+ar p $CWD/${SRCNAM}_${VERSION}_universal.deb data.tar.xz | unxz | tar xv
+
+mkdir -p $PKG/usr/share/filebot/lib/$(uname -m)
+cp $TMP/jna/com/sun/jna/linux-$JNAARCH/libjnidispatch.so $PKG/usr/share/filebot/lib/$(uname -m)
+cp $CWD/jna-$JNAVER.jar $PKG/usr/share/filebot/jar/jna.jar
+
+# Clean up the .desktop file to only have one category
+sed -i 's|AudioVideo;Video;Utility;FileTools;|Utility|' $PKG/usr/share/applications/filebot.desktop
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+# Create launcher file in /usr/bin/
+mkdir -p $PKG/usr/bin/
+cat << EOF > $PKG/usr/bin/filebot
+#!/bin/bash
+#
+# Launcher for FileBot
+
+/usr/share/filebot/bin/filebot.sh "\$@"
+EOF
+chmod 0755 $PKG/usr/bin/filebot
+
+# Ensure it uses the proper jna library
+SEDSEARCH="-Djna.boot.library.name=jnidispatch.system"
+SEDREPLACE='-Djna.boot.library.path=\"$LIBRARY_PATH\" -Djna.library.path=\"$LIBRARY_PATH\" -Djava.library.path=\"$LIBRARY_PATH\"'
+sed -i "s|$SEDSEARCH|$SEDREPLACE|" $PKG/usr/share/filebot/bin/filebot.sh
+
+# Set the correct paths
+sed -i "s|LIBRARY_PATH=.*|LIBRARY_PATH=\$FILEBOT_HOME/lib/\$(uname -m):/usr/lib$LIBDIRSUFFIX|" $PKG/usr/share/filebot/bin/filebot.sh
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

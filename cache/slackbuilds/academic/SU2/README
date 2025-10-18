@@ -1,0 +1,33 @@
+SU2 - Open-Source CFD code
+
+Open-source suite for Partial Differential Equation (PDE) analysis and
+PDE-constrained optimization problems. Designed with Computational
+Fluid Dynamics (CFD) and aerodynamic shape optimization in mind, but
+extensible to arbitrary sets of governing equations such as potential
+flow, elasticity, electrodynamics, chemically-reacting flows, and many
+others. Under active development by individuals all around the world
+on GitHub and is released under an open-source license.
+
+Optional dependencies: mpich or openmpi; OpenBLAS
+
+Build options can be controlled by passing MESONOPTS to the SlackBuild
+script.
+
+Builds parallel version by default if mpich or openmpi installed. If
+mpich, use:
+
+MESONOPTS="-Dcustom-mpi=true -Dextra-deps=mpich"
+
+For OpenBlas, add "-Denable-openblas=true"
+
+See the docs for a complete list of options.
+
+Following installation, add these to your ~/.bashrc:
+
+export SU2_RUN=/usr/bin
+export PATH=$PATH:$SU2_RUN
+export PYTHONPATH=$PYTHONPATH:$SU2_RUN
+
+Warning: This SlackBuild requires network access when it runs, meaning
+it downloads files from the Internet with root access. You should
+decide for yourself whether or not you think this is a good idea.

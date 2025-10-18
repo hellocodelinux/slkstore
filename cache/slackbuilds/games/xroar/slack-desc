@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+xroar: xroar (emulator for 6809-based systems)
+xroar:
+xroar: XRoar emulates the Dragon 32/64; Tandy Colour Computers 1, 2 and 3;
+xroar: the Tandy MC-10; and some other similar machines or clones. It runs
+xroar: on a wide variety of platforms.
+xroar:
+xroar: This package is built with:
+xroar:   ALSA: @ALSA@ | PulseAudio: @PULSE@ | OSS: @OSS@ | JACK: @JACK@
+xroar:
+xroar:
+xroar:

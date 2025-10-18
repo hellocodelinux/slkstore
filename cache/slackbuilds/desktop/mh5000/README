@@ -1,0 +1,7 @@
+mh5000 (X11 background image setter and viewer)
+
+mh5000 is a background image setter. It's capable of scaling,
+cropping, and tiling images, and it supports changing images according
+to a timer (a slideshow). It can choose images randomly or display
+them in order. It can also set the background to solid or gradient
+color patterns.

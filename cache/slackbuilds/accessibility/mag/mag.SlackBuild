@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Slackware build script for mag
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# VERSION comes from the last modified date on the homepage.
+
+# 20211207 bkw: BUILD=2
+# - fix blank window on -current (it shouldn't have worked on 14.2 either).
+# - add BUGS to man page (no way to exit mag).
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=mag
+VERSION=${VERSION:-20100913}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+# Since it's just a single C source file, we don't have a
+# $TMP/$PRGNAM-$VERSION and don't need find/chown/chmod stuff.
+# In case you're wondering, -Wl,-s builds a stripped binary.
+rm -rf $PKG
+mkdir -p $PKG/usr/bin $OUTPUT
+
+cd $PKG
+
+# 20211207 bkw: we *do* have to patch it now, and we don't want
+# to write to $CWD, so:
+cat $CWD/$PRGNAM.c > $PRGNAM.c
+
+# 20211207 bkw: silly mistake in the code: it was calling
+# XDestroyImage(ximage) before the for loop that *uses* ximage.
+# On 14.2's X, this was equivalent to a use-after-free, and worked
+# accidentally most (or even all) of the time, but on -current's X,
+# it results in a blank (all-black) window.
+patch -p0 < $CWD/xdestroyimage.diff
+
+gcc $SLKCFLAGS -Wl,-s -o $PKG/usr/bin/$PRGNAM $PRGNAM.c -lX11
+rm $PRGNAM.c
+
+# Man page written by SlackBuild author. Please don't include mag.rst
+# in the package, it's the source for the man page only.
+mkdir -p $PKG/usr/man/man1
+gzip -9c < $CWD/$PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+# Include our own README.
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/README > $PKG/usr/doc/$PRGNAM-$VERSION/README
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

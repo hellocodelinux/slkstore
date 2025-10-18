@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                     |-----handy-ruler------------------------------------------------------|
+ttf-paratype-pt-fonts: ttf-paratype-pt-fonts (ParaType free fonts)
+ttf-paratype-pt-fonts:
+ttf-paratype-pt-fonts: This package contains 7 free OFL licensed fonts released in 2009-2019
+ttf-paratype-pt-fonts: by the ParaType company. The fonts include 35 styles and cover a long
+ttf-paratype-pt-fonts: list of Eurasian languages based on Latin and Cyrillic scripts.
+ttf-paratype-pt-fonts:
+ttf-paratype-pt-fonts:
+ttf-paratype-pt-fonts: Homepage: https://www.paratype.com/catalog?freefonts=true
+ttf-paratype-pt-fonts:
+ttf-paratype-pt-fonts:
+ttf-paratype-pt-fonts:

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=SmartSVN
+Keywords=svn;subversion
+GenericName=SVN Client
+Type=Application
+Categories=Development;RevisionControl
+Terminal=false
+StartupNotify=true
+Exec=smartsvn %f
+MimeType=x-scheme-handler/smartsvn
+Icon=smartsvn

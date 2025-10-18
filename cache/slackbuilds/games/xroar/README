@@ -1,0 +1,12 @@
+xroar (emulator for 6809-based systems)
+
+XRoar emulates the Dragon 32/64; Tandy Colour Computers 1, 2 and 3;
+the Tandy MC-10; and some other similar machines or clones. It runs
+on a wide variety of platforms. For more information on the Dragon and
+CoCo computers, see:
+
+http://en.wikipedia.org/wiki/TRS-80_Color_Computer
+http://archive.worldofdragon.org/index.php?title=Main_Page
+http://archive.worldofdragon.org/archive/index.php
+
+For optional dependencies and build options, see README_SBo.txt.

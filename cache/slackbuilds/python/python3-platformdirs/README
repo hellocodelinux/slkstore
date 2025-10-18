@@ -1,0 +1,2 @@
+platformdirs is a small Python module for determining appropriate
+platform-specific directories, e.g. a "user data dir".

@@ -1,0 +1,11 @@
+libvslvm (libYAL Linux LVM library)
+
+Library to access the Linux Logical Volume Manager (LVM) volume system
+format.
+
+Not supported:
+
+* multiple physical volumes
+* multiple segments
+* non-linear stripes
+* snapshots

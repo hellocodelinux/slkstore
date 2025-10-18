@@ -1,0 +1,25 @@
+Gallium Nine allows to run any Direct3D 9 application with nearly no CPU
+overhead, which provides a smoother gaming experience and increased FPS.
+
+Gallium Nine Standalone, as the name implies, is a standalone version of
+the WINE parts of Gallium Nine.
+
+This decouples Gallium Nine from the WINE tree, so that it can be used
+with any WINE version. There is no need for any WINE patches. A stable,
+development, or staging WINE release is sufficient.
+
+wine-nine-standalone can only be used with gallium drivers provided by
+mesa, this includes nouveau, r600 and radeonsi users.
+
+To enable 64-bit support wine must be built with wine64.
+
+  WIN64=yes ./wine.SlackBuild
+
+To build on a pure Slackware64 install 32-bit wine must be disabled.
+
+  WIN32=no WIN64=yes ./wine.SlackBuild
+
+On multilib systems pkgconf is required.
+
+On Slackware 14.2 multilib systems compat32 packages of both kbproto and
+xproto are also required.

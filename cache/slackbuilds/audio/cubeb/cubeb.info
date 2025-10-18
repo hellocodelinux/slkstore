@@ -1,0 +1,14 @@
+PRGNAM="cubeb"
+VERSION="20230825_3f86a06"
+HOMEPAGE="https://github.com/mozilla/cubeb"
+DOWNLOAD="https://github.com/mozilla/cubeb/archive/3f86a06fcee0ee738db8d0747bf291df8d12ef07/cubeb-3f86a06fcee0ee738db8d0747bf291df8d12ef07.tar.gz \
+          https://github.com/google/googletest/archive/40412d85124f7c6f3d88454583c4633e5e10fc8c/googletest-40412d85124f7c6f3d88454583c4633e5e10fc8c.tar.gz \
+          https://github.com/arsenm/sanitizers-cmake/archive/aab6948fa863bc1cbe5d0850bc46b9ef02ed4c1a/sanitizers-cmake-aab6948fa863bc1cbe5d0850bc46b9ef02ed4c1a.tar.gz"
+MD5SUM="39ef157697f709b524d0c2c9fd5385ec \
+        875f461cd87598454cc16547fcb22132 \
+        0492fedbd255d1d831db432c2578a0c1"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES=""
+MAINTAINER="Steven Voges"
+EMAIL="svoges.sbo@gmail.com"

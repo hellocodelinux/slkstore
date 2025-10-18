@@ -1,0 +1,18 @@
+PRGNAM="avogadrolibs"
+VERSION="1.100.0"
+HOMEPAGE="https://github.com/OpenChemistry/avogadrolibs"
+DOWNLOAD="https://github.com/OpenChemistry/avogadrolibs/archive/1.100.0/avogadrolibs-1.100.0.tar.gz \
+          https://github.com/OpenChemistry/molecules/archive/1.98.0/molecules-1.98.0.tar.gz \
+          https://github.com/OpenChemistry/crystals/archive/1.98.0/crystals-1.98.0.tar.gz \
+          https://github.com/OpenChemistry/avogenerators/archive/1.98.0/avogenerators-1.98.0.tar.gz \
+          https://github.com/OpenChemistry/fragments/archive/1.99.0/fragments-1.99.0.tar.gz"
+MD5SUM="dc3b6f832aa7e06b420b96467b5980d9 \
+        789264f5a03f37bf336d2904abe9cd3d \
+        07733a52b8a6572adb353abb6044d6f6 \
+        74b508114f30f469256a19ebc4996f87 \
+        4dd9a11d0e07503cf468ea97c5e94359"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES="cmake-opt molequeue mmtf-cpp libmsym spglib"
+MAINTAINER="Giancarlo Dessi"
+EMAIL="slack@giand.it"

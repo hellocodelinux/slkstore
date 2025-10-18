@@ -1,0 +1,61 @@
+Thar be bears!
+==============
+The SOGo group recommends the following versions of gnustep-make and
+gnustep-base when running SOGo:
+
+  * gnustep-make version 2.6.6
+  * gnustep-base version 1.24.6
+
+Running SOGo with versions other than the ones suggested can result in
+SOGo not working properly and many hours of time wasted until you
+happen upon just the right forum post that explains the situation.
+
+How do I configure this?
+========================
+Documentation for this project can be found at
+https://sogo.nu/support.html#/documentation.
+
+Automatically starting SOGo
+===========================
+To start SOGo automatically at system startup, add the following to
+your /etc/rc.d/rc.local:
+
+  if [ -x /etc/rc.d/rc.sogod ]; then
+    /etc/rc.d/rc.sogod start
+  fi
+
+To stop sogo automatically at system shutdown, add the following to
+your /etc/rc.d/rc.local_shutdown:
+
+  if [ -x /etc/rc.d/rc.sogod ]; then
+    /etc/rc.d/rc.sogod stop
+  fi
+
+Adding users
+============
+Users are automatically added to the SOGo groupware server whenever they
+successfully log in with valid IMAP credentials.
+
+Removing users
+==============
+Removing a user from the SOGo groupware server requires the use of the
+sogo-tool utility.  You can remove a user like so:
+
+  $ /usr/sbin/sogo-tool remove USERID
+
+Configuration file issues
+=========================
+The documentation outlines the format required when trying to specify
+TLS with the SOGoIMAPServer and SOGoSieveServer values in the
+/etc/sogo/sogo.conf file.  Unfortunately, what is described doesn't
+work.  In order to use TLS with these two values, you will need to
+quote the parameters, like so:
+
+  ..
+  SOGoIMAPServer = "imap://127.0.0.1:143/?tls=YES";
+  ..
+  SOGoSieveServer = "sieve://127.0.0.1:4190/?tls=YES";
+  ..
+
+If you ignore the quotes, these two parameters will not work when using
+TLS.

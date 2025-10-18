@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Slackware build script for nevernoid
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211025 bkw: BUILD=3, new-style icons.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=nevernoid
+VERSION=${VERSION:-1.2}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# Binary-only package, so no CFLAGS here
+case "$ARCH" in
+  i?86)   PARCH=x86 ; ARCH=i586 ;;
+  x86_64) PARCH=x64 ;;
+  *) echo "Unsupported ARCH '$ARCH'" 1>&2 ; exit 1 ;;
+esac
+
+PVER=${VERSION//./}
+ARCHIVE="NeverNoid_v${PVER}_linux_${PARCH}.tar.gz"
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM
+tar xvf $CWD/$ARCHIVE
+cd $PRGNAM
+
+# Upstream fixed a bug in one of the maps, as a separate download.
+# Some dumb browsers might save the file with %20 where the spaces belong.
+BIRDY="$CWD/watch the birdy.zip"
+[ ! -e "$BIRDY" ] && BIRDY="$CWD/watch%20the%20birdy.zip"
+unzip "$BIRDY"
+mv "watch the birdy.map" maps/
+
+chown -R root:root .
+find . -type f -print0 | xargs -0 chmod 644
+find . -type d -print0 | xargs -0 chmod 755
+
+mkdir -p $PKG/usr/libexec $PKG/usr/games $PKG/usr/share/$PRGNAM
+install -m0755 -o root -g root $PRGNAM $PKG/usr/libexec
+cp -r fonts maps music sounds sprites $PKG/usr/share/$PRGNAM
+
+# game expects to be run from within its data directory like a windows app,
+# and expects to write highscore/settings data to the same place. Wrapper
+# script allows system-wide installation with per-user data.
+install -m0755 -o root -g root $CWD/$PRGNAM.wrapper $PKG/usr/games/$PRGNAM
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+sed 's/\r//g' readme.txt > $PKG/usr/doc/$PRGNAM-$VERSION/readme.txt
+cat $CWD/README > $PKG/usr/doc/$PRGNAM-$VERSION/README_SBo.txt
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/usr/share/applications
+cp $CWD/$PRGNAM.desktop $PKG/usr/share/applications
+
+# Oddly, there's no win32 icon for this game...
+# Don't laugh, I made this icon from a screenshot of the title screen
+# in the gimp. Took about 10 minutes plus lots of cussing & head-scratching.
+# If anyone who actually knows anything at all about graphic design would
+# like to do a better icon, email me.
+for px in 16 32 48 64; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -resize $size $CWD/$PRGNAM.png $dir/$PRGNAM.png
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

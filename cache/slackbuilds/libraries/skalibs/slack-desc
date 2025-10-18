@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+skalibs: skalibs (general-purpose C libraries for skarnet.org software)
+skalibs:
+skalibs: skalibs is a package centralizing the free software / open source C
+skalibs: development files used for building all software at skarnet.org: it
+skalibs: contains essentially general-purpose libraries. You will need to
+skalibs: install skalibs if you plan to build skarnet.org software. skalibs can
+skalibs: also be used as a general-purpose library. It is very suitable for
+skalibs: creating small and secure system programs.
+skalibs:
+skalibs: Homepage: https://skarnet.org/software/skalibs/
+skalibs:

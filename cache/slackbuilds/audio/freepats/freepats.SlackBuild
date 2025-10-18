@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Slackware build script for freepats
+
+# Copyright 2010-2018 Kyle Guinn <elyk03@gmail.com>, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20230111 bkw: Modified by SlackBuilds.org, BUILD=3:
+# - Create config file symlink at /etc/timidity.cfg, because Slackware's
+#   SDL-1.2 looks there for it. Doing this makes the music work in odamex,
+#   and various other games. Also add a douninst.sh that removes the
+#   symlinks *if* they point to crude.cfg, to make it possible to switch
+#   between freepats and eawpats without having to manually update the
+#   symlinks.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=freepats
+VERSION=${VERSION:-20060219}
+ARCH=noarch
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+DOCS="COPYING README"
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM
+tar xvf $CWD/$PRGNAM-$VERSION.tar.xz
+cd $PRGNAM
+chown -R root:root .
+chmod -R u+w,go-w,a+rX-st .
+
+mkdir -p $PKG/usr/share/sounds/$PRGNAM $PKG/etc/timidity
+cp -a Drum_000 Tone_000 $PKG/usr/share/sounds/$PRGNAM
+cat crude.cfg > $PKG/etc/timidity/crude.cfg.new
+cat freepats.cfg > $PKG/etc/timidity/freepats.cfg.new
+
+# Modify the sample TiMidity++ configuration files so that
+# TiMidity++ will be able to find the patch files.
+sed -i "4idir /usr/share/sounds/$PRGNAM\n" $PKG/etc/timidity/freepats.cfg.new
+sed -i "10idir /usr/share/sounds/$PRGNAM\n" $PKG/etc/timidity/crude.cfg.new
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+cat $CWD/douninst.sh > $PKG/install/douninst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

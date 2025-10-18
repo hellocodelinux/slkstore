@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Bristol
+GenericName=Synthesizer Emulator
+Type=Application
+Exec=launch-bristol
+Terminal=false
+Icon=bristol
+Categories=AudioVideo;Audio;

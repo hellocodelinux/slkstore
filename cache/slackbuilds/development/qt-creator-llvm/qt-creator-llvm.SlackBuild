@@ -1,0 +1,137 @@
+#!/bin/bash
+
+# Slackware build script for LLVM/Clang tools for Qt Creator
+
+# Copyright 2020 Andrzej Telszewski, Szczecin
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=qt-creator-llvm
+VERSION=${VERSION:-13.0.0_d7b669b}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.?z
+cd $PRGNAM-$VERSION
+
+mv clang-tools-extra clang/tools/extra
+mv clang llvm/tools/clang
+
+cd llvm
+
+chown -R root:root .
+chmod -R a-st,u+rwX,go-w+rX .
+
+# Exceptionally, copy docs before the build starts.  This can save quite
+# some script development time should one of the files be missing.
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION/{clang,clang-tools-extra}
+mkdir -p $PKG/install
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cp -a CODE_OWNERS.TXT CREDITS.TXT LICENSE.TXT README.txt RELEASE_TESTERS.TXT \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+
+( cd tools/clang
+  cp -a CODE_OWNERS.TXT LICENSE.TXT NOTES.txt README.txt                \
+    $PKG/usr/doc/$PRGNAM-$VERSION/clang
+  cp -a tools/extra/{CODE_OWNERS.TXT,LICENSE.TXT,README.txt}            \
+    $PKG/usr/doc/$PRGNAM-$VERSION/clang-tools-extra
+)
+
+# Build LLVM/Clang proper.
+
+mkdir -p build
+cd build
+  cmake                                                 \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS"                 \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS"               \
+    -DCMAKE_INSTALL_PREFIX=/usr/libexec/qtcreator/clang \
+    -DLLVM_LIBDIR_SUFFIX=                               \
+    -DCMAKE_BUILD_TYPE=Release                          \
+    -DLLVM_BUILD_LLVM_DYLIB=ON                          \
+    -DLLVM_LINK_LLVM_DYLIB=ON                           \
+    -DLLVM_ENABLE_RTTI=ON                               \
+    -DLLVM_ENABLE_ASSERTIONS=OFF                        \
+    ..
+  make
+  make install DESTDIR=$PKG
+cd ..
+
+# Remove uneeded components (reduce package size).
+
+find $PKG/usr/libexec/qtcreator/clang/bin -mindepth 1 -not          \
+  \( -name clang  -o -name clang-[0-9]\*    -o -name clang-tidy -o  \
+     -name clangd -o -name llvm-config \) \
+  -exec rm {} \;
+
+rm -rf $PKG/usr/libexec/qtcreator/clang/libexec
+rm -rf $PKG/usr/libexec/qtcreator/clang/share
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

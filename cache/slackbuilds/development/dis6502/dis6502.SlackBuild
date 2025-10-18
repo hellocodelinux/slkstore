@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Slackware build script for dis6502
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230516 bkw: *finally* updated after almost 6 years. upstream moved
+# to github but didn't update or remove the old website...
+# - updated for latest git (0.15+2857fc3_20180311). used latest git
+#   rather than the last release because there's a critical bugfix:
+#   release was missing the LSR zeropage opcode.
+# - use upstream's man page, now that there is one. though I had to
+#   patch it to add a couple options that aren't mentioned there.
+# - get rid of no-longer-needed compilefix and helpformat patches.
+# - mention the predefs files in README.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=dis6502
+VERSION=${VERSION:-0.15+2857fc3_20180311}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+TARVER="$( echo $VERSION | cut -d+ -f1 )"
+GITVER="$( echo $VERSION | cut -d+ -f2 )"
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$TARVER
+tar xvf $CWD/$PRGNAM-$TARVER.tar.gz
+cd $PRGNAM-$TARVER
+chown -R root:root .
+chmod 644 *
+
+# Patch was made by editing the man page. Documents a few options
+# that are in the help output, cleans up the formatting, and fixes
+# the synopsis.
+patch -p1 < $CWD/manpage.diff
+
+# Patch was made by cloning upstream's repo and doing a 'git diff v0.15'.
+patch -p1 < $CWD/$GITVER.diff
+
+make CFLAGS="$SLKCFLAGS -fcommon"
+
+mkdir -p $PKG/usr/bin $PKG/usr/man/man1
+install -s -m0755 $PRGNAM $PKG/usr/bin
+gzip -9c < $PRGNAM.1 > $PKG/usr/man/man1/$PRGNAM.1.gz
+
+# c64.predefs file is a modified version of the one from the
+# comp.sources.amiga v02i053 release. atari8.predefs file was created
+# by the SlackBuild author.
+mkdir -p $PKG/usr/share/$PRGNAM
+cat $CWD/c64.predefs > $PKG/usr/share/$PRGNAM/c64.predefs
+cat $CWD/atari8.predefs > $PKG/usr/share/$PRGNAM/atari8.predefs
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a README* COPYING $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

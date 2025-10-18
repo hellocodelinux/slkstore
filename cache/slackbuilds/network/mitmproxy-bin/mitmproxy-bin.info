@@ -1,0 +1,12 @@
+PRGNAM="mitmproxy-bin"
+VERSION="9.0.1"
+HOMEPAGE="https://mitmproxy.org/"
+DOWNLOAD="UNSUPPORTED"
+MD5SUM=""
+DOWNLOAD_x86_64="https://snapshots.mitmproxy.org/9.0.1/mitmproxy-9.0.1-linux.tar.gz \
+                 https://github.com/mitmproxy/mitmproxy/archive/9.0.1/mitmproxy-9.0.1.tar.gz"
+MD5SUM_x86_64="30da921ebfb0b4a5020e4eee82e4b0d6 \
+               7cd164f90c348ca05f23606971f88e2b"
+REQUIRES=""
+MAINTAINER="B. Watson"
+EMAIL="urchlay@slackware.uk"

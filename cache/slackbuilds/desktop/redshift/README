@@ -1,0 +1,8 @@
+redshift (screen colour adjuster)
+
+Redshift adjusts the colour temperature of your screen according to
+your surroundings. This may help your eyes if you are working in front
+of the screen at night.
+
+This package has a dependency on geoclue2, however it will compile the
+package without it if geoclue2 is not present.

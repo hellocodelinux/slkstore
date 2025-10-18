@@ -1,0 +1,156 @@
+#!/bin/bash
+
+# Slackware build script for oracle-instantclient-basic
+
+# Copyright 2015 Dhaby Xiloj <slack.dhabyx@gmail.com> Guatemala
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=oracle-instantclient-basic
+VERSION=${VERSION:-21.5.0.0.0}
+SRCVER=${SRCVER:-21.5.0.0.0-1}
+RELEASE=${RELEASE:-1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+ORAVER="21"
+
+if [ -z "$ARCH" ]; then
+  ARCH=$( uname -m )
+fi
+
+# 2023-05-16 DW: moved above PRINT_PACKAGE_NAME
+if [ "$ARCH" = "x86_64" ]; then
+  LIBDIRSUFFIX="64"
+else
+  echo "$ARCH architecture is unsupported." >/dev/stderr
+  exit 1
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+
+# recreating the name of the RPM
+RPMNAM="$PRGNAM-$VERSION-$RELEASE.$ARCH.rpm"
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $PKG
+rpm2cpio < $CWD/$RPMNAM | cpio -imdv
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+if [ "$LIBDIRSUFFIX" = "64" ]; then
+    mv $PKG/usr/lib $PKG/usr/lib${LIBDIRSUFFIX}
+fi
+
+# 2023-05-16 DW: I think this is safer on a single line
+ORACLE_CLIENT_HOME="/usr/lib${LIBDIRSUFFIX}/oracle/${ORAVER}/client${LIBDIRSUFFIX}"
+
+# Testing if ORACLE already installed
+if [ "$ORACLE_HOME" ]; then
+    # make symbolic links to client apps
+    mkdir -p $PKG/$ORACLE_HOME/bin
+    for app in $(ls $PKG/${ORACLE_CLIENT_HOME}/bin) ; do
+        ln -sf $ORACLE_CLIENT_HOME/bin/$app \
+            $PKG/$ORACLE_HOME/bin/
+    done
+fi
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Making csh file for profile.d
+mkdir -p $PKG/etc/profile.d/
+cat << EOF > $PKG/etc/profile.d/$PRGNAM.csh
+#!/bin/csh
+setenv ORACLE_CLIENT_HOME ${ORACLE_CLIENT_HOME}
+
+# 2023-05-16 DW: csh syntax
+if ( ! \$?ORACLE_HOME ) then
+  setenv ORACLE_HOME \$ORACLE_CLIENT_HOME
+endif
+
+# 2023-05-16 DW: csh uses a lowercase path array
+set path = ( \$path \$ORACLE_CLIENT_HOME/bin )
+
+# 2023-05-16 DW: will set this, but braces to stop : modifier errors
+setenv PATH \${PATH}:\${ORACLE_CLIENT_HOME}/bin
+
+# 2023-05-16 DW: test if CLASSPATH is set or not to avoid errors
+if ( \$?CLASSPATH ) then
+  setenv CLASSPATH \${CLASSPATH}:\${ORACLE_CLIENT_HOME}/lib/ojdbc6.jar
+else
+  setenv CLASSPATH \${ORACLE_CLIENT_HOME}/lib/ojdbc6.jar
+endif
+
+# 2023-05-16 DW: it seems that this is also needed
+if ( \$?LD_LIBRARY_PATH ) then
+  setenv LD_LIBRARY_PATH \${LD_LIBRARY_PATH}:\${ORACLE_CLIENT_HOME}/lib
+else
+  setenv LD_LIBRARY_PATH \${ORACLE_CLIENT_HOME}/lib
+endif
+EOF
+
+# Making sh file for profile.d
+cat << EOF > $PKG/etc/profile.d/$PRGNAM.sh
+#!/bin/sh
+export ORACLE_CLIENT_HOME=${ORACLE_CLIENT_HOME}
+
+if [ -z "\$ORACLE_HOME" ]; then
+    export ORACLE_HOME=\$ORACLE_CLIENT_HOME
+fi
+
+export PATH=\$PATH:\$ORACLE_CLIENT_HOME/bin
+export CLASSPATH=\$CLASSPATH:\$ORACLE_CLIENT_HOME/lib/ojdbc6.jar
+
+# 2023-05-16 DW: add this here too JIC (untested)
+if [ "\$LD_LIBRARY_PATH" ]; then
+  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$ORACLE_CLIENT_HOME/lib
+else
+  export LD_LIBRARY_PATH=\$ORACLE_CLIENT_HOME/lib
+fi
+EOF
+chmod 755 $PKG/etc/profile.d/*sh
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

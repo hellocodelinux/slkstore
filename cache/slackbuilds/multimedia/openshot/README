@@ -1,0 +1,7 @@
+OpenShot Video Editor is a free, open-source, non-linear video editor.
+It can create and edit videos and movies using many popular video,
+audio, and image formats.
+
+Blender is an optional runtime dependency (for animated titles),
+as is inkscape. To use them, set the full paths for the blender and
+inkscape executables in the preferences menu.

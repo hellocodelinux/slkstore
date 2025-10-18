@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+   |-----handy-ruler------------------------------------------------------|
+zim: zim (A Desktop Wiki Editor)
+zim:
+zim: Zim is a graphical text editor used to maintain a collection of wiki
+zim: pages. Each page can contain links to other pages, simple formatting,
+zim: and images. Pages are stored in a folder structure, like in an
+zim: outliner, and can have attachments.
+zim:
+zim:
+zim:
+zim: Homepage: http://zim-wiki.org/
+zim:

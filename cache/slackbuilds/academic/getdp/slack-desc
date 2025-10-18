@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in. You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+     |-----handy-ruler------------------------------------------------------|
+getdp: getdp (Finite Element Solver)
+getdp:
+getdp: GetDP a free finite element solver using mixed elements
+getdp: to discretize de Rham-type complexes in one, two and three
+getdp: dimensions. The main feature of GetDP is the closeness between
+getdp: the input data defining discrete problems (written by the user
+getdp: in ASCII data files) and the symbolic mathematical expressions
+getdp: of these problems.
+getdp:
+getdp: GetDP is distributed under the terms of the GNU General Public
+getdp: License.

@@ -1,0 +1,46 @@
+diff --git a/device/lib/Makefile.in b/device/lib/Makefile.in
+--- a/device/lib/Makefile.in
++++ b/device/lib/Makefile.in
+@@ -661,19 +661,11 @@
+	$(CP_U) -r $(MODELS) mcs51 ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 hc08 s08 stm8 pdk13 pdk14 pdk15 $(sdcc_libdir)/src
+ 
+	for src in $(MODELS) ds390 ds400 z80 z180 ez80_z80 z80n r2k r2ka r3ka tlcs90 sm83 hc08 s08 mos6502 mos65c02 stm8 pdk13 pdk14 pdk15 pic14 pic16; do \
+-	  find $(sdcc_libdir)/src/$$src -depth \
+-	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
+-	    -name '*.lst' -o -name '*.asm' -o -name '.svn' -o -name 'autom4te.cache' -o \
+-	    -name 'build' -o -name 'bin' -o -name 'Makefile*' -o -name 'config*' -o \
+-	    -name 'depcomp' -o -name 'missing' -o -name 'install-sh' -o \
+-	    -name 'bootstrap.sh' \) \
+-	    -exec rm -rf {} + ; \
++	  find $(sdcc_libdir)/src/$$src -type f -not -regex '.*\(/[A-Z]+\|\.\(c\|s\|S\|inc\)\)$$' -delete ; \
++	  find $(sdcc_libdir)/src/$$src -type d -empty -delete ; \
+ 	done
+-	find $(sdcc_libdir)/src/mcs51 -depth \
+-	  \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
+-	  -name '*.lst' -o -name '.svn' -o -name 'build' -o -name 'bin' -o \
+-	  -name 'Makefile*' \) \
+-	  -exec rm -rf {} +
++	find $(sdcc_libdir)/src/mcs51 -type f -not -regex '.*\(/[A-Z]+\|\.\(c\|s\|S\|asm\|inc\)\)$$' -delete
++	find $(sdcc_libdir)/src/mcs51 -type d -empty -delete
+ 
+ # Deleting all the installed files
+ # --------------------------------
+diff --git a/device/non-free/lib/Makefile.in b/device/non-free/lib/Makefile.in
+--- a/device/non-free/lib/Makefile.in
++++ b/device/non-free/lib/Makefile.in
+@@ -356,13 +356,8 @@
+ 	$(CP_U) -r $(foreach p, $(ENABLED_PORTS), $(srcdir)/$(p)) $(sdcc_libdir)/src
+ 
+ 	for src in $(ENABLED_PORTS); do \
+-	  find $(sdcc_libdir)/src/$$src -depth \
+-	    \( -name '*.rel' -o -name '*.dump*' -o -name '*.sym' -o -name '*.o' -o -name '*.lib' -o \
+-	    -name '*.lst' -o -name '*.asm' -o -name '.svn' -o -name 'autom4te.cache' -o \
+-	    -name 'build' -o -name 'bin' -o -name 'Makefile*' -o -name 'config*' -o \
+-	    -name 'depcomp' -o -name 'missing' -o -name 'install-sh' -o \
+-	    -name 'bootstrap.sh' \) \
+-	    -exec rm -rf {} + ; \
++	  find $(sdcc_libdir)/src/$$src -type f -not -regex '.*\(/[A-Z]+\|\.\(c\|s\|S\|inc\)\)$$' -delete ; \
++	  find $(sdcc_libdir)/src/$$src -type d -empty -delete ; \
+ 	done
+ endif
+ 

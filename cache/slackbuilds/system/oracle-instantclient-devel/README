@@ -1,0 +1,8 @@
+Oracle Instant Client Devel is a free devel headers
+for connecting to Oracle databases.
+
+It provides additional header files for compiling
+applications against instantclient.
+
+Oracle-xe and JRE or JDK packages are optional and
+depends on your needs.

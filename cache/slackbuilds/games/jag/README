@@ -1,0 +1,7 @@
+JAG is an arcade-puzzle 2D game which runs on Linux and Windows.
+It is free and opensource.
+
+There is also an optional level editor that can be installed.
+To install the editor pass EDITOR="yes" to the slackbuild.
+
+  # EDITOR="yes" ./jag.SlackBuild

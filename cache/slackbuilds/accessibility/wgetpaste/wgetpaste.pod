@@ -1,0 +1,143 @@
+# pod source for wgetpaste man page. Convert with:
+# pod2man --stderr -s1 -cSlackBuilds.org -r2.33 -u wgetpaste.pod > wgetpaste.1
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+wgetpaste - Command-line interface to various pastebin sites
+
+=head1 SYNOPSIS
+
+wgetpaste [options] [file[s]]
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-l>, B<--language> I<lang>
+
+set language (defaults to "Plain Text")
+
+=item B<-d>, B<--description> I<description>
+
+set description (defaults to "stdin" or filename)
+
+=item B<-n>, B<--nick> I<nick>
+
+set nick (defaults to your username)
+
+=item B<-s>, B<--service> I<service>
+
+set service to use (defaults to I<bpaste>)
+
+=item B<-e>, B<--expiration> I<expiration>
+
+set when it should expire (defaults to "1 month")
+
+=item B<-S>, B<--list-services>
+
+list supported pastebin services
+
+=item B<-L>, B<--list-languages>
+
+list languages supported by the specified service
+
+=item B<-E>, B<--list-expiration>
+
+list expiration setting supported by the specified service
+
+=item B<-u>, B<--tinyurl> I<url>
+
+convert input url to tinyurl
+
+=item B<-c>, B<--command> I<command>
+
+paste COMMAND and the output of COMMAND
+
+=item B<-i>, B<--info>
+
+append the output of `wgetpaste_info`
+
+=item B<-I>, B<--info-only>
+
+paste the output of `wgetpaste_info` only
+
+=item B<-x>, B<--xcut>
+
+read input from clipboard (requires B<xclip>(1))
+
+=item B<-X>, B<--xpaste>
+
+write resulting url to the X primary selection buffer (requires B<xclip>(1))
+
+=item B<-C>, B<--xclippaste>
+
+write resulting url to the X clipboard selection buffer (requires B<xclip>(1))
+
+=item B<-N>, B<--no-ansi>
+
+strip ANSI codes such as colors before pasting (requires B<ansifilter>(1))
+
+=item B<-r>, B<--raw>
+
+show url for the raw paste (no syntax highlighting or html)
+
+=item B<-t>, B<--tee>
+
+use tee to show what is being pasted
+
+=item B<-v>, B<--verbose>
+
+show wget stderr output if no url is received
+
+=item B<--completions>
+
+emit output suitable for shell completions (only affects B<--list-*>)
+
+=item B<--debug>
+
+be *very* verbose (implies B<-v>)
+
+=item B<-h>, B<--help>
+
+show this help
+
+=item B<-g>, B<--ignore-configs>
+
+ignore /etc/wgetpaste.conf, ~/.wgetpaste.conf etc.
+
+=item B<--version>
+
+show version information
+
+=back
+
+Defaults (DEFAULT_{NICK,LANGUAGE,EXPIRATION}[_${SERVICE}] and DEFAULT_SERVICE)
+can be overridden globally in /etc/wgetpaste.conf or /etc/wgetpaste.d/*.conf or
+per user in any of ~/.wgetpaste.conf or ~/.wgetpaste.d/*.conf.
+
+An additional http header can be passed by setting HEADER_${SERVICE} in any of the
+configuration files mentioned above. For example, authenticating with github gist:
+HEADER_gists="Authorization: token 1234abc56789..."
+
+=head1 BUGS
+
+B<wgetpaste> works by hard-coding URLs and CGI parameters into
+the script. This means that if a paste service's web site changes,
+B<wgetpaste> might stop working with that site. Currently (December
+2023), the I<0x0>, I<dpaste>, I<sprunge>, I<bpaste> (default) services
+are working, the I<codepad> and I<ix_io> services are not working,
+and I<gists> and I<snippets> are untested because they require user
+account creation.
+
+=head1 AUTHOR
+
+Copyright (c) 2007 Bo Ørsted Andresen <bo.andresen@zlin.dk>
+
+Distributed as-is. With no warranties.
+
+Man page created by B. Watson <urchlay@slackware.uk>, for the SlackBuilds.org project (but
+it may be used by anyone).

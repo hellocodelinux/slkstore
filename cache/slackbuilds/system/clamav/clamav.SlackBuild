@@ -1,0 +1,227 @@
+#!/bin/bash
+
+# Copyright (c) 2006,2007 Eric Hameleers <alien@slackware.com>
+# Copyright (c) 2011-2025 Matteo Bernardini <ponce@slackbuilds.org>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+
+# Modified to SBo format with the help of Yalla-One
+# Version bump and various other changes by Robby Workman
+# New version bump and various other changes by Matteo Bernardini
+# No additional license terms added
+# Code to deal with multiple copies of the source by B. Watson
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=clamav
+VERSION=${VERSION:-1.5.0}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i686 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG="$TMP/package-$PRGNAM"
+OUTPUT=${OUTPUT:-/tmp}
+
+# Two letter country code
+# See http://www.iana.org/cctld/cctld-whois.htm for options
+COUNTRY=${COUNTRY:-us}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+bailout() {
+  printf "\n  You must have a \"clamav\" user and group in order to run this script.
+  Add them with something like this:
+     groupadd -g 210 clamav
+     useradd -u 210 -d /dev/null -s /bin/false -g clamav clamav\n"
+  exit 1
+}
+
+# Check for ClamAV user and group availability
+if ! getent group clamav 2>&1 > /dev/null; then
+  bailout ;
+elif ! getent passwd clamav 2>&1 > /dev/null; then
+  bailout ;
+fi
+
+set -e
+
+# 20220209 bkw: the download filename ends up with a bunch of
+# gibberish (CGI params) if you use wget... I ended up with 2 copies
+# of the tarball with different gibberish in the names, and the "tar
+# xvf $CWD/$PRGNAM-$VERSION.tar.?z*" meant that both were passed as
+# args to tar (making it fail). So be a little more paranoid about
+# the filename.
+TARBALL=$CWD/$PRGNAM-$VERSION.tar.gz
+if [ ! -e "$TARBALL" ]; then
+  T="$( /bin/ls $CWD/$PRGNAM-$VERSION.tar.gz\?* 2>/dev/null | head -1 )"
+  [ -n "$T" ] && TARBALL="$T"
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $TARBALL
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+ -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+export PATH="/opt/rust/bin:$PATH"
+if [ -z "$LD_LIBRARY_PATH" ]; then
+  export LD_LIBRARY_PATH="/opt/rust/lib$LIBDIRSUFFIX"
+else
+  export LD_LIBRARY_PATH="/opt/rust/lib$LIBDIRSUFFIX:$LD_LIBRARY_PATH"
+fi
+
+# Specify the desired mirror in the update config file
+# http://www.iana.org/cctld/cctld-whois.htm
+sed -i "s/^\#DatabaseMirror.*/DatabaseMirror db.${COUNTRY}.clamav.net/" \
+  etc/freshclam.conf.sample || exit 1
+
+sed \
+  -e "s/^Example/#Example/" \
+  -e "s/^\#LogSyslog/LogSyslog/" \
+  -e "s/^\#LogFacility/LogFacility/" \
+  -e "s/^\#PidFile.*/PidFile \/var\/run\/clamav\/freshclam.pid/" \
+  -e "s/^\#UpdateLogFile.*/UpdateLogFile \/var\/log\/clamav\/freshclam.log/" \
+  -e "s/^\#AllowSupplementaryGroups.*/AllowSupplementaryGroups yes/" \
+  -e "s/^\#DatabaseOwner.*/DatabaseOwner clamav/" \
+  -e "s/^\#NotifyClamd.*/NotifyClamd \/etc\/clamd.conf/" \
+  -i etc/freshclam.conf.sample || exit 1
+sed \
+  -e "s/^Example/#Example/" \
+  -e "s/^\#LogSyslog/LogSyslog/" \
+  -e "s/^\#LogFacility/LogFacility/" \
+  -e "s/^\#LogFile\ .*/LogFile \/var\/log\/clamav\/clamd.log/" \
+  -e "s/^\#PidFile.*/PidFile \/var\/run\/clamav\/clamd.pid/" \
+  -e "s/^\#LocalSocket\ .*/LocalSocket \/var\/run\/clamav\/clamd.socket/" \
+  -e "s/^\#LocalSocketGroup.*/LocalSocketGroup clamav/" \
+  -e "s/^\#LocalSocketMode/LocalSocketMode/" \
+  -e "s/^\#FixStaleSocket/FixStaleSocket/" \
+  -e "s/^\#User.*/User clamav/" \
+  -e "s/^\#AllowSupplementaryGroups.*/AllowSupplementaryGroups yes/" \
+  -e "s/^\#ExitOnOOM/ExitOnOOM/" \
+  -i etc/clamd.conf.sample || exit 1
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_FULL_LIBDIR=/usr/lib$LIBDIRSUFFIX \
+    -DAPP_CONFIG_DIRECTORY=/etc \
+    -DENABLE_MILTER=ON \
+    -DENABLE_SYSTEMD=OFF \
+    -DENABLE_TESTS=OFF \
+    -DDATABASE_DIRECTORY=/var/lib/clamav \
+    -DENABLE_EXTERNAL_MSPACK=ON \
+    -DCMAKE_BUILD_TYPE=Release ..
+  make
+  make install DESTDIR=$PKG
+cd ..
+
+mv $PKG/usr/share/man $PKG/usr/man
+rm -fR $PKG/usr/share
+
+# Prepare the config files:
+for cf in clamd freshclam clamav-milter; do
+  mv $PKG/etc/$cf.conf.sample $PKG/etc/$cf.conf.new
+done
+
+# Our rc script and logrotate entry:
+install -D -m 0755 $CWD/rc.clamav $PKG/etc/rc.d/rc.clamav.new
+install -D -m 0644 $CWD/logrotate.clamav $PKG/etc/logrotate.d/clamav.new
+
+# Create pid, socket, db, and log directories
+# init script must still ensure that /var/run/clamav exists
+# and has proper ownership and permissions though
+mkdir -p $PKG/var/lib/clamav $PKG/var/log/clamav $PKG/var/run/clamav
+chmod 0771 $PKG/var/log/clamav $PKG/var/run/clamav
+chmod 0775 $PKG/var/lib/clamav
+
+# Fixup some ownership and permissions issues
+chown -R root:root $PKG
+chmod -R o-w $PKG
+chown clamav $PKG/usr/sbin/clamav-milter
+chmod 4700 $PKG/usr/sbin/clamav-milter
+touch $PKG/var/lib/clamav/main.cvd $PKG/var/lib/clamav/daily.cvd
+chmod 0660 $PKG/var/lib/clamav/*
+
+# Create log files in such a way that they won't clobber existing ones
+touch $PKG/var/log/clamav/clamd.log.new \
+  $PKG/var/log/clamav/freshclam.log.new
+chmod 0660 $PKG/var/log/clamav/clamd.log.new \
+  $PKG/var/log/clamav/freshclam.log.new
+
+chown -R clamav:clamav $PKG/var/lib/clamav $PKG/var/log/clamav \
+  $PKG/var/run/clamav
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Compress the man page(s)
+find $PKG/usr/man -type f -name "*.?" -exec gzip -9f {} \;
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  COPYING* docs/html examples \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+chmod -R 0644 $PKG/usr/doc/$PRGNAM-$VERSION
+find $PKG/usr/doc/$PRGNAM-$VERSION -type d -exec chmod 0755 {} \;
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+cat $CWD/README.SLACKWARE > $PKG/usr/doc/$PRGNAM-$VERSION/README.SLACKWARE
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

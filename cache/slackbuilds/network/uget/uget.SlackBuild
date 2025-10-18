@@ -1,0 +1,128 @@
+#!/bin/bash
+
+# Slackware build script for uget
+# Originally written by Morten Juhl-Johansen Zölde-Fejér <email removed>
+# Updated and now maintained by B. Watson <urchlay@slackware.uk>
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20210926 bkw: BUILD=2, fix build on -current/15.0
+# 20200223 bkw: update for 2.2.3_1
+# 20191130 bkw: update for 2.2.2
+# 20180612 bkw: update for 2.2.1
+
+# 20180109 bkw:
+# - update for 2.2.0
+# - get rid of ARIA2 variable, since it's become a runtime dep
+# - get rid of --disable-gstreamer, since gstreamer-1.x is in
+#   Slackware these days. Add GSTREAMER variable to disable it.
+# - update README and slack-desc
+
+# 20170827 bkw: update for 2.0.10
+
+# 20170324 bkw:
+# - update for 2.0.9
+# - AUTHORS no longer empty, include in package
+
+# 20160727 bkw: upgrade to 2.0.8
+
+# 20150910 bkw:
+# - upgrade to 2.0.1
+# - get rid of curlopt_nosignal.diff (no longer needed)
+# - fix WTFPL URL
+# - add LIBNOTIFY=no
+# - document build options in slack-desc
+# - cleanup README
+# - install developer docs doc/*.txt
+# - don't install empty AUTHORS and ChangeLog
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=uget
+VERSION=${VERSION:-2.2.3_1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# Tarball filename version number doesn't match top-level dir inside
+# tarball, and neither matches VERSION 'cause we can't use hyphens.
+# This stuff can safely be left in place: if VERSION contains no _
+# character, TARVER == DIRVER == VERSION.
+TARVER=${VERSION/_/-}
+DIRVER="$( echo $VERSION | cut -d_ -f1 )"
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$DIRVER
+tar xvf $CWD/$PRGNAM-$TARVER.tar.gz
+cd $PRGNAM-$DIRVER
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+LIBNOTIFY="${LIBNOTIFY:-yes}"
+GSTREAMER="${GSTREAMER:-yes}"
+
+[ "$LIBNOTIFY" = "no" ] && NOTIFYFLAG="--disable-notify"
+[ "$GSTREAMER" = "no" ] && GSTFLAG="--disable-gstreamer"
+
+SLKCFLAGS+=" -fcommon"
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  $NOTIFYFLAG \
+  $GSTFLAG \
+  --prefix=/usr \
+  --build=$ARCH-slackware-linux
+make
+make install-strip DESTDIR=$PKG
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+# 20170324 bkw: NEWS and ChangeLog are 0-byte placeholders in uget-2.0.9,
+# add them back if this changes in future releases.
+cp -a AUTHORS COPYING README doc/*.txt $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed -e "s,@A,$GSTREAMER," \
+    -e "s,@L,$LIBNOTIFY," \
+    $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

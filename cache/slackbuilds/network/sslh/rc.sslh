@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.sslh
+#
+# Start/stop/restart the sslh daemon.
+#
+
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+export PATH
+
+NAME="sslh"
+pidfile="/var/run/${NAME}.pid"
+
+source /etc/default/$NAME || exit 1
+
+start() {
+    if [[ -z $(pidof -o %PPID $NAME) ]]; then
+        rm $pidfile &>/dev/null
+    fi
+
+    if [ ! -f $pidfile ]; then
+        echo "Starting SSL multiplexer: $NAME $SSLH_OPTS"
+        $NAME $SSLH_OPTS >/dev/null 2>&1
+    else
+        echo "Service $NAME already running."
+    fi
+}
+
+stop() {
+    if [ -f $pidfile ]; then
+        echo "Stopping $NAME"
+        kill $(cat $pidfile) >/dev/null 2>&1
+        rm $pidfile &>/dev/null
+    else
+        echo "Service $NAME is not running."
+    fi
+}
+
+restart() {
+    stop
+    sleep 2
+    start
+}
+
+case $1 in
+'start')
+  start
+  ;;
+'stop')
+  stop
+  ;;
+'restart')
+  restart
+  ;;
+*)
+  echo "Usage $0 {start|stop|restart}"
+esac

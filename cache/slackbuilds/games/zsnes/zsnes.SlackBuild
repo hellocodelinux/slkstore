@@ -1,0 +1,120 @@
+#!/bin/bash
+
+# Slackware build script for zsnes
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# Note: this is a completely new-from-template znes.SlackBuild,
+# written from scratch, for the "LTS" 2.x fork from xyproto. It shares
+# no code with the old zsnes.SlackBuild for the 1.51 release.
+
+# TODO: build a static 32-bit binary for x86_64 users. Can't be done
+# on Slackware (we don't have static X11, SDL, png16, nor GL libs),
+# but maybe it could be done on some other distro (one that uses musl,
+# maybe), then hosted as a DOWNLOAD_X86_64.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=zsnes
+VERSION=${VERSION:-2.0.12}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# No SLKCFLAGS here. Upstream's got a set of flags they've tested with,
+# and most of the code's in asm anyway.
+case "$ARCH" in
+  i?86)               ;;
+  x86_64) MULTI=yes   ;;
+  *)      BADARCH=yes ;;
+esac
+
+# Hang on to this for use in error message, below.
+OLDARCH="$ARCH"
+
+# Always uses MMX extensions so i686 is correct.
+# PRINT_PACKAGE_NAME and the actual package name will always say i686.
+ARCH="i686"
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+if [ "$MULTI" = "yes" ]; then
+  echo "=== Attempting multilib build on $OLDARCH..."
+  CTEST=$TMP/$( mcookie ).c
+  echo 'main(){}' > $CTEST
+  if ! gcc -w -m32 -o /dev/null $CTEST 2>/dev/null; then
+    echo "*** You don't have multilib installed, bailing."
+    exit 1
+  fi
+  echo "=== Multilib gcc is installed..."
+  rm -f $CTEST
+fi
+
+if [ "$BADARCH" = "yes" ]; then
+  echo "*** Sorry, $PRGNAM can't be built on $OLDARCH." ; exit 1
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# Patch does these things:
+# - Install binary to /usr/games
+# - Fix install permissions for icon, .desktop, metainfo (no +x).
+# - Install man page to /usr/man (not /usr/share/man)
+# - Change the section in the man page to 6, install in man6.
+# - Use the github URL in the man page, not zsnes.com.
+# - Use full path to binary in .desktop file.
+# I wanted to build a static binary, but Slackware doesn't ship a
+# full set of static libs, plus glibc's getpwnam() and getpwuid()
+# are used (which use dlopen() to load a shared lib at runtime).
+patch -p1 < $CWD/sbo.diff
+
+# Build options.
+# Disabling WITH_AO doesn't seem particularly useful, but allow it.
+# Disabling WITH_DEBUGGER might make sense for slow systems.
+A=no ; D=no
+[ "${AO:-yes}"       = "yes" ] && ARGS+="WITH_AO=yes "       && A=yes
+[ "${DEBUGGER:-yes}" = "yes" ] && ARGS+="WITH_DEBUGGER=yes " && D=yes
+echo "::: running: make $ARGS"
+
+make $ARGS
+make install DESTDIR=$PKG
+gzip -9 $PKG/usr/man/man*/*
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a COPYING* README* TODO* $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed -e "s,@A@,$A," -e "s,@D@,$D," < $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Slackware build script for qtads
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230711 bkw: updated for v3.4.0.
+# 20220611 bkw: updated for v3.3.0.
+# 20211022 bkw: updated for v3.2.0.
+# 20201020 bkw: updated for v3.0.0. Sadly the qt4 UI is gone in this
+# release, so qt5 is now a hard dep. SDL2_sound is no longer needed, but
+# it's replaced with fluidsynth.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=qtads
+VERSION=${VERSION:-3.4.0}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# No SLKCFLAGS: qmake-qt5 uses the CFLAGS qt5 was built with.
+# No need for LIBDIRSUFFIX either, qtads doesn't use /usr/lib(64).
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION-source.tar.xz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# In case the user just installed qt5 and hasn't logged out & back in:
+[ "$QT5DIR" = "" ] && source /etc/profile.d/qt5.sh
+
+qmake-qt5 PREFIX=/usr BINDIR=/usr/games DOCDIR=/usr/doc/$PRGNAM-$VERSION
+
+# Hardcoded share/ in man path.
+sed -i 's,/usr/share/man,/usr/man,g' Makefile
+
+# Setting CC/CXX shows the actual compile commands. Using gold speeds
+# up linking enough to be worth the effort.
+make CC=gcc CXX=g++ LINK="g++ -fuse-ld=gold"
+
+# INSTALL_ROOT, *not* DESTDIR here!
+make install INSTALL_ROOT=$PKG
+
+gzip -9 $PKG/usr/man/man?/*.?
+
+# 'make install' doesn't install the GPL.
+cp -a LICENSE.TXT $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

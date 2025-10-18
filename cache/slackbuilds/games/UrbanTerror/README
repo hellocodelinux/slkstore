@@ -1,0 +1,14 @@
+UrbanTerror is an urban combat themed First Person Shooter.
+Urban Terror started as a realism based "total conversion" mod for 
+Quake III Arena. Nowadays, Urban Terror is played using the free, 
+stand-alone, ioquake3 engine modified, which doesn't require 
+Quake III Arena.
+
+To build a 32bit package pass ARCH=i386 to the script, ie
+$ ARCH=i386 ./UrbanTerror.SlackBuild
+
+Please note:
+
+If you have a previous version of UrbanTerror installed please don't
+use upgradekg with this package. Use removepkg to remove the previous
+version first since the paths may differ. 

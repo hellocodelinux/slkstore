@@ -1,0 +1,19 @@
+stratagus (RTS game engine)
+
+Stratagus Core is a free cross-platform real-time strategy gaming
+engine. It includes support for playing over the internet/LAN, or
+playing a computer opponent. The engine is configurable and can be
+used to create games with a wide range of features specific to your
+needs.
+
+If you're installing stratagus as a dependency for wargus, make sure
+the stratagus and wargus version numbers match. This shouldn't be a
+problem (both will be updated at SBo at the same time, when needed).
+
+Stratagus was formerly known as FreeCraft and ALE Clone.
+
+Upgrade note: Why haven't I updated this in 6 years? It's because
+newer versions of wargus and stratagus are unable to play the game
+using the data files from the Warcraft II CD that I bought in the
+1990s. I assume I'm not the only one using the old version of the
+game, either.

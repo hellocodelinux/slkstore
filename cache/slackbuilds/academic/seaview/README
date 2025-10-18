@@ -1,0 +1,25 @@
+SeaView is a multiplatform, graphical user interface for multiple
+sequence alignment and molecular phylogeny. Features:
+
+- Reads and writes various file formats (NEXUS, MSF, CLUSTAL, FASTA,
+  PHYLIP, MASE, Newick) of DNA and protein sequences and of phylogenetic
+  trees.
+- Drives programs muscle or Clustal Omega for multiple sequence
+  alignment, and also allows to use any external alignment
+  algorithm able to read and write FASTA-formatted files.
+- Drives the Gblocks program to select blocks of evolutionarily
+  conserved sites.
+- Computes phylogenetic trees by parsimony, using PHYLIP's dnapars /
+  protpars algorithm, distance, with NJ or BioNJ algorithms on a variety
+  of evolutionary distances, maximum likelihood, driving program PhyML
+- Can use the Transfer Bootstrap Expectation method to compute the
+  bootstrap support of PhyML and distance trees.
+- Prints and draws phylogenetic trees on screen, SVG, PDF or PostScript
+  files.
+- Allows to download sequences from EMBL / GenBank / UniProt.
+
+For details and citation:
+Gouy M., Guindon S. & Gascuel O. (2010) SeaView version 4 : a
+multiplatform graphical user interface for sequence alignment and
+phylogenetic tree building. Molecular Biology and Evolution
+27(2):221-224.

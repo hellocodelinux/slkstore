@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+wmnet: wmnet (network bandwidth monitor dockapp for WindowMaker)
+wmnet:
+wmnet: wmnet polls network statistics and does a few things with the data it
+wmnet: gets. It has small blinking lights for the RX and TX of IP packets,
+wmnet: a digital speedometer of your network's current speed, and a bar graph
+wmnet: (like xload) plotting your throughput.
+wmnet:
+wmnet:
+wmnet:
+wmnet:
+wmnet:

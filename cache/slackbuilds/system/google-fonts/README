@@ -1,0 +1,19 @@
+This project contains the binary font files served by Google Fonts:
+
+The top level directories indicate the license of all files found
+within them. Subdirectories are named according to the family name
+of the fonts within.
+
+*** WARNINGS ***
+
+This is a 1.2G download.
+
+This SlackBuild conflicts with other SlackBuilds that package
+individual fonts, including
+  google-droid-fonts
+  numix-pack
+  ttf-coda
+  ttf-crosscorefonts
+  ttf-inconsolata
+  ttf-open-sans
+  ttf-roboto

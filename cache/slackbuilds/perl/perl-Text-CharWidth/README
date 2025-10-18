@@ -1,0 +1,8 @@
+perl-Text-CharWidth (perl module)
+
+This perl module, Text::CharWidth, gets the number of columns occupied
+by a string on a terminal. This is not always equal to the number
+of characters, depending on the encoding in use. This is similar to
+wcwidth(3) and wcswidth(3) in C.
+
+This perl module is needed by Text::WrapI18N.

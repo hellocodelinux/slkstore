@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Slackware build script for discount
+
+# Original author: Antonio Hernández Blas.
+# Formerly maintained by Donald Cooley and later Brandon Pribula.
+# Now maintained by B. Watson (urchlay@slackware.uk).
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20241019 bkw: update for v3.0.0d (in conjunction with Greg's pdfpc update).
+
+# 20240807 bkw: note to self:
+# - tried to update for v3.0.0d, but pdfpc fails to compile with it.
+#   looked for a fix in pdfpc's git, but latest git fails with the
+#   same error. so, not updating this build until there's a new
+#   pdfpc release that can handle it.
+
+# 20230914 bkw:
+# - take over maintenance.
+# - update for v2.2.7d.
+# - don't install VERSION in doc dir.
+# - add MAKETEST option, disabled by default, to run 'make test'.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=discount
+VERSION=${VERSION:-3.0.0d}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# Disable ldconfig use during 'make install'
+sed -i 's/LDCONFIG=.*$/LDCONFIG=true/g' configure.inc
+
+# Fix file permission
+sed -i '/PROG_INSTALL/s,-m 444,-m 644,g' configure.inc
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure.sh \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --confdir=/etc \
+  --mandir=/usr/man \
+  --with-amalloc \
+  --with-dl=Both \
+  --with-id-anchor \
+  --with-github-tags \
+  --with-fenced-code \
+  --with-urlencoded-anchor \
+  --enable-all-features \
+  --shared
+
+# 20241019 bkw: v2.2.x required "make -j1", 3.0.0d seems OK without it.
+make
+
+[ "${MAKETEST:-no}" = "yes" ] && make -j1 test
+
+mkdir -p $PKG/usr/{bin,lib${LIBDIRSUFFIX},include}
+make -j1 install.everything DESTDIR=$PKG
+strip $PKG/usr/bin/* $PKG/usr/lib*/*.so.*.*.*
+gzip -9 $PKG/usr/man/man*/*
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a COPYRIGHT CREDITS README $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

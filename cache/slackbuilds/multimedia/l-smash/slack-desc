@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+l-smash: l-smash (open source mp4 handler)
+l-smash:
+l-smash: l-smash is a set of simple open source tools for the mp4 container. It
+l-smash: rivals Mp4Box from GPAC in muxing, demuxing and tagging mp4, mov, 3gp,
+l-smash: 3g2, m4a and m4v files.
+l-smash:
+l-smash: Included in the package are four executables: boxdumper, muxer,
+l-smash: remuxer, and timelineeditor. There are no man pages for these, but
+l-smash: each one can be run with --help to see usage information.
+l-smash:
+l-smash:

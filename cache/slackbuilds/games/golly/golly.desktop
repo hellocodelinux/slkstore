@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Golly
+Type=Application
+Comment=Cellular Automata Simulator
+Terminal=false
+Exec=/usr/games/golly
+Icon=golly
+Categories=Game;Simulation;

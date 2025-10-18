@@ -1,0 +1,12 @@
+diff -Naur lumina-pdf-1.6.0/src-qt5/Renderer-poppler.cpp lumina-pdf-1.6.0-patched/src-qt5/Renderer-poppler.cpp
+--- lumina-pdf-1.6.0/src-qt5/Renderer-poppler.cpp	2020-02-04 20:56:36.000000000 +0100
++++ lumina-pdf-1.6.0-patched/src-qt5/Renderer-poppler.cpp	2020-05-18 13:34:31.211851748 +0200
+@@ -72,7 +72,7 @@
+   DOC->setRenderHint(Poppler::Document::Antialiasing);
+   DOC->setRenderHint(Poppler::Document::TextAntialiasing);
+   // qDebug() << "Opening File:" << path;
+-  doctitle = DOC->title();
++  // doctitle = DOC->title();
+   if (doctitle.isEmpty()) {
+     doctitle = path.section("/", -1);
+   }

@@ -1,0 +1,26 @@
+The ReportLab Open Source PDF library is a proven industry-strength
+python-based PDF generating solution, suitable for web publishers,
+developers or creative design professionals who need to quickly and
+easily create or automate complex (even data-driven) documents.
+It is released by ReportLab Inc., under BSD license.
+
+It has the following features:
+- create professional portable documents
+- real document layout engine (Platypus)
+- flowable objects (paragraphs headlines tables images graphics etc)
+- arbitrary Type-1 fonts
+- bitmap images, vector graphics
+- library of reusable primitive shapes
+- extensible widget library
+- layered architecture
+- includes simple demos and more complex tools
+- allows for any data sources
+- strong community support
+- platform-independent
+- includes PythonPoint - PDF Presentation Tool
+
+For document generation,Reportlab has a circular dependency on itself
+So you have to install reportlab first and then extract the source
+to some $DIR and then cd to $DIR/reportlab-$VER/docs and then
+run python3 genAll.py it will generate a pdf file, which you can copy it
+to some other convenient location.

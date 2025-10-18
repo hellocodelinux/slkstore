@@ -1,0 +1,11 @@
+libmseed (C library framework for manipulating SEED data records)
+
+The miniSEED library provides a framework for manipulation of SEED
+data records, a format commonly used for seismological time series
+and related data.
+
+The library includes the functionality to read and write data records,
+in addition to reconstructing time series from multiple records.
+
+The library should work in Unix-like, Windows and potentially other
+environments.

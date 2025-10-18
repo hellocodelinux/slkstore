@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Slackware build script for makepp
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20220316 bkw: derp. fix broken symlinks.
+# 20210824 bkw: update for v2.0.99.2, aka 2.1rc1, because 2.0 won't
+# build on -current and other distros have been shipping 2.1 betas and
+# release candidates for years now.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=makepp
+VERSION=${VERSION:-2.0.99.2}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.t?z
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# Most of the executables have 2 names each, short and long, e.g. mpp
+# and makepp. install.pl installs them as hardlinks, which is kinda weird
+# for a Slack package. Not sure they'd cause any problems, but I *know*
+# symlinks work correctly, so:
+sed -i \
+    -e 's,^ *link\>,symlink,' \
+    install.pl
+
+# configure/make is just a wrapper around install.pl. Skip the tests,
+# because they spam /usr/include and don't even clean up after themselves.
+PERL5LIB="$( pwd )" \
+perl install.pl \
+  /usr/bin \
+  /usr/share/$PRGNAM \
+  /usr/man \
+  /usr/doc/$PRGNAM-$VERSION/html \
+  none \
+  $PKG
+
+# 20220316 bkw: install.pl's symlinks are absolute, pointing to $PKG.
+# Make them relative. This code only works because the link targets
+# are in the same directories as the links.
+for link in $( find -P $PKG -type l); do
+  target="$( realpath $link )"
+  rm -f $link; ln -s $( basename $target ) $link
+done
+
+# in 2.0.99.2, they're already gzipped.
+#gzip -9 $PKG/usr/man/man1/*.1
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a ChangeLog LICENSE README $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,6 @@
+opencomal (interpreter for Comal programming language)
+
+OpenComal is a portable and free implementation of the Comal programming
+language written by Jos Visser. Currently supported platforms are Unix,
+MsDos and Win32. Comal is a crossover between Basic and Pascal, with
+the best features of both and none of the drawbacks of either.

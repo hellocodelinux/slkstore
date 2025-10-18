@@ -1,0 +1,11 @@
+coolreader (e-book reader)
+
+CoolReader is an e-book reader for various platforms, with a Qt5 user
+interface.
+
+Supported file formats include plain text, HTML, RTF, Microsoft Word
+(.doc), Palm Pilot (.prc, .pdb, .pml, .mobi), FB2, and EPUB.
+
+Note: coolreader is "chatty": it logs a lot of meaningless warnings
+and errors to stderr. Unless there's an actual problem with the
+application, you can ignore this stuff.

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+chicken: chicken (a practical and portable scheme system)
+chicken:
+chicken: CHICKEN is a compiler for the Scheme programming language. It produces
+chicken: portable and efficient C and supports the R5RS and R7RS (work in
+chicken: progress) standards, and many extensions. It runs on Linux, OS X,
+chicken: Windows, many Unix flavours, and aims to be free, simple, portable,
+chicken: extensible, well documented, and actively supported.
+chicken:
+chicken: Scheme is a member of the Lisp family of languages.
+chicken:
+chicken:

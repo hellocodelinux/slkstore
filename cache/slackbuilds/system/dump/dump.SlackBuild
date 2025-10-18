@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Slackware build script for dump
+
+# Copyright 2022 B. Watson <urchlay@slackware.uk>
+# Copyright 2017 Donald Cooley, South Haven, Indiana USA
+# Copyright 2014 Ryan P.C. McQuen, WA, ryanpcmcquen@member.fsf.org
+# Copyright 2012 Chris Abela, Malta
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20241109 bkw: update for 0.4b48.
+# 20220425 bkw: BUILD=2
+# - take over maintenance.
+# - relicense as WTFPL (with permission; see mailing list).
+# - rename /sbin/restore command (and man page) to restore.dump.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=dump
+VERSION=${VERSION:-0.4b48}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# rmt is available on Slack's tar package, so I am disabling it
+# The full path for mandir is necessary
+CFLAGS="$SLKCFLAGS" \
+EXT2FS_LIBS="-lext2fs -lcom_err" \
+./configure \
+  --prefix=/usr \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --mandir=$PKG/usr/man \
+  --enable-rmt=no \
+  --enable-selinux=no
+
+make
+make prefix=$PKG install-strip # According to fhs-2.3, dump goes in /sbin
+
+# 20220425 bkw: avoid conflicting with Slackware's restore. the old
+# version of this script installed dump's restore in /sbin, and didn't
+# mess with Slackware's /usr/sbin/restore... technically not a conflict,
+# but a landmine anyway (it would be all too easy to type the wrong
+# path to the restore command). rename it.
+cd $PKG/sbin
+mv restore restore.dump
+rm -f rrestore
+ln -s restore.dump rrestore
+cd -
+
+# 20220425 bkw: rename the man page, for consistency. note that
+# rdump.8 just used ".so dump.8" (and likewise for rrestore); replace
+# with symlinks.
+cd $PKG/usr/man/man8
+mv restore.8 restore.dump.8
+rm -f rdump.8 rrestore.8
+gzip -9 *
+ln -s restore.dump.8.gz rrestore.8.gz
+ln -s dump.8.gz rdump.8.gz
+cd -
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a \
+  AUTHORS COPYING *BUGS MAINTAINERS NEWS README TODO ChangeLog examples \
+  $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

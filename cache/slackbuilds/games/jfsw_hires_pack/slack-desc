@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+               |-----handy-ruler------------------------------------------------------|
+jfsw_hires_pack: jfsw_hires_pack (graphic enhancements for jfsw and voidsw)
+jfsw_hires_pack:
+jfsw_hires_pack: This adds high resolution textures and 3D models to Shadow
+jfsw_hires_pack: Warrior. For use with slackbuilds.org jfsw or eduke32 packages.
+jfsw_hires_pack:
+jfsw_hires_pack: There is a known issue with jfsw: the sword doesn't display
+jfsw_hires_pack: properly. It looks like half a sword. This has been a known issue for
+jfsw_hires_pack: some time now.
+jfsw_hires_pack:
+jfsw_hires_pack:
+jfsw_hires_pack:

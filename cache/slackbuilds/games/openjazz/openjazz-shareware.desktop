@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Jazz Jackrabbit Shareware
+Comment=Classic MS-DOS platform game (OpenJazz engine)
+Exec=/usr/games/openjazz-shareware
+Icon=openjazz-shareware
+Terminal=false
+Type=Application
+Categories=Game;ArcadeGame;

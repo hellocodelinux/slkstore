@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# Originally written by hollywoodb (email removed)
+# Maintained 2011-2016 by sero (email removed)
+# Maintained 2017-2021 by Benjamin Trigona-Harany (email removed)
+# Maintained 2021-? by B. Watson <urchlay@slackware.uk>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20250914 bkw: update for v4.7.1.
+# 20250612 bkw: update for v4.6.3.
+# 20250122 bkw: update for v4.5.1.
+# 20241031 bkw: update for v4.4.3.
+# 20241024 bkw: BUILD=2, support lua 5.4.
+# 20240926 bkw: update for v4.4.2.
+# 20240823 bkw: update for v4.4.1.
+# 20240808 bkw: update for v4.3.5, new dep cJSON.
+# 20240213 bkw: update for v4.2.1.
+# 20231219 bkw: update for v4.1.2.
+# 20231111 bkw: update for v4.1.1.
+# 20230907 bkw: update for v4.0.4.
+# 20230104 bkw: update for v3.7.1.
+
+# 20211019 bkw:
+# - take over maintenance.
+# - update for v3.3.
+# - always docs/manpages, now that Slackware has rubygem-asciidoctor.
+# - add doinst.sh, since we have .desktop and icons.
+# - include old-style icon.
+# - mention optional lua deps.
+# - mention the fact that Tcl and Guile are supported scripting langs.
+# - get rid of external stylesheets/fonts/JS in HTML docs, as this
+#   is a privacy issue.
+
+# I considered including the contents of Debian's weechat-scripts
+# package here, but weechat's set up to download scripts from a remote
+# server, not a local directory, so probly nobody'd ever use them.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=weechat
+VERSION=${VERSION:-4.7.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.xz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# 20211019 bkw: patch from Debian: Build html documentation without
+# requiring data (javascript, fonts) on external websites (potential
+# privacy breach). Patch was slightly modified for Slackware.
+# 20230104 bkw: patch updated, used as-is from Debian this time.
+# 20240213 bkw: patch no longer applies, it's a one-liner, just use sed.
+sed -i 's,icons=font,icons=text,' doc/CMakeLists.txt
+
+# 20211019 bkw: hardcoded paths suck.
+DOC=/usr/doc/$PRGNAM-$VERSION
+PKGDOC=$PKG/$DOC
+sed -i \
+  '/install(/s,\(DESTINATION\) *"\$.DATAROOTDIR.*,\1 '$DOC'/html),' \
+  doc/CMakeLists.txt
+
+# 20211019 bkw:
+# -DENABLE_PHP=OFF because Slackware's php isn't built with --enable-embed.
+# -DENABLE_JAVASCRIPT=OFF because neither SBo nor Slackware provides a
+# v8 package. Looks like this is where you'd get the source: https://v8.dev/
+
+# lua isn't auto-disabled if it's missing, so help it out a little.
+if [ -x /usr/bin/lua ]; then
+  LUAOPT=ON; WITHLUA=WITH
+else
+  LUAOPT=OFF; WITHLUA=WITHOUT
+fi
+
+# Everything else is autodetected and/or included in a full Slackware
+# install. Have to enable "incomplete docs" in 4.0.x, so it won't
+# complain about disabled plugins.
+
+mkdir build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DENABLE_LUA="$LUAOPT" \
+    -DENABLE_JAVASCRIPT=OFF \
+    -DENABLE_PHP=OFF \
+    -DENABLE_DOC=ON \
+    -DENABLE_DOC_INCOMPLETE=ON \
+    -DENABLE_MAN=ON \
+    -DMANDIR=/usr/man \
+    -DLIBDIR=/usr/lib${LIBDIRSUFFIX} \
+    -DCMAKE_BUILD_TYPE=Release \
+    ..
+  make install/strip DESTDIR=$PKG
+cd ..
+
+gzip -9 $PKG/usr/man/man1/* $PKG/usr/man/*/man1/*
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/32x32/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# 20240823 bkw: Docs switched from .adoc to .md around 4.4.0. This
+# allows older versions to still build with this script.
+if [ -e AUTHORS.adoc ]; then
+  cp -a *.adoc COPYING $PKGDOC
+elif [ -e AUTHORS.md ]; then
+  cp -a *.md COPYING $PKGDOC
+fi
+
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed "s,@WITHLUA@,$WITHLUA," $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

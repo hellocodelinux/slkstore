@@ -1,0 +1,4 @@
+zmusic (library for music support in games)
+
+ZMusic is GZDoom's music system separated as a stand-alone music
+library, providing a unified interface for its components.

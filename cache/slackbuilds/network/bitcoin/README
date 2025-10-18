@@ -1,0 +1,15 @@
+bitcoin (P2P electronic cash system)
+
+Bitcoin is a free open source peer-to-peer electronic cash system
+that is completely decentralized, without the need for a central
+server or trusted parties.  Users hold the crypto keys to their
+own money and transact directly with each other, with the help
+of a P2P network to check for double-spending.
+
+Bitcoin Core connects to the Bitcoin peer-to-peer network to
+download and fully validate blocks and transactions.
+
+zeromq is an optional dependency (autodetected).
+
+Note: This package conflicts with bitcoin-knots and both cannot
+be installed at the same time.

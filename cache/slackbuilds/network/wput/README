@@ -1,0 +1,5 @@
+wput (wget-like FTP uploader)
+
+wput is a tiny program that looks like wget and is designed to upload
+files or whole directories to remote FTP servers. It uses ~/.netrc for
+login names and passwords.

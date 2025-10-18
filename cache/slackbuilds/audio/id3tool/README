@@ -1,0 +1,4 @@
+id3tool (command line utility for manipulating ID3 tags)
+
+id3tool is a command line utility for easy manipulation of the ID3 tags
+present in MPEG Layer 3 (mp3) audio files.

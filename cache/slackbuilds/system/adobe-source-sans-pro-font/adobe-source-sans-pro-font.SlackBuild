@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Slackware build script for adobe-source-sans-pro-font
+
+# Copyright (c) 2012 Daniel LEVAI
+# Copyright (c) 2012-2019 Dugan Chen
+# Copyright (c) 2019-2023 Matteo Bernardini
+# All rights reserved.
+#
+# * Redistribution and use in source and binary forms, with or without
+#   modification, are permitted provided that the following conditions
+#   are met:
+# * Redistributions of source code must retain the above copyright notice
+#   this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED ''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+# AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20220212 bkw: Modified by SlackBuilds.org, updated for v3.046R.
+# Note to whoever's updating this in the future: don't get the source
+# tarball or zip file (with the archive/refs/tags URL), it doesn't
+# contain the compiled OTF fonts (only the source, which we don't have
+# the tools to compile into fonts). The zip file with release/download
+# in the URL and OTF in the name is the one you want.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=adobe-source-sans-pro-font
+SRCNAM=source-sans
+VERSION=${VERSION:-3.052}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-${VERSION}R
+# 20220212 bkw: careful, warrior! no top-level dir in zip file!
+mkdir $SRCNAM-${VERSION}R
+cd $SRCNAM-${VERSION}R
+unzip $CWD/OTF-$SRCNAM-${VERSION}R.zip
+chown -R root:root .
+find . -type d -a -exec chmod 755 {} \+
+find . -type f -a -exec chmod 644 {} \+
+
+mkdir -p $PKG/usr/share/fonts/OTF
+cp OTF/*.otf $PKG/usr/share/fonts/OTF/
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n -p $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

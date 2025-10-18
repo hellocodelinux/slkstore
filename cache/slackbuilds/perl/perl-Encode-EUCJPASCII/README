@@ -1,0 +1,5 @@
+perl-Encode-EUCJPASCII (eucJP-open mapping)
+
+Perl module that provides extended mappings for Japanese codepages.
+
+This perl package is an optional dependency of perl-MIME-Charset.

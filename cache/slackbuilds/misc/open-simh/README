@@ -1,0 +1,67 @@
+Open SimH (History Simulator) is a collection of simulators for
+historically significant or just plain interesting computer hardware
+and software from the past.
+The goal of the project is to create highly portable system simulators
+and to publish them as freeware on the Internet, with freely available
+copies of significant or representative software.
+
+Open SIMH provides a large (and growing) number of simulators:
+
+SimH Name       –   Common Name
+-----------------------------------------------------------
+3B2             –   AT&T 3B2/400 & 700
+alpha           –   DEC Alpha AXP
+ALTAIR          –   MITS Altair 8800
+AltairZ80       –   MITS Altair 8080 & Z80
+B5500           –   Burroughs B5500
+BESM6           –   BESM-6 (USSR)
+CDC1700         –   CDC 1700
+GRI             –   GRI-909 & 99
+H316            –   Honywell H316 & 516
+H316-IMP        –   Honywell H316 & 516 ARPA/IMP
+HP2100          –   HP-2100
+HP3000          –   HP-3000
+I1401           –   IBM 1401
+I1620           –   IBM 1620
+I650            –   IBM 650
+I7000           –   IBM 701,7010,7070,7080, 7090
+I7094           –   IBM 7094
+Ibm1130         –   IBM 1130
+imlac           –   IMLAC PDS-1
+Intel-Systems   –   MDS PC XT SCELBI
+Interdata       –   Interdata 16b/32b
+LGP             –   Royal-Mcbee LGP-21,30
+NOVA            –   Data General Nova
+PDP1            –   DEC PDP-1
+PDP4            –   DEC PDP-4
+PDP6            –   DEC PDP-6
+PDP7            –   DEC PDP-7
+PDP8            –   DEC PDP-8
+PDP9            –   DEC PDP-9
+PDP15           –   DEC PDP-15
+PDP10           –   DEC PDP-10 (KS)
+KA10            –   DEC PDP-10 (KA10)
+KI10            –   DEC PDP-10 (KI10)
+KL10            –   DEC PDP-10 (KL10)
+KS10            –   DEC PDP-10 (KS10)
+PDP11           –   DEC PDP-11
+PDQ-3           –   Advanced Computer PQD-3
+S3              –   IBM System/3 model 10
+SAGE            –   SAGE Inc. 68000
+SDS             –   SDS 940
+SEL32           –   SEL 32/27, 67,77,87,97,V7,V9
+sigma           –   XDS Sigma 32b
+SSEM            –   Manchester SSEM
+swtp6800        –   SWTP 6800
+tt2500          –   General Turtle tt2500
+TX-0            –   MIT TX-0
+VAX             –   DEC VAX
+
+This package contains the Open Simh version, the 4.X stream,
+which can be found in github.
+Open SimH is more advanced and implements more simulators than
+the "classic" SimH, but is also CI/CD work.
+
+Note: Please add /opt/open-simh/bin to your $PATH or simply
+      invoke each simulator with open-simh-"name".
+      Example: open-simh-vax

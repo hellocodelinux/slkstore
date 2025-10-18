@@ -1,0 +1,11 @@
+sdl-jstest (SDL joystick test utility)
+
+sdl-jstest is a simple program that lets you find out how many
+joysticks SDL detected on your system, how many axes, buttons, hats
+and balls they have each. It also lets you test the joysticks by
+displaying the events they send or by displaying their current button,
+axis, hat or ball state. sdl-jstest is especially useful if you want
+to test your SDL Linux joystick configuration.
+
+The package includes both sdl-jstest (SDL 1.2) and sdl2-jstest (SDL
+2.0) executables.

@@ -1,0 +1,30 @@
+Solfege is free music education software.
+
+Use it to train your rhythm, interval, scale and chord skills.
+Solfege - Smarten your ears! 
+
+Features
+    * Recognise melodic and harmonic intervals
+    * Compare interval sizes
+    * Sing the intervals the computer asks for
+    * Identify chords
+    * Sing chords
+    * Sing tone from chords: root, third, fifth, etc
+    * Scales
+    * Dictation
+    * Remembering rhythmic patterns 
+    * Theory: name intervals and scales
+    * Cadences
+
+Notes:
+
+1. If you don't hear any audio, you may have to edit the ~/.solfegerc
+   file and add "-Os -o hw:0" to the midi_player_options.
+   Mine looks like:
+
+     midi_player_options=-Os -o hw:0 -idqq %s
+
+   I don't see a way to make this change via the GUI.
+
+2. Although freepats is listed as required in the .info file, this
+   will work with eawpats instead.

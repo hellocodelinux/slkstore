@@ -1,0 +1,20 @@
+--- xen-4.18.0/tools/xs-clients/Makefile.ORIG	2023-11-16 22:44:21.000000000 +0100
++++ xen-4.18.0/tools/xs-clients/Makefile	2023-12-05 03:01:05.801759446 +0100
+@@ -29,7 +29,7 @@
+ clients: xenstore $(CLIENTS) xenstore-control
+ 
+ $(CLIENTS): xenstore
+-	ln -f xenstore $@
++	ln -sf xenstore $@
+ 
+ xenstore: xenstore_client.o
+ 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@ $(APPEND_LDFLAGS)
+@@ -54,7 +54,7 @@
+ 	$(INSTALL_PROG) xenstore-control $(DESTDIR)$(bindir)
+ 	$(INSTALL_PROG) xenstore $(DESTDIR)$(bindir)
+ 	set -e ; for c in $(CLIENTS) ; do \
+-		ln -f $(DESTDIR)$(bindir)/xenstore $(DESTDIR)$(bindir)/$${c} ; \
++		ln -sf xenstore $(DESTDIR)$(bindir)/$${c} ; \
+ 	done
+ 
+ .PHONY: uninstall

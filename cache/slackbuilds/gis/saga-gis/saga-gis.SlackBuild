@@ -1,0 +1,163 @@
+#!/bin/bash
+
+# Slackware build script for saga-gis
+
+# Copyright 2023-2025 Giancarlo Dessi, Cagliari, IT
+# Copyright 2014-2021 Benjamin Trigona-Harany <slackbuilds@jaxartes.net>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=saga-gis
+VERSION=${VERSION:-9.9.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+SRCNAM=saga
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+# unixODBC is needed in 32 bit systems instead of libiodbc released
+# with Slackware 15.0. The slackbuild stops if unixODBC is not installed
+if [[ "$ARCH" = "i586" || "$ARCH" = "i686" ]] ; then
+  if ! [ -f /usr/lib/libodbc.so ] ; then
+    echo "";
+    echo "";
+    echo "";
+    echo "******************** WARNING *********************";
+    echo " This script cannot be executed in 32 bit systems ";
+    echo " with iODBC as default ODBC library installed.    ";
+    echo " The current process will be stopped.             ";
+    echo " Please install the unixODBC package from the     ";
+    echo " slackbuild available in the SBo repository.      ";
+    echo "**************************************************";
+    exit 1;
+  fi
+fi
+
+# if both unixODBCand and libiodbc are installed, SAGA set the
+# first as default driver ODBC. This flag should prevent possible 
+# compilation failures since cmake does not find the correct
+# path of unixODBC headers
+ODBC=""
+if pkg-config --exists odbc; then
+  ODBC="-DODBC_INCLUDE_DIR=/usr/include/unixodbc "
+fi
+
+# Look if the system has PDAL installed
+if pkg-config --exists pdal; then
+  WITHPDAL=""
+else
+  WITHPDAL="-DWITH_TOOLS_PDAL=OFF "
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION/saga-gis
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Disable WITH_EXIV in stable due outdated version of exiv2
+if [ -f /usr/lib${LIBDIRSUFFIX}/libexiv2.so.0.27.5 ]; then
+ sed -i src/tools/io/io_grid_image/CMakeLists.txt -e \
+    's/Exiv2 GPS Tag extraction" ON)/Exiv2 GPS Tag extraction" OFF)/g'
+fi
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_MANDIR=/usr/man \
+    $ODBC \
+    $WITHPDAL \
+    $CMAKE_POLICY \
+    -DCMAKE_BUILD_TYPE=Release ..
+  make -j 10
+  make install/strip DESTDIR=$PKG
+cd ..
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# DCMAKE_INSTALL_MANDIR is not applied by the process we move files manually from /usr/share
+mv $PKG/usr/share/man $PKG/usr/
+find $PKG/usr/man -type f -exec gzip -9 {} \;
+for i in $( find $PKG/usr/man -type l ) ; do ln -s $( readlink $i ).gz $i.gz ; rm $i ; done
+
+mv $PKG/usr/share/metainfo $PKG/usr/share/appdata
+
+# fix some bad perms in doc files that have to install
+chmod 644 readme.md src/*.txt
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a readme.md src/gpl.txt src/lgpl.txt  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

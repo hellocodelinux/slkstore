@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# Slackware build script for kegs
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230918 bkw: update for v1.29, binary in /usr/games, section 6 manpage.
+# 20221228 bkw: update for v1.16.
+
+# 20210825 bkw: update for v1.12.
+# - upstream got rid of to_pro and partls, so their man pages are
+#   also gone now.
+
+# 20210225 bkw: update for v1.05. lots of changes:
+# - include the ROM image in the package (add it to DOWNLOAD)
+# - allow_sound_open_fail.diff no longer required
+# - rework allow_window_close.diff for v1.05
+# - .desktop file no longer needs Terminal=true
+# - upstream now supports pulseaudio, so build with it by default. add
+#   AUDIO variable to build the old OSS sound support or ALSA via aoss
+#   instead.
+
+# 20170305 bkw:
+# - fix building under installwatch, caused by a symlink in the
+#   tarball being listed before its target. Why does this choke
+#   under installwatch and not otherwise? Not bumping BUILD for this.
+
+# 20150621 bkw: bump BUILD to 2
+# - fix link to GS/OS images in README
+# - split up huge README, move most of it to README.Slackware
+# - add allow_sound_open_fail.diff
+# - add instructions on getting OSS audio to work on modern Slack
+# - "Exec=aoss xkegs" in .desktop file
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=kegs
+VERSION=${VERSION:-1.29}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+AUDIO=${AUDIO:-pulse}
+VARS=$CWD/makevars/vars.$AUDIO
+
+if [ ! -e $VARS ]; then
+  echo -n "*** AUDIO=\"$AUDIO\" not supported. Use one of: " 1>&2
+  list="$( ls -1 $CWD/makevars/vars.* | cut -d. -f2 )"
+  echo $list 1>&2
+  exit 1
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM.$VERSION
+unzip $CWD/$PRGNAM.$VERSION.zip -x '*/KEGSMAC.app/*' '*/xkegs' '*.exe'
+cd $PRGNAM.$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# device name for joysticks has changed for the 21st century.
+sed -i 's,/dev/js,/dev/input/js,' src/joystick_driver.c
+
+# xkegs refuses to close (close button greyed-out by window manager).
+# Small patch by SlackBuild author fixes this large annoyance (which is
+# extra-annoying because there's also no Quit option in the kegs menu).
+# I've sent this upstream, maybe it'll get integrated in future versions.
+# 20210225 bkw: Years later. Patch had to change for 1.05. The README
+# for kegs *actually says* you can close the main KEGS window to quit,
+# *and you can't fucking close it* without this patch. Apologies if I
+# sound a bit strident, but...
+# 20230918 bkw: patch still applies (with fuzz) & works on 1.29.
+patch -p1 < $CWD/allow_window_close.diff
+
+cd src
+rm -f vars
+cat $VARS > vars
+make SLKCFLAGS="$SLKCFLAGS" x$PRGNAM
+cd -
+
+# No install target, just stick it all where it goes.
+mkdir -p \
+  $PKG/usr/games \
+  $PKG/usr/libexec \
+  $PKG/usr/share/pixmaps \
+  $PKG/usr/share/applications \
+  $PKG/usr/share/$PRGNAM \
+  $PKG/usr/man/man6
+install -s -m0755 x$PRGNAM $PKG/usr/libexec/
+install -m0755 $CWD/x$PRGNAM.sh $PKG/usr/games/x$PRGNAM
+install -m0644 $CWD/$PRGNAM.desktop $PKG/usr/share/applications/
+install -m0644 $CWD/config.$PRGNAM.default $PKG/usr/share/$PRGNAM
+
+# The icons were converted from the Mac OSX icon with icns2png.
+for i in 16 32 48 128; do
+  idir=$PKG/usr/share/icons/hicolor/${i}x${i}/apps
+  mkdir -p $idir
+  cat $CWD/icons/$i.png > $idir/$PRGNAM.png
+done
+
+# old-style icon (e.g. windowmaker, fvwm2)
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# Include the ROM image in the package. It's been available on the
+# asimov site for at least 20 years now, Apple has never complained.
+unzip -p $CWD/gsrom03.zip > $PKG/usr/share/$PRGNAM/rom03
+
+# 20210825 bkw: include the bundled disk images in the package.
+cp -a [A-Z]*.gz $PKG/usr/share/$PRGNAM/
+
+# Man pages are specific to the SlackBuild, though I've sent
+# them upstream for consideration.
+for file in $CWD/man/*.6; do
+  sed "s/@VERSION@/$VERSION/g" $file \
+  | gzip -9c \
+  > $PKG/usr/man/man6/$( basename $file ).gz
+done
+
+# Half the supplied documentation refers to it as "kegs" and
+# the other half calls it "xkegs". To avoid confusion:
+ln -s x$PRGNAM.6.gz $PKG/usr/man/man6/$PRGNAM.6.gz
+ln -s x$PRGNAM $PKG/usr/games/$PRGNAM
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+install -m0644 doc/*.txt $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed "s,@AUDIO@,$AUDIO," $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

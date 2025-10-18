@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+         |-----handy-ruler------------------------------------------------------|
+mate-calc: mate-calc (calculator for the MATE desktop)
+mate-calc:
+mate-calc: MATE Calculator started as a fork of gnome-calc, the calculator
+mate-calc: application that was previously in the OpenWindows Deskset of the
+mate-calc: Solaris 8 operating system.
+mate-calc: It supports scientific, financial and logical modes.
+mate-calc:
+mate-calc:
+mate-calc:
+mate-calc: https://wiki.mate-desktop.org/mate-desktop/applications/mate-calc/
+mate-calc:

@@ -1,0 +1,39 @@
+irssi-python (Python 3 scripting support for irssi)
+
+irssi-python embeds Python into an Irssi module, providing most of the
+functionality of the Perl wrapper to Python scripts using a similar
+interface.
+
+After the package is installed, you can test it from within irssi by
+running "/load python". If this works OK, you can configure irssi to
+always load the module with a command like:
+
+$ echo 'load python' >> ~/.irssi/startup
+
+Example python scripts can be found in /usr/share/irssi/scripts/*.py
+
+Note that previous versions of irssi-python used Python 2. If you've
+written any scripts, they may have to be modified for Python 3.
+
+Beware of upgrades: if Slackware's irssi or python packages are ever
+upgraded, you'll almost certainly have to rebuild & reinstall this.
+Symptoms may include irssi ABI version mismatch errors, undefined
+symbols, or segfaults.
+
+If you get a warning about an irssi version mismatch when building
+irssi-python, first update your irssi package to the latest one for
+your Slackware version:
+
+# slackpkg update
+# slackpkg upgrade irssi
+
+If you still get the warning, set the environment variable VERSION.
+The first part of VERSION (before the last _) should not change, but
+the part after the last _ is the irssi version. Example:
+
+# VERSION="20230512_9ab753d_1.4.5" sh irssi-python.SlackBuild
+
+You'll also have to have the irssi .tar.xz source tarball in the
+SlackBuild directory. It should be available from:
+
+https://github.com/irssi/irssi/releases/

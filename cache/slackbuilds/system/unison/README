@@ -1,0 +1,27 @@
+Unison is a file-synchronization tool for Unix and Windows. It allows
+two replicas of a collection of files and directories to be stored
+on different hosts (or different disks on the same host), modified
+separately, and then brought up to date by propagating the changes in
+each replica to the other.
+
+Unlike simple mirroring or backup utilities, Unison can deal with
+updates to both replicas of a distributed directory structure. Updates
+that do not conflict are propagated automatically. Conflicting updates
+are detected and displayed.
+
+Unison allows you to either build a text-only binary or a binary that
+will use a graphical user interface.
+
+The dependency (lablgkt3) required for a GUI is currently not
+available on slackbuilds.org, so this defaults to a text only build.
+
+This slackbuild supports, similar to Slackware's own emacs package,
+building both a text-only and a gui binary. To do this, you would
+need to install lablgtk3 somehow yourself and then:
+
+  "FLAVOUR='gtk3 text' ./unison.SlackBuild"
+
+Please also consider submitting the build for others to use.
+
+hevea is an optional dependency which allows building the HTML
+documentation. Otherwise only PDF docs will be built.

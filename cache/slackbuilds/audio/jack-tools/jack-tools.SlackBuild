@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# Slackware build script for jack-tools
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211128 bkw:
+# - Update for v20210917_ab297f4 (latest git).
+# - Now that Slackware-current has asciidoctor, use it to generate
+#   man pages (and get rid of my own hacked-up ones).
+# - Binary names all changed from jack-* to rju-*, note in README.
+# - Add git2tarxz.sh now that upstream's switched to git.
+
+# 20180617 bkw:
+# - BUILD=2
+# - Get rid of VST headers, since Steinberg doesn't want us to
+#   distribute them. Thanks to idlemoor for cleaning up the mess
+#   in the git history.
+# - If the user really needs native VST support, he can get the
+#   headers the legit way (from Steinberg) and the script will
+#   pick them up. Otherwise, jack-lxvst is just not built. Add
+#   README_VST.txt to hopefully clarify the situation.
+
+# 20170127 bkw:
+# - Updated for 20170117 (latest commit). Also updated c-common to
+#   latest.
+# - Added man pages for the new jack-data and jack-lxvst utils.
+# - Added VST headers to get jack-lxvst to build. Not sure the
+#   licensing status of these, but they were cloned from a public
+#   github repo.
+
+# 20151110 bkw:
+# - Updated for 20141211. This is the date of the latest darcs
+#   commit. Note that the c-common/ in the source tarball is the
+#   old one (from my jack-tools-20130616.tar.gz), since jack-tools
+#   won't compile against the latest c-common. Only jack-scope
+#   and jack-play have changed.
+# - Add capability stuff.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=jack-tools
+VERSION=${VERSION:-20210917_ab297f4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/${PRGNAM}-$VERSION.tar.xz
+
+# Sources live in a subdir (but the docs don't).
+cd $PRGNAM-$VERSION/cmd
+
+# apply our flags. -Wl,-s strips the binaries.
+sed -i "s/-O./$SLKCFLAGS -Wl,-s/" Makefile r-common/c/Makefile
+
+# If the Steinberg VST headers are found, put them where the build can find
+# them. Neither SBo nor upstream can distribute the headers, you have to get
+# them direct from Steinberg.
+VST_HEADERS=${VST_HEADERS:-$CWD}
+if [ -e $VST_HEADERS/aeffect.h -a -e $VST_HEADERS/aeffectx.h ]; then
+  # Steinberg me harder!
+  mkdir -p pluginterfaces/vst2.x
+  cp $VST_HEADERS/aeffect.h $VST_HEADERS/aeffectx.h pluginterfaces/vst2.x
+  WITH=WITH
+else
+  sed -i '/^bin *=/s,\(rju-lxvst\|lxvst-query\),,g' Makefile
+  WITH=WITHOUT
+  # Don't install the lxvst man page if building without VST.
+  rm -f ../md/*lxvst*
+fi
+
+make
+make all VST_SDK=$(pwd)
+
+mkdir -p $PKG/usr/bin $PKG/usr/include
+make install prefix=$PKG/usr
+
+# Back to parent source dir.
+cd $TMP/$PRGNAM-$VERSION
+
+# generate man pages. results aren't perfectly formatted, but not too bad.
+# upstream doesn't have a lxvst-query.md.
+asciidoctor -b manpage -d manpage md/rju-*.md
+
+mkdir -p $PKG/usr/man/man1
+cp md/*.1 $PKG/usr/man/man1
+gzip -9 $PKG/usr/man/man1/*
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat README.md > $PKG/usr/doc/$PRGNAM-$VERSION/README
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+sed "s,@WITH@,$WITH," $CWD/slack-desc > $PKG/install/slack-desc
+
+# Only add capability stuff if not disabled:
+if [ "${SETCAP:-yes}" = "yes" ]; then
+  cat $CWD/setcap.sh >> $PKG/install/doinst.sh
+  chown root:audio $PKG/usr/bin/*
+  chmod 0750 $PKG/usr/bin/*
+fi
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

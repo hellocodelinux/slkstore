@@ -1,0 +1,14 @@
+wineasio (an ASIO to JACK driver for WINE)
+
+WineASIO provides an ASIO to JACK driver for WINE. ASIO is the most
+common Windows low-latency driver, so is commonly used in audio
+workstation programs.
+
+After installing the package, each user who will use wineasio must
+run the command "regsvr32 wineasio.dll". This must be done as the
+user(s), not as root. This only needs to be done once per user. See
+the wineasio README.md for more information.
+
+Note: If multilib is installed, this *should* build a package with
+support for both 32-bit and 64-bit wine, but it hasn't been tested by
+the SlackBuild maintainer.

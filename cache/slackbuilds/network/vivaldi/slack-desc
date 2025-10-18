@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+       |-----handy-ruler------------------------------------------------------|
+vivaldi: vivaldi (web browser)
+vivaldi:
+vivaldi: Experience the web in a whole new way with Vivaldi.
+vivaldi:
+vivaldi: Vivaldi is a browser that has the features you need, a style that fits
+vivaldi: and values you can stand by. Your browser matters. Take control with
+vivaldi: Vivaldi.
+vivaldi:
+vivaldi: Home Page: https://vivaldi.com
+vivaldi:
+vivaldi:

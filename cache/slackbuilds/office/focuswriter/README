@@ -1,0 +1,10 @@
+FocusWriter is a fullscreen, distraction-free word processor designed
+to immerse you as much as possible in your work. 
+The program autosaves your progress, and reloads the last files you
+had open to make it easy to jump back in during your next writing
+session, and has many other features that make it such that only one
+thing matters: your writing.
+
+FocusWriter 1.7.6 is the last available version for qt5. Newer versions
+(focuswriter >= 1.8.0) require qt6.
+A focuswriter-qt6 package is available on slackbuilds.org.

@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Slackware build script for Angband
+
+# Written by Marshall Scott, David Melik, and Ben Collver.
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20220219 bkw: Modified by SlackBuilds.org:
+# - update download URL to one that exists.
+# - actually use SLKCFLAGS.
+# - use full path to icon in .desktop (since it's not in /usr/share/icons).
+# - remove an empty file from the doc dir.
+
+# 20240203
+# - install old_class.txt
+# See also:
+# https://angband.live/forums/forum/angband/vanilla/248199-can-t-get-most-spells-as-ranger
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=angband
+VERSION=${VERSION:-4.2.5}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+rm -rf $TMP/$PRGNAM-$VERSION
+cd $TMP
+tar xvf $CWD/Angband-$VERSION.tar.gz
+cd Angband-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+CFLAGS="$SLKCFLAGS" \
+./configure \
+  --enable-sdl2 \
+  --prefix=/usr \
+  --datarootdir=/usr/share/games \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --bindir=/usr/games \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux \
+
+make
+make install DESTDIR=$PKG
+strip $PKG/usr/games/$PRGNAM
+cp lib/gamedata/old_class.txt $PKG/etc/angband/gamedata/
+
+find $PKG -name "delete.me" -exec rm -f {} \+
+
+mkdir -p $PKG/var/games/angband/archive
+mkdir -p $PKG/var/games/angband/save
+mkdir -p $PKG/var/games/angband/scores
+mkdir -p $PKG/var/games/angband/user
+
+mkdir -p $PKG/usr/share/{applications,pixmaps}
+cp $CWD/angband.png $PKG/usr/share/pixmaps
+cp $CWD/angband.desktop $PKG/usr/share/applications
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a changes.txt README.md docs/ lib/help/ \
+    $PKG/usr/doc/$PRGNAM-$VERSION
+cp $CWD/README $PKG/usr/doc/$PRGNAM-$VERSION
+find $PKG/usr/doc/$PRGNAM-$VERSION -type f -exec chmod 644 {} \+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+rm -f $PKG/usr/doc/$PRGNAM-$VERSION/{doc,help}/.dep*
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

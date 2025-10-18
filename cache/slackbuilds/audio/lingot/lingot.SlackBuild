@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Slackware build script for lingot
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20211129 bkw:
+# - updated for v1.1.1.
+# - use upstream's man page (identical to the one we used to have here).
+# - *fix* upstream's man page.
+# - get rid of format_string.diff (no longer applies).
+# - lower the default minimum frequency and raise the default
+#   max frequency.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=lingot
+VERSION=${VERSION:-1.1.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# make the .desktop validate
+sed -i 's,\.svg,,' *.desktop
+
+# man page hasn't been updated for new conf file location. also
+# fix "-c config" formatting error.
+sed -i -e 's,\\c$,c,' \
+       -e 's,~/.lingot,~/.config/lingot,' \
+       $PRGNAM.1
+
+# Default minimum frequency is E2 (82.407Hz), which is the low E on a
+# guitar in standard tuning. This kinda sucks: some of us play bass.
+# Or 7- or 8-string guitar. Or 6-string guitar in drop-D or open
+# D/G/etc tunings. Make it default to A0, which is 1 full step lower
+# than the low B on a 5-string bass guitar. Also raise the max. This
+# just changes the defaults; users can adjust as desired from the GUI.
+# Unfortunately, lingot can't actually display the 0 octave, so this
+# still only gets us down to C1 (1/2 step too high for a 5-string
+# bass). Also your audio interface might be cutting off the lows, I've
+# got a cheap one that sharply drops off around 40Hz.
+
+sed -i -e '/->min_frequency *=/s,=.*,= 27.5;  // Hz (A0),' \
+       -e '/->max_frequency *=/s,=.*,= 880.0; // Hz (A5),' \
+       src/lingot-config.c
+
+[ "${JACK:-yes}"  = "no" ] && EXTRA+="--without-jack "
+[ "${PULSE:-yes}" = "no" ] && EXTRA+="--without-pulseaudio "
+[ "${OSS:-no}"    = "no" ] && EXTRA+="--without-oss "
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  $EXTRA \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux
+
+make
+make install-strip DESTDIR=$PKG
+
+gzip -9 $PKG/usr/man/man1/$PRGNAM.1
+
+rm -f $PKG/usr/lib*/*.la
+
+svgicon="$( /bin/ls icons/*.svg | head -1 )"
+iconname="$( basename $svgicon .svg )"
+for px in 16 32 48 64 128; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -resize $size $svgicon $dir/$iconname.png
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$iconname.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# `make install' puts the docs in --docdir, just add the SlackBuild
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+P=no; J=no; O=no
+strings $PKG/usr/lib*/lib$PRGNAM.so | grep -q /dev/dsp && O=yes
+objdump -p $PKG/usr/lib*/lib$PRGNAM.so | grep NEEDED > otmp
+grep -q libpulse otmp && P=yes
+grep -q libjack  otmp && J=yes
+
+sed -e "s,@P@,$P," -e "s,@J@,$J," -e "s,@O@,$O," $CWD/slack-desc \
+    > $PKG/install/slack-desc
+
+if [ "${SETCAP:-yes}" = "yes" ]; then
+  cat $CWD/setcap.sh >> $PKG/install/doinst.sh
+  chown root:audio $PKG/usr/bin/$PRGNAM
+  chmod 0750 $PKG/usr/bin/$PRGNAM
+fi
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

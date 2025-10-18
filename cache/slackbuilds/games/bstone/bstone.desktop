@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Blake Stone
+GenericName=First Person Shooting Game
+Icon=/usr/share/pixmaps/bstone.png
+Exec=/usr/games/bstone
+Terminal=false
+Categories=Game;ActionGame;

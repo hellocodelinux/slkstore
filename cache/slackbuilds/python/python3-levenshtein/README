@@ -1,0 +1,4 @@
+python3-levenshtein (Compute string edit distances and similarities)
+
+The Levenshtein Python C extension module contains functions for
+fast computation of Levenshtein distance and string similarity.

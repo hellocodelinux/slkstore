@@ -1,0 +1,23 @@
+--- support/Startup/argus.orig	2024-04-16 14:24:23.066973888 -0300
++++ support/Startup/argus	2024-04-16 14:25:50.591966998 -0300
+@@ -48,17 +48,17 @@
+ fi
+ 
+ # Source networking configuration.
+-. /etc/sysconfig/network
++#. /etc/sysconfig/network
+ 
+ # Check that networking is up.
+-[ .${NETWORKING} = ."no" ] && exit 1
++#[ .${NETWORKING} = ."no" ] && exit 1
+ 
+ 
+ # Set argus path by defining $ARGUSHOME for this script.
+ # If argus was installed in another way, modify PATH to
+ # include the directory where the argus binary was installed.
+ 
+-ARGUSDIR=/usr/local/sbin
++ARGUSDIR=/usr/sbin
+ ARGUSHOME=$ARGUSDIR
+ export PATH=$ARGUSHOME:$PATH
+ 

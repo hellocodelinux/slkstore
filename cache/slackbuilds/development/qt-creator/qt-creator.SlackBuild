@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Slackware build script for Qt Creator
+
+# Copyright 2016 Andre Barboza, Belo Horizonte - Brazil
+# Copyright 2020 Andrzej Telszewski, Szczecin
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# For building -rc or -beta releases, set VERSION to something like:
+# VERSION=4.2.0_rc1 or VERSION=4.2.0_beta1 (note the underscore).
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=qt-creator
+VERSION=${VERSION:-5.0.3}
+SRCVER=$(echo $VERSION | tr _ -)
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+
+rm -rf $PRGNAM-$SRCVER
+tar xvf $CWD/$PRGNAM-opensource-src-$SRCVER.tar.gz
+#mv $PRGNAM-opensource-src-$SRCVER $PRGNAM-$SRCVER
+cd $PRGNAM-$SRCVER
+
+chown -R root:root .
+chmod -R a-st,u+rwX,go-w+rX .
+
+# Adjust docs location.
+
+sed -i "s|share/doc/qtcreator|doc/$PRGNAM-$VERSION|g"  qtcreator.pri || exit 1
+sed -i "s|share/doc/qtcreator|doc/$PRGNAM-$VERSION|g"  doc/qtcreatordev/src/qtcreator-documentation.qdoc || exit 1
+sed -i "s|share/doc/\${IDE_ID}|doc/$PRGNAM-$VERSION|g" cmake/QtCreatorAPI.cmake || exit 1
+
+# LLVM/Clang can be used to extend Qt Creator functionality.
+
+if [ "${USE_LLVM:-no}" = yes ] || [ "${CODE_MODEL:-no}" = "yes" ]; then
+  LLVM_INSTALL_ROOT=/usr/libexec/qtcreator/clang
+  QMAKE_LFLAGS=-L${LLVM_INSTALL_ROOT}/lib
+  export QTC_ENABLE_CLANG_LIBTOOLING=1
+
+  if [ ! -x ${LLVM_INSTALL_ROOT}/bin/clang ]; then
+    echo "error: You must install \"qt-creator-llvm\" package in order to"
+    echo "error: use LLVM/Clang tools integration."
+
+    exit 1
+  fi
+fi
+
+# -Wunguarded-availability-new is not supported.
+
+patch -p0 < $CWD/remove-w-error-unguarded-availability-new.patch
+
+# Tell DEs that Qt Creator supports some more MIME types.
+
+patch -p0 < $CWD/add-mime-types.patch
+
+# Fix for https://lists.qt-project.org/pipermail/qt-creator/2019-May/008050.html
+
+QMAKE_LFLAGS="$QMAKE_LFLAGS -L/usr/lib$LIBDIRSUFFIX"
+
+qmake-qt5 -r qtcreator.pro                 \
+  QMAKE_CXXFLAGS="$SLKCFLAGS"              \
+  QMAKE_LFLAGS="$QMAKE_LFLAGS"             \
+  QTC_PREFIX=/usr                          \
+  IDE_LIBRARY_BASENAME=lib$LIBDIRSUFFIX    \
+  LLVM_INSTALL_DIR=$LLVM_INSTALL_ROOT      \
+  QBS_INSTALL_DIR=/usr                     \
+  DEFINES+=QBS_ENABLE_PROJECT_FILE_UPDATES
+
+make
+make install INSTALL_ROOT=$PKG
+
+if which qdoc-qt5 &>/dev/null; then
+  make docs
+  make install_docs INSTALL_ROOT=$PKG
+else
+  echo "qdoc-qt5 not found.  Docs won't be built nor installed."
+fi
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/share/mime/packages
+cat $CWD/qt-creator.xml > $PKG/usr/share/mime/packages/qt-creator.xml
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a HACKING LICENSE.GPL3-EXCEPT README.md $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh  > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

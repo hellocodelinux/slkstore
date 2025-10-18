@@ -1,0 +1,8 @@
+fsviewer (NextStep-like file browser)
+
+FSViewer is a file system viewer for Window Maker, developed by George
+Clernon visually and functionally in analogy to the Workspace Manager
+of NeXTStep(TM).
+
+Although fsviewer uses windowmaker's libraries, it will run under any
+X window manager or desktop environment.

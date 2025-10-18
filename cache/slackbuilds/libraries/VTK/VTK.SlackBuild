@@ -1,0 +1,181 @@
+#!/bin/bash
+
+# Slackware build script for VTK
+
+# Copyright 2013,2014 Youjie Zhou <jmpopush@gmail.com>
+# All rights reserved.
+# Copyright 2016-2025 Christoph Willing,  Sydney Australia
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=VTK
+VERSION=${VERSION:-9.4.1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+    *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+# configure VTK features
+# (defaults suitable for OpenCASCADE, it's the only SBo package that depends on VTK)
+group_imaging="" ; [ "${IMAGING:-yes}" != "no" ] && group_imaging="-DVTK_GROUP_ENABLE_Imaging=YES"
+group_mpi=""     ; [ "${MPI:-no}" != "no" ]      && group_mpi="-DVTK_GROUP_ENABLE_MPI=YES -DVTK_USE_MPI=yes"
+group_qt=""      ; [ "${QT:-yes}" != "no" ]      && group_qt="-DVTK_GROUP_ENABLE_Qt=YES"
+group_views=""   ; [ "${VIEWS:-yes}" != "no" ]    && group_views="-DVTK_GROUP_ENABLE_Views=YES"
+group_web=""     ; [ "${WEB:-no}" != "no" ]      && group_web="-DVTK_GROUP_ENABLE_Web=YES"
+wrap_java=""     ; [ "${JAVA:-no}" != "no" ]     && wrap_java="-DVTK_WRAP_JAVA=true"
+wrap_python=""   ; [ "${PYTHON:-yes}" != "no" ]  && wrap_python="-DVTK_WRAP_PYTHON=true"
+python_version="-DVTK_PYTHON_VERSION=3"; [ "${PYTHONVERSION:-3}" == "2" ]  && python_version="-DVTK_PYTHON_VERSION=2"
+
+if pkg-config --exists jsoncpp ; then jsoncpp="-DVTK_USE_SYSTEM_JSONCPP:BOOL=ON" ; else jsoncpp="" ; fi
+
+# TODO: netcdf, hdf5, gl2ps
+#if test -e /usr/include/hdf5.h ; then hdf5="-DVTK_USE_SYSTEM_HDF5:BOOL=ON" ; else hdf5="" ; fi
+hdf5=""
+netcdf=""
+
+# gl2ps 1.4.0 is needed (+ VTK-specific changes)
+#if test -e /usr/include/gl2ps.h ; then gl2ps="-DVTK_USE_SYSTEM_GL2PS:BOOL=ON" ; else gl2ps="" ; fi
+gl2ps=""
+
+qtversion="-DVTK_QT_VERSION=Auto"
+if [ "$QTVERSION" = "5" ]; then
+  qtversion="-DVTK_QT_VERSION=5"
+elif [ "$QTVERSION" = "6" ]; then
+  qtversion="-DVTK_QT_VERSION=6"
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+
+patch -p1 < $CWD/include_limits.patch
+patch -p0 < $CWD/cstdint-for-gcc13.diff
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+sed -i '/include <QTextStream>/a #include <QPainterPath>' \
+  Rendering/Qt/vtkQtLabelRenderStrategy.cxx \
+  Rendering/Qt/vtkQtStringToImage.cxx
+
+if pkg-config --exists proj ; then
+  proj="-DVTK_USE_SYSTEM_LIBPROJ:BOOL=ON"
+else
+  proj=""
+fi
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib${LIBDIRSUFFIX} \
+    -DBUILD_SHARED_LIBS=ON \
+    -DVTK_CUSTOM_LIBRARY_SUFFIX="" \
+    -DVTK_USE_TK=ON \
+    -DVTK_BUILD_EXAMPLES=ON \
+    -DINSTALL_DOCS=ON \
+    $qtversion \
+    $group_imaging \
+    $group_mpi \
+    $group_qt \
+    $group_views \
+    $group_web \
+    $wrap_java \
+    $wrap_python \
+    $python_version \
+    $jsoncpp \
+    $proj \
+    $gl2ps \
+    $hdf5 \
+    $netcdf \
+    -DCMAKE_BUILD_TYPE=Release ..
+
+  make
+  make install DESTDIR=$PKG
+cd ..
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+[ -d $PKG/usr/plugins ] && {
+  mkdir -p $PKG/usr/lib${LIBDIRSUFFIX}/qt
+  mv \
+    $PKG/usr/plugins/ \
+    $PKG/usr/lib${LIBDIRSUFFIX}/qt
+}
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION/licenses
+cp -a \
+  CONTRIBUTING.md Copyright.txt README.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a \
+  $PKG/usr/share/licenses/VTK/* \
+  $PKG/usr/doc/$PRGNAM-$VERSION/licenses/
+rm -rf $PKG/usr/share
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,31 @@
+libqcow (libYAL QEMU QCOW image library)
+
+libqcow is a library to access the QEMU Copy-On-Write (QCOW) image file
+format.
+
+Project information:
+
+* Status: alpha
+* Licence: LGPLv3+
+
+Read-only supported QCOW formats:
+
+* version 1
+* version 2
+* version 3
+
+Supported QCOW format features:
+
+* zlib (DEFLATE) compression
+* AES-CBC 128-bit encryption
+* backing file (differential image)
+
+Unsupported QCOW format features:
+
+* LUKS encryption
+* data file
+* in-image snapshots
+
+Work in progress:
+
+* Thread-safety in file API functions

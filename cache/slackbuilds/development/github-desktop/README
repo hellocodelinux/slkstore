@@ -1,0 +1,8 @@
+
+github-desktop (Desktop client for GitHub)
+
+This is a re-pack of the official DEB package.
+
+Fork of GitHub Desktop to support various Linux distributions.
+
+For x86_64 or aarch64 only, no 32-bit support.

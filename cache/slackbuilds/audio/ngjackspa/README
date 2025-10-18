@@ -1,0 +1,22 @@
+ngjackspa (JACK host for LADSPA plugins)
+
+ngjackspa is a set of simple user interfaces that host a LADSPA plugin,
+providing JACK ports for its audio inputs and outputs, and dynamic
+setting of its control inputs. Additionally, the plugin controls can
+be exported to or controlled by control voltages on standard JACK audio
+ports.
+
+By default, the command-line (jackspa-cli), ncurses (njackspa), and
+gtkmm (gjackspa) user interfaces are built, and the qt4 one (qjackspa)
+is disabled. To build the qt4 UI, export QT=yes in the script's
+environment. You can also disable gtkmm with GTKMM=no.
+
+Note: gjackspa and qjackspa won't appear in your desktop startup menu.
+This is because they require command-line arguments (the plugin
+library and ID).
+
+This package uses POSIX filesystem capabilities to execute with
+elevated privileges (required for realtime audio processing). This
+may be considered a security/stability risk. Please read
+http://www.slackbuilds.org/caps/ for more information. To disable
+capabilities, pass SETCAP=no to the script.

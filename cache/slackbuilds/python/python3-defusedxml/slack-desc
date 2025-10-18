@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+                  |-----handy-ruler------------------------------------------------------|
+python3-defusedxml: python3-defusedxml (XML bomb protection for Python stdlib modules)
+python3-defusedxml:
+python3-defusedxml: The defusedxml package contains several Python-only workarounds and
+python3-defusedxml: fixes for denial of service and other vulnerabilities in Python's
+python3-defusedxml: XML libraries. In order to benefit from the protection you just have
+python3-defusedxml: to import and use the listed functions or classes from the right
+python3-defusedxml: defusedxml module instead of the original module.
+python3-defusedxml:
+python3-defusedxml:
+python3-defusedxml:
+python3-defusedxml:

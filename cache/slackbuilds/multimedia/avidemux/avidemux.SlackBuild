@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# Slackware build script for avidemux
+
+# Derived from a SlackBuild by Eric Hameleers.
+# Copyright 2009, 2010, 2011, 2013  Eric Hameleers, Eindhoven, NL
+# Copyright 2015 John Vogel Corning, NY USA
+# Copyright 2017-2022 Matteo Bernardini, Pisa, IT
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20241205 bkw: Modified by SlackBuilds.org, v2.8.1, BUILD=2:
+# - add patch for x265 update to 4.1. don't apply if building against
+#   x265 3.x.
+# - gzip the x86 nosse patch, to avoid misconfigured git repos
+#   stripping the CRLFs off it.
+
+# 20220402 bkw: Modified by SlackBuilds.org, v2.8.0, BUILD=2:
+# - man page was getting installed as a *file* called /usr/man/man1. fix.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=avidemux
+VERSION=${VERSION:-2.8.1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# 20241205 bkw: Note: these SLKCFLAGS are bogus. They never get
+# passed to the build. Also LIBDIRSUFFIX not needed.
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+DOCS="AUTHORS License.txt COPYING scripts/automkv.py"
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf ${PRGNAM}_${VERSION}
+tar xvf $CWD/${PRGNAM}_${VERSION}.tar.gz
+cd ${PRGNAM}_${VERSION}
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+# Thanks FreeBSD guys!
+[[ "$ARCH" = "i586" ]] && \
+  zcat $CWD/extra-patch-i386-nosse.patch.gz | patch -p0
+
+# 20241205 bkw: API change in x265 between 3.6 and 4.1. A struct field
+# used to be a char*, and now it's a char[256]. Only apply if needed.
+pkg-config --atleast-version 4.0 x265 && patch -p1 < $CWD/x265-4.1.diff
+
+sed -i 's|../avidemux/qt4|../avidemux/qt4 -DLRELEASE_EXECUTABLE=/usr/bin/lrelease-qt5|' bootStrap.bash || exit 1
+sed -i 's|0.19|1.0|' avidemux_plugins/ADM_videoFilters6/ass/CMakeLists.txt || exit 1
+
+bash bootStrap.bash --with-core --with-cli --with-plugins
+
+make -C buildCli DESTDIR="$PKG" install
+make -C buildCore DESTDIR="$PKG" install
+make -C buildPluginsCLI DESTDIR="$PKG" install
+make -C buildPluginsCommon DESTDIR="$PKG" install
+
+install -Dm 644 avidemux_icon.png $PKG/usr/share/pixmaps/avidemux.png
+mkdir -p $PKG/usr/man/man1
+gzip -9c < man/avidemux.1 > $PKG/usr/man/man1/avidemux.1.gz
+
+make -C buildQt5 DESTDIR="$PKG" install
+make -C buildPluginsQt5 DESTDIR="$PKG" install
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/${PRGNAM}-${VERSION}
+cp -a $DOCS $PKG/usr/doc/${PRGNAM}-${VERSION}
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/${PRGNAM}-${VERSION}/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

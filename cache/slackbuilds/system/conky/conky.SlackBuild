@@ -1,0 +1,172 @@
+#!/bin/bash
+
+# Slackware build script for conky
+
+# Copyright 2021 Matt Dinslage (daedra1980@gmail.com), Springfield, MO, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20241017 bkw: Modified by SlackBuilds.org, BUILD=2: update for lua 5.4.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=conky
+VERSION=${VERSION:-1.22.2}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# Pass AUDACIOUS=yes if you want to build audacious player support.
+AUDACIOUS=${AUDACIOUS:-"no"}
+
+# Pass NVIDIA=yes if you want to build NVIDIA hardware monitoring support.
+NVIDIA=${NVIDIA:-"no"}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+if [ "${AUDACIOUS:-yes}" = "yes" ]; then
+  audacious="ON"
+else
+  audacious="OFF"
+fi
+
+if [ "${NVIDIA:-yes}" = "yes" ]; then
+  nvidia="ON"
+else
+  nvidia="OFF"
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DDOC_PATH=/usr/doc/$PRGNAM-$VERSION \
+    -DMAINTAINER_MODE=ON \
+    -DBUILD_DOCS=OFF \
+    -DBUILD_EXTRAS=ON \
+    -DBUILD_XDBE=ON \
+    -DBUILD_AUDACIOUS=$audacious \
+    -DBUILD_NVIDIA=$nvidia \
+    -DBUILD_CURL=ON \
+    -DBUILD_WLAN=ON \
+    -DBUILD_RSS=ON \
+    -DBUILD_PULSEAUDIO=ON \
+    -DBUILD_MPD=ON \
+    -DBUILD_IMLIB2=ON \
+    -DBUILD_LUA_CAIRO=ON \
+    -DBUILD_LUA_IMLIB2=ON \
+    -DBUILD_WAYLAND=ON \
+    -DBUILD_MOUSE_EVENTS=ON \
+    -DCMAKE_BUILD_TYPE=Release ..
+
+  make
+  make install DESTDIR=$PKG
+cd ..
+
+# Delete the duplicate, and wrong location, vim and nano syntax files.
+rm -rf $PKG/{vim,nano}
+
+# Don't ship .a files:
+find $PKG -type f -iname '*.a' -exec rm -rf {} \+
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Conky now requires pandoc to generate the man pages.  
+# No need to add that dependency, we will use the
+# man page provided by the conky team.
+mkdir -p $PKG/usr/man/man1
+cp $CWD/conky.1.gz $PKG/usr/man/man1
+
+# Copy existing config files
+mkdir -p $PKG/etc/conky
+cp data/conky.conf $PKG/etc/conky/conky.conf.new
+cp data/conky_no_x11.conf $PKG/etc/conky/conky_no_x11.conf.new
+
+# Vim and Nano syntax highlighting files
+mkdir -p $PKG/usr/share/nano
+mkdir -p $PKG/usr/share/vim/vimfiles/{syntax,ftdetect}
+cp build/extras/vim/syntax/conkyrc.vim $PKG/usr/share/vim/vimfiles/syntax
+cp extras/vim/ftdetect/conkyrc.vim $PKG/usr/share/vim/vimfiles/ftdetect
+cp build/extras/nano/conky.nanorc $PKG/usr/share/nano/conky.nanorc
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS COPYING LICENSE.BSD README.md \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+# include copy of convert.lua script for old configs.
+cat extras/convert.lua > $PKG/usr/doc/$PRGNAM-$VERSION/convert.lua
+
+# Remove duplicate config files out of the docdir.
+rm -r $PKG/usr/doc/$PRGNAM-$VERSION/*.conf
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

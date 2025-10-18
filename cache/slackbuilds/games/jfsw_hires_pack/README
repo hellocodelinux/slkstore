@@ -1,0 +1,8 @@
+jfsw_hires_pack (graphic enhancements for jfsw and voidsw)
+
+This adds high resolution textures and 3D models to Shadow
+Warrior. For use with slackbuilds.org jfsw or eduke32 packages.
+
+There is a known issue with jfsw: the sword doesn't display
+properly. It looks like half a sword. This has been a known issue for
+some time now.

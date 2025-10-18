@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+mdbtools: mdbtools (libraries and utilities to read MDB and ACCDB files)
+mdbtools:
+mdbtools: The MDB Tools project is a effort to document the MDB and ACCDB file
+mdbtools: formats used in Microsoft's Access database packages, and to provide
+mdbtools: a set of tools and applications to make that data available on other
+mdbtools: platforms.
+mdbtools:
+mdbtools: https://github.com/mdbtools/mdbtools
+mdbtools:
+mdbtools:
+mdbtools:

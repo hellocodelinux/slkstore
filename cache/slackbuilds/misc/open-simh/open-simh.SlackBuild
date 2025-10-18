@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# Slackware build script for Open-SimH
+
+# Copyright 2023-2025 Antonio Leal, Porto Salvo, Oeiras, Portugal
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=open-simh
+SRCNAM=simh
+VERSION=${VERSION:-20250910_6e9324e}
+COMMIT=${COMMIT:-6e9324e09f4f364346310de34849077c986c29f2}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$COMMIT
+tar xvf $CWD/$SRCNAM-$COMMIT.tar.gz
+cd $SRCNAM-$COMMIT
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+simulators="pdp1 pdp4 pdp7 pdp8 pdp9 pdp15 pdp11 pdp10 \
+	vax microvax3900 microvax1 rtvax1000 microvax2 vax730 vax750 vax780 \
+	vax8200 vax8600 besm6 \
+	microvax2000 infoserver100 infoserver150vxt microvax3100 microvax3100e \
+	vaxstation3100m30 vaxstation3100m38 vaxstation3100m76 vaxstation4000m60 \
+	microvax3100m80 vaxstation4000vlc infoserver1000 \
+	nd100 nova eclipse hp2100 hp3000 i1401 i1620 s3 altair altairz80 gri \
+	i7094 ibm1130 id16 id32 sds lgp h316 cdc1700 \
+	swtp6800mp-a swtp6800mp-a2 tx-0 ssem b5500 intel-mds \
+	scelbi 3b2 3b2-700 i701 i704 i7010 i7070 i7080 i7090 \
+	sigma uc15 pdp10-ka pdp10-ki pdp10-kl pdp10-ks pdp6 i650 \
+	imlac tt2500 sel32"
+
+# make -j1 BIN/vax
+# make -j1 BIN/pdp11
+# make -j1 all
+for s in `echo $simulators`
+do
+    echo $s
+    CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" make -j1 $s
+done
+
+mkdir -p $PKG/opt/$PRGNAM/bin
+mv BIN/* $PKG/opt/$PRGNAM/bin
+
+### Symlinks ##
+mkdir -p $PKG/usr/bin
+for s in `echo $simulators`
+do
+    ( cd $PKG/usr/bin ; rm -rf open-simh-$s )
+    ( cd $PKG/usr/bin ; ln -sf ../../opt/open-simh/bin/$s open-simh-$s )
+done
+
+rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mv  doc/* $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+( cd $PKG/opt/$PRGNAM ; rm -rf doc )
+( cd $PKG/opt/$PRGNAM ; ln -sf ../../usr/doc/$PRGNAM-$VERSION doc )
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

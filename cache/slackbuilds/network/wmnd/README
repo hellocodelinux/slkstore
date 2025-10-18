@@ -1,0 +1,15 @@
+wmnd (WindowMaker Network Devices DockApp)
+
+WMND is a dockapp for monitoring network interfaces under WindowMaker
+and other compatible window managers. WMND currently works on Linux,
+FreeBSD, NetBSD, Solaris, OpenSolaris, Darwin and IRIX.
+
+WMND can monitor multiple interfaces at the same time, sports several
+display modes and can also monitor remote interfaces through SNMP.
+
+An optional dep is "Trend" (not on SBo) which can be used to zoom in on
+the bars inside the dockapp.
+
+Note: This dockapp uses a config file "~/.wmndrc". If it's not found,
+an empty one is created. You can see an example of how to customize it
+in: /usr/doc/wmnd-0.4.18/examples/wmndrc

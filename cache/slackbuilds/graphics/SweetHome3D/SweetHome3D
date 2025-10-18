@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /opt/SweetHome3D/SweetHome3D

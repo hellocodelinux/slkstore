@@ -1,0 +1,11 @@
+--- raudio.c	2024-11-18 13:21:10.000000000 +0100
++++ raudio-patch.c	2025-06-14 16:40:31.871305606 +0200
+@@ -1453,6 +1453,8 @@
+             music.ctxData = ctxXm;
+             jar_xm_set_max_loop_count(ctxXm, 0);    // Set infinite number of loops
+ 
++            ctxXm->module.linear_interpolation = 1;
++
+             unsigned int bits = 32;
+             if (AUDIO_DEVICE_FORMAT == ma_format_s16) bits = 16;
+             else if (AUDIO_DEVICE_FORMAT == ma_format_u8) bits = 8;

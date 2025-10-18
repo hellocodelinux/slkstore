@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+         |-----handy-ruler------------------------------------------------------|
+partclone: partclone (utility to clone various filesystems)
+partclone:
+partclone: Partclone is a program similar to the well-known backup utility
+partclone: "Partition Image" a.k.a partimage. Partclone provides utilities to
+partclone: save and restore used blocks on a partition and is designed for
+partclone: higher compatibility of the file system by using existing libraries,
+partclone: e.g. e2fslibs is used to read and write the ext2 partition.
+partclone:
+partclone:
+partclone:
+partclone:

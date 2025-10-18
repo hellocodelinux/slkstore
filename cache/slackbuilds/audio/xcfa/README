@@ -1,0 +1,28 @@
+xcfa (Powerful Audio Converter & Splitter for Linux)
+
+XCFA is a tool to extract the contents of Audio-CDs and convert musical
+audio files conversion to FLAC, WAV, OGG, M4A, MPC, MP3, WavPack and
+many others.
+
+Features:
+
+ * Handling of frequency, track and bits.
+ * Handling of files shared volume before a recording.
+ * Web retrieval of Audio-CD information during treatment.
+ * Small cover creation for Audio-CDs.
+
+Optional dependencies:
+
+ * cdrkit
+ * faac
+ * faad2
+ * cd-discid
+ * mac
+ * mp3check
+ * mp3gain
+ * musepack-tools
+ * shntool
+ * shorten
+ * vorbisgain
+ * lsdvd
+ * aacplusenc

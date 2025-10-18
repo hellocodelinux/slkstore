@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Slackware build script for Marathon Eternal X
+
+# Original author: Hunter Sezen.
+# Modified and now maintained by B. Watson <urchlay@slackware.uk>.
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240902 bkw:
+# - new maintainer.
+# - relicense as WTFPL.
+# - update for v1.2.1 (latest stable).
+# - fix libpng warnings.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=marathon-eternal-data
+VERSION=${VERSION:-1.2.1}
+SRCVER=$(printf %s "$VERSION" | tr -d .)
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+# install gamedata in opt instead of usr
+if [ "${OPT:-no}" != "no" ]; then
+  DATA='/opt/AlephOne'
+else
+  DATA='/usr/share/AlephOne/gamedata'
+fi
+
+ZIPNAME=EternalX
+ZIPFILE=${ZIPNAME}v${SRCVER}.zip
+WRAPPER=marathon-eternal
+DATADIR=$PKG$DATA
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT $DATADIR
+cd $TMP
+unzip $CWD/$ZIPFILE -d $DATADIR
+
+chown -R root:root $DATADIR
+
+# NB: the usual find predicate is different (zipfile stores +x permissions
+# on some files for no good reason)
+find $DATADIR \
+ \( -type f -exec chmod 644 {} + \) -o \
+ \( -type d -exec chmod 755 {} + \)
+
+# Write launcher script to the user's path
+mkdir -p $PKG/usr/games
+cat > $PKG/usr/games/$WRAPPER <<EOF
+#!/bin/sh
+ALEPHONE_DATA="$DATA/Eternal $VERSION"
+export ALEPHONE_DATA
+exec alephone "\$@"
+EOF
+chmod +x $PKG/usr/games/$WRAPPER
+
+# Write a desktop file
+mkdir -p $PKG/usr/share/applications
+cat > $PKG/usr/share/applications/$WRAPPER.desktop <<EOF
+[Desktop Entry]
+Name=Marathon Eternal X
+Exec=/usr/games/$WRAPPER
+Icon=alephone
+Type=Application
+Comment=Marathon Eternal X (first-person shooter game)
+Categories=Game;ActionGame;
+EOF
+
+# Don't want this
+rm -rf $DATADIR/__MACOSX
+
+# Remove unneeded hidden files
+find $DATADIR -name ".[^.]*" -mindepth 1 -print0 | xargs -0r rm -rf
+
+# Fix windows formatted scripts
+set -- $DATADIR/*/Scripts/*
+for script do
+  tr '\r' '\n' < "$script" > "$script-tmp"
+  mv -- "$script-tmp" "$script"
+done
+
+# 20240902 bkw: get rid of these warnings during gameplay:
+# libpng warning: iCCP: known incorrect sRGB profile
+# Unfortunately libpng doesn't say *which* png file it's bitching about.
+# It turns out, you can just grep for iCCP to find them. All but one
+# of the PNGs that have an iCCP chunk, have an invalid one... and if
+# you run 'mogrify' on such an image, it removes the iCCP chunk (though
+# it leaves it, if it's *not* "incorrect").
+# This would fail if any of the PNG images had spaces in the filenames.
+cd $DATADIR/Eternal\ $VERSION
+find . -name '*.png' | xargs grep -l iCCP | xargs mogrify
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

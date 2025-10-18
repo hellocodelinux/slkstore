@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Slackware build script for splix
+# Written by Iskar Enev <iskar.enev[@]gmail.com>
+# Currently maintained by endspiel <endspiel@disroot.org>
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=splix
+VERSION=${VERSION:-2.0.0_76268c4}
+SRCVERSION=${SRCVERSION:-76268c4dd7dbc8218ea7426401104c3b40cc707a}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+[ ${JBIG:-no} = "yes" ] \
+  && JBIGOPT=0 || JBIGOPT=1
+
+CUPSCFLAGS=$(cups-config --cflags)
+CUPSLDFLAGS=$(cups-config --ldflags)
+CUPSLIBS=$(cups-config --libs)
+CUPSSERVERBIN=$(cups-config --serverbin)
+CUPSDATADIR=$(cups-config --datadir)
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+mkdir $PRGNAM-$VERSION
+tar \
+  -C $PRGNAM-$VERSION \
+  --strip-components=2 \
+  -xvf $CWD/$PRGNAM-$SRCVERSION.tar.bz2 $PRGNAM-$SRCVERSION/$PRGNAM
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+sed -e "s%\`cups-config --cflags\`%$CUPSCFLAGS%" \
+    -e "s%\`cups-config --ldflags\`%$CUPSLDFLAGS%" \
+    -e "s%\`cups-config --libs\`%$CUPSLIBS%" \
+    -e "s%\`cups-config --serverbin\`%$CUPSSERVERBIN%" \
+    -e "s%\`cups-config --datadir\`%$CUPSDATADIR%" \
+    -i module.mk
+
+make \
+  V=1 \
+  DISABLE_JBIG=$JBIGOPT \
+  OPTIM_CFLAGS="$SLKCFLAGS" \
+  OPTIM_CXXFLAGS="$SLKCFLAGS"
+
+mkdir -p ${PKG}${CUPSSERVERBIN}/filter ${PKG}${CUPSDATADIR}/model
+
+make install \
+  DISABLE_JBIG=$JBIGOPT \
+  DESTDIR=$PKG
+
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS ChangeLog COPYING INSTALL README THANKS TODO \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

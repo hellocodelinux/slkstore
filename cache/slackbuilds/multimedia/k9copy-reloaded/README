@@ -1,0 +1,16 @@
+K9copy-reloaded is a continuation of the original k9copy program.
+It allows you to make 1:1 backups of both single-and dual-layer
+DVDs, as well as compress a dual-layer DVD to single-layer.
+
+NOTE 1: This script now uses the system ffmpeg, so be sure it is
+installed before trying to run this script.
+
+NOTE 2: This program is only intended for personal backups, and is NOT
+intended for copying of copyrighted commercial DVDs.  Therefore, there 
+is NO CSS decription libary included in this package.
+
+NOTE 3: dvdauthor is listed as optional, but it crashes k9copy if you
+try to use it for copy without menus; it is disabled by default in
+settings.
+
+Requires libmpeg2.

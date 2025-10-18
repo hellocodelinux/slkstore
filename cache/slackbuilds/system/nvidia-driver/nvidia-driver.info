@@ -1,0 +1,20 @@
+PRGNAM="nvidia-driver"
+VERSION="580.95.05"
+HOMEPAGE="https://www.nvidia.com"
+DOWNLOAD="UNSUPPORTED"
+MD5SUM=""
+DOWNLOAD_x86_64="https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/NVIDIA-Linux-x86_64-580.95.05.run \
+                 https://download.nvidia.com/XFree86/nvidia-installer/nvidia-installer-580.95.05.tar.bz2 \
+                 https://download.nvidia.com/XFree86/nvidia-modprobe/nvidia-modprobe-580.95.05.tar.bz2 \
+                 https://download.nvidia.com/XFree86/nvidia-persistenced/nvidia-persistenced-580.95.05.tar.bz2 \
+                 https://download.nvidia.com/XFree86/nvidia-settings/nvidia-settings-580.95.05.tar.bz2 \
+                 https://download.nvidia.com/XFree86/nvidia-xconfig/nvidia-xconfig-580.95.05.tar.bz2"
+MD5SUM_x86_64="3d23653c4898d08b1f3f031ea8cdaa93 \
+               2a39dad622165c342b2e478a875cc950 \
+               929c5cf5d575dfd655e9727e48f40641 \
+               6b6c97e1a393ee5a35e5c29166e7386f \
+               60428e0b4dc3998bbca09b96a70530ba \
+               45fdc2df9539f744c4f1be761ca48fed"
+REQUIRES="nvidia-kernel"
+MAINTAINER="Lenard Spencer"
+EMAIL="lenardrspencer@gmail.com"

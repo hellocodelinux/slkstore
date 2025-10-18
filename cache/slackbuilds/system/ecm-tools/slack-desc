@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+         |-----handy-ruler------------------------------------------------------|
+ecm-tools: ecm-tools (encoder/decoder for error code modeler CD/DVD compression)
+ecm-tools:
+ecm-tools: ECM is a compression format for ".bin" CD/DVD images, typically used
+ecm-tools: to distribute Playstation ROMs.
+ecm-tools:
+ecm-tools: This is a fork of the original ECM, primarily to host the code because
+ecm-tools: upstream seems dead, with a minor change to how binaries are named to
+ecm-tools: avoid conflicts with Sage Mathematics' ECM.
+ecm-tools:
+ecm-tools: Homepage: https://github.com/alucryd/ecm-tools
+ecm-tools:

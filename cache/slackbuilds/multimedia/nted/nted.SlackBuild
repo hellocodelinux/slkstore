@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# Slackware build script for nted
+
+# Copyright 2008 Corrado Franco (email removed)
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Modified by the SlackBuilds.org project
+
+# 20230103 bkw: BUILD=3, get rid of useless install instructions.
+
+# 20210910 bkw: fix build on -current (gcc11)
+# TODO: occasionally nted segfaults on exit, fix if possible. It's
+# difficult to reproduce, and when I compile with debugging symbols
+# I can't get it to happen at all.
+
+# 20180905 bkw: upstream has been dead a while, switch homepage to
+# debian's package page, and use their patches. VERSION now 1.10.18_12,
+# original version + debian patchlevel 12. The debian patches fix a few
+# segfaults, and compile issues with later gcc versions (like the one
+# in -current, and whatever will end up in 15.0).
+
+# 20170621 bkw: fix build on -current (gcc7's pickier, use -Wno-narrowing)
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=nted
+VERSION=${VERSION:-1.10.18_12}
+BUILD=${BUILD:-3}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+# 20210910 bkw: NEWS and ChangeLog are 0-byte placeholders, ignore
+DOCS="ABOUT* AUTHORS COPYING* FAQ README"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  SLKLDFLAGS=""; LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  SLKLDFLAGS=""; LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  SLKLDFLAGS="-L/usr/lib64"; LIBDIRSUFFIX="64"
+fi
+
+set -e
+
+MAINVER="$( echo $VERSION | cut -d_ -f1 )"
+DEBVER="$( echo $VERSION | cut -d_ -f2 )"
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$MAINVER
+tar xvf $CWD/${PRGNAM}_$MAINVER.orig.tar.gz
+cd $PRGNAM-$MAINVER
+tar xvf $CWD/${PRGNAM}_$MAINVER-$DEBVER.debian.tar.xz
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+patch -p1 < $CWD/compilefix.diff
+
+for i in $( cat debian/patches/series ); do
+  patch -p1 < debian/patches/$i
+done
+
+# The -Wno-error causes automake to be run with --warnings=no-error,
+# but automake still says "warnings are being treated as errors". The
+# thing it's warning about is configure.in should be named configure.ac,
+# I have no idea how to turn off warnings as errors if the goddam
+# --warnings=no-error command line flag doesn't work, so just rename
+# the thing. I *really hate* this kinda pointless pedantry.
+mv configure.in configure.ac
+autoreconf -ivf -Wno-error
+
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -fpermissive -Wno-narrowing" \
+./configure \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --infodir=/usr/info \
+  --without-doc \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux \
+
+make
+make install-strip DESTDIR=$PKG
+gzip -9 $PKG/usr/man/man?/*.*
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a $DOCS $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+# Overwrite shipped .desktop file with fixed one that validates
+cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

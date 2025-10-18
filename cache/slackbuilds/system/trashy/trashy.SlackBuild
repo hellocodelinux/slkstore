@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Slackware build script for trashy
+# Copyright 2014-22 Klaatu @member.fsf.org
+
+# GNU All-Permissive License
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.  This file is offered as-is,
+# without any warranty.
+
+# 20220316 bkw: Modified by SlackBuilds.org, BUILD=2:
+# - move symlink creation to the script, because doinst.sh was
+#   creating a symlink that didn't get removed by removepkg.
+# - get rid of the utterly useless and time-consuming autoconf,
+#   aclocal, configure stuff. this is a shell script and a man
+#   page, configure wasn't *doing* anything.
+# - do not install useless INSTALL in doc dir.
+# - do install LICENSE and AUTHORS in doc dir.
+# - use the man page from the source, which seems to document what
+#   trashy does more accurately than the one that was here.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=trashy
+VERSION=${VERSION:-2.5.1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.bz2
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# 20220316 bkw: skip the autoreconf/configure/make stuff, it's
+# 2 files, we can get by without 'make install'.
+mkdir -p $PKG/usr/{bin,man/man8}
+install -m0755 -oroot -groot bin/$PRGNAM $PKG/usr/bin/$PRGNAM
+gzip -9c < man/$PRGNAM.8 > $PKG/usr/man/man8/$PRGNAM.8.gz
+
+# 20220316 bkw: no idea why the thing is called "trashy" but
+# its man page and --help refer to it as "trash". symlinks
+# to the rescue.
+ln -s $PRGNAM $PKG/usr/bin/trash
+ln -s $PRGNAM.8.gz $PKG/usr/man/man8/trash.8.gz
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a README.md LICENSE AUTHORS $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

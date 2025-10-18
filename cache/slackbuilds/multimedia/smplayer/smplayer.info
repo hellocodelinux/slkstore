@@ -1,0 +1,14 @@
+PRGNAM="smplayer"
+VERSION="25.6.0"
+HOMEPAGE="https://www.smplayer.info/"
+DOWNLOAD="https://github.com/smplayer-dev/smplayer/releases/download/v25.6.0/smplayer-25.6.0.tar.bz2                 \
+          https://github.com/smplayer-dev/smplayer-themes/releases/download/v20.11.0/smplayer-themes-20.11.0.tar.bz2 \
+          https://github.com/smplayer-dev/smplayer-skins/releases/download/v20.11.0/smplayer-skins-20.11.0.tar.bz2"
+MD5SUM="b6896b5c848c9757c583d95148a5345f \
+        2d2906945c066531c00197165125c754 \
+        1bc677d1d21eea0946ad3bc603a3a2e6"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES=""
+MAINTAINER="Andrzej Telszewski"
+EMAIL="andrzej@telszewski.com"

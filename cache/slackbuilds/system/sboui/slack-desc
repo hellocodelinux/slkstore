@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+     |-----handy-ruler------------------------------------------------------|
+sboui: sboui (ncurses SBo package management tool)
+sboui:
+sboui: sboui is a package management tool for SlackBuilds.org (SBo). It
+sboui: features an ncurses user interface that combines the user-friendliness
+sboui: typically found in a GUI with the efficiency, light weight, and
+sboui: portability of a text interface. It can function as a stand-alone
+sboui: package manager or serve as a front-end to sbopkg, sbotools, or
+sboui: custom package managers.
+sboui:
+sboui: homepage: https://github.com/montagdude/sboui
+sboui:

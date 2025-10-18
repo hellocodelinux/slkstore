@@ -1,0 +1,29 @@
+Zim is a graphical text editor used to maintain a collection of wiki
+pages. Each page can contain links to other pages, simple formatting,
+and images. Pages are stored in a folder structure, like in an
+outliner, and can have attachments. Creating a new page is as easy as
+linking to a nonexistent page. All data is stored in plain text files
+with wiki formatting. Various plugins provide additional
+functionality, like a task list manager, an equation editor, a tray
+icon, and support for version control.
+
+Zim can be used to:
+
+    Keep an archive of notes
+    Keep a daily or weekly journal
+    Take notes during meetings or lectures
+    Organize task lists
+    Draft blog entries and emails
+    Do brainstorming
+
+
+NOTE:
+Zim can be expanded with plugins.  From 'preferences' go to
+'plugins' and anything marked 'failed' can be installed either
+from SBo or pip.  These aren't dependencies; Zim runs without them.
+
+Version status:
+Although Zim version > 0.75.2 dependencies appear to be satisfied in
+Slack 15, Zim won't build without a higher version of setuptools.
+This can be updated in pip, but to ensure Zim works on a clean
+install, Zim is held at 0.75.2

@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# Slackware build script for irssi-python
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# A note about the download URL: I'm stuck using the github
+# auto-generated one, even though upstream created a static release
+# tarball. Unfortunately, the release tarball is un-buildable because it's
+# missing various files. Also it's missing the entire doc/ directory.
+
+# VERSION is the irssi-python version, an underscore, and the irssi
+# version we're building it for.
+# Unfortunately we have to pick an irssi version to be the default,
+# because the DOWNLOAD links are static (can't have $VERSION or such in
+# them). This build will have to be updated any time Pat does an irssi
+# version update.
+
+# 20230707 bkw: update for 20230512_9ab753d_1.4.4 (latest git that
+# works with python-3.9; later commits break it). needed because
+# Slackware 15.0's patches/ has irssi-1.4.4, which is too new for the
+# irssi-python-test4 release. Source tarball made with:
+# sh git2tarxz.sh 9ab753db9a
+
+# 20211208 bkw: update for vtest4_1.2.3.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=irssi-python
+VERSION=${VERSION:-20230512_9ab753d_1.4.4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+PYIRSSI_VER="$( echo $VERSION | cut -d_ -f1,2 )"
+IRSSI_VER="$(   echo $VERSION | cut -d_ -f3 )"
+
+# Alert the user (but don't stop the build) if $IRSSI_VER doesn't match
+# the installed version of irssi.
+SYS_IRSSI="$( irssi --version | cut -d' ' -f2 )"
+if [ "$IRSSI_VER" != "$SYS_IRSSI" ]; then
+  cat <<EOF
+***
+*** WARNING: building for irssi $IRSSI_VER, but installed version is $SYS_IRSSI!
+*** Continuing build in 5 seconds, or press ^C to abort.
+***
+EOF
+  sleep 5
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM
+mkdir -p $PRGNAM
+cd $PRGNAM
+tar xvf $CWD/$PRGNAM-$PYIRSSI_VER.tar.xz
+tar xvf $CWD/irssi-$IRSSI_VER.tar.xz
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# According to its INSTALL doc, irssi-python is supposed to need
+# "the configured Irssi sources". But test4 builds fine without
+# running ./configure in the irssi source dir. Leaving this here,
+# commented out, for reference.
+## cd irssi-$IRSSI_VER
+## CFLAGS="$SLKCFLAGS" \
+## ./configure \
+##   --prefix=/usr \
+##   --libdir=/usr/lib${LIBDIRSUFFIX} \
+##   --mandir=/usr/man \
+##   --sysconfdir=/etc \
+##   --docdir=/usr/doc/irssi-$VERSION \
+##   --enable-ipv6 \
+##   --with-textui \
+##   --with-proxy \
+##   --with-perl-lib=vendor \
+##   --build=$ARCH-slackware-linux
+## cd $TMP/$PRGNAM
+
+cd $PRGNAM-$PYIRSSI_VER
+
+autoreconf -ivf -I.
+
+# configure script expects to read this info via pkg-config, but our
+# irssi-1.pc file doesn't have the variables for it. not sure why not,
+# but this is what it would have read anyway.
+sed -i -e "/IRSSI_SIGNALSFILE/s,=.*,=/usr/doc/irssi-$IRSSI_VER/signals.txt," \
+       -e "/IRSSI_MODULEDIR/s,=.*,=/usr/lib$LIBDIRSUFFIX/irssi/modules," \
+       configure
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure \
+  --with-irssi=$TMP/$PRGNAM/irssi-$IRSSI_VER \
+  --prefix=/usr \
+  --libdir=/usr/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=/usr/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --build=$ARCH-slackware-linux
+
+make
+make install-strip DESTDIR=$PKG
+
+rm -f $PKG/usr/lib*/irssi/modules/*.la
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a AUTHORS COPYING ChangeLog NEWS README TODO classes.txt docs/*html \
+      $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+# 20211208 bkw: it might be redundant to include the irssi version
+# in the slack-desc, since it's now in the actual version number, but
+# belt and suspenders...
+mkdir -p $PKG/install
+sed "s/@IRSSI_VER@/$IRSSI_VER/" $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

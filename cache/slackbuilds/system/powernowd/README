@@ -1,0 +1,11 @@
+This is a very simple program that will adjust the speed of your CPU
+depending on system load.
+
+It is designed for use with CPU's supporting AMD's PowerNow power
+management scheme, as it's algorithm works better if there are more then
+two CPU speeds available.  (aka, ARM, AMD K6/K7, Via C3, and Crusoe as
+opposed to traditional Intel and Ultrasparc).
+
+This program is essentially a simple client to the CPUFreq sysfs
+interface.  This means that you -need- to be running Linux v2.5 or later
+that includes the sysfs interface.

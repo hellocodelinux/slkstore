@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+x11spice: x11spice (export X via spice)
+x11spice:
+x11spice: x11spice connects a running X server as a Spice server.
+x11spice:
+x11spice: It owes a debt to the excellent x11vnc project, from the libvncserver
+x11spice: project. That project proved that this could be done, and done well.
+x11spice: Some of the logic, notably that of scan.c, was inspired  by the code
+x11spice: in x11vnc.
+x11spice:
+x11spice: homepage: https://gitlab.freedesktop.org/spice/x11spice
+x11spice:

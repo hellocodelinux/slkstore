@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+      |-----handy-ruler------------------------------------------------------|
+libxls: libxls (Read XLS files from C)
+libxls:
+libxls: This is libxls, a C library for reading Excel files in the nasty old
+libxls: binary OLE format, plus a command-line tool for converting XLS to CSV
+libxls: (named, appropriately enough, libxls2csv).
+libxls:
+libxls: Note: The command-line tool is, instead, named libxls2csv by this
+libxls: SlackBuild script to avoid conflict with xls2csv tool from catdoc
+libxls: package.
+libxls:
+libxls:

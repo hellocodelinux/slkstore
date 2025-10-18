@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# Slackware build script for CEGUI0.7
+
+# Copyright 2014-2016  Dimitris Zlatanidis  Orestiada, Greece
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20230110 bkw: modified by SlackBuilds.org, BUILD=5.
+# - Install to /opt/CEGUI0.7, not /usr. Resolves the conflict with
+#   CEGUI. Apps that depend on this will have to be modified to
+#   use /opt/CEGUI0.7 (only games/smc depends on this, though).
+# - Disable irrlicht renderer (unneeded).
+# - Disable ogre renderer (fails to build with modern ogre).
+# - Add FreeImage to REQUIRES. Our one dependee (smc) requires
+#   a CEGUI0.7 that was built with FreeImage support.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=CEGUI0.7
+SRCNAM=CEGUI
+VERSION=${VERSION:-0.7.9}
+BUILD=${BUILD:-5}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+OPT=/opt/$PRGNAM
+OPTLIB=$OPT/lib$LIBDIRSUFFIX
+PKGOPT=$PKG/$OPT
+PKGOPTLIB=$PKG/$OPTLIB
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+
+patch -p1 < $CWD/CEGUI.patch
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -fpermissive" \
+./configure \
+  --prefix=$OPT \
+  --libdir=$OPT/lib${LIBDIRSUFFIX} \
+  --sysconfdir=/etc \
+  --localstatedir=/var \
+  --mandir=$OPT/man \
+  --docdir=/usr/doc/$PRGNAM-$VERSION \
+  --enable-null-renderer \
+  --disable-python-module \
+  --disable-ogre-renderer \
+  --disable-irrlicht-renderer \
+  --with-default-image-codec=FreeImageImageCodec \
+  --build=$ARCH-slackware-linux
+
+make
+make install-strip DESTDIR=$PKG
+
+# 20230110 bkw: .pc files contain -Wl,-rpath...
+# this way, anything that needs to link with CEGUI0.7 can simply:
+#   export PKG_CONFIG_PATH=/opt/CEGUI0.7/lib$LIBDIRSUFFIX/pkgconfig
+# example: games/smc
+install -m0644 -oroot -groot $CWD/CEGUI*.pc $PKGOPTLIB/pkgconfig
+sed -i "s/%LIBDIRSUFFIX%/$LIBDIRSUFFIX/g" $PKGOPTLIB/pkgconfig/*.pc
+
+mkdir -p $PKGDOC
+cp -a doc/* $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+rm -f $PKGOPTLIB/*.la
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

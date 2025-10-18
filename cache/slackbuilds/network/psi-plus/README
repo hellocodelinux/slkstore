@@ -1,0 +1,16 @@
+Development branch of Psi XMPP client by psi-dev@conference.jabber.ru
+
+NOTE This is intended for advanced users and developers.
+NOTE This can coexist with the stable psi package.
+
+In 2009 a Psi fork named Psi+ was started. Project purposes are:
+implementation of new features, writing of patches and plugins for
+transferring them to upstream. As of 2017 the most of active Psi+
+developers have become official Psi developers, but Psi+ still has a
+number of unique features. From developers point of view Psi+ is just a
+development branch of Psi IM client which is hosted at separate git
+repositories and for which rolling release development model is used.
+
+Warning: This SlackBuild requires network access when it runs, meaning
+it downloads files from the Internet with root access. You should
+decide for yourself whether or not you think this is a good idea.

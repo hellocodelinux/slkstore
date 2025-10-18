@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# Slackware build script for vegastrike
+
+# Copyright 2019- CRTS
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20220221 bkw: Modified by SlackBuilds.org: fix build on 15.0.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=vegastrike
+VERSION=${VERSION:-0.5.1.r1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+PRGSRCSUF=${PRGSRCSUF:-.tar.bz2}
+PRGSRCNAME=${PRGSRCNAME:-$PRGNAM-src-*}
+PRGSRCNAME=${PRGSRCNAME%$PRGSRCSUF}
+
+PRGDATASUF=${PRGDATASUF:-.tar.bz2}
+PRGDATANAME=${PRGDATANAME:-$PRGNAM-data-*}
+PRGDATANAME=${PRGDATANAME%$PRGDATASUF}
+
+PRGEXTRASUF=${PRGEXTRASUF%.tar.bz2}
+PRGEXTRANAME=${PRGEXTRANAME:-$PRGNAM-extra-*}
+PRGEXTRANAME=${PRGEXTRANAME%$PRGEXTRASUF}
+
+PRGMUSICSUF=${PRGMUSICSUF%.tar}
+PRGMUSICNAME=${PRGMUSICNAME:-$PRGNAM-music-*}
+PRGMUSICNAME=${PRGMUSICNAME%$PRGMUSICSUF}
+
+PRGSPEECHSUF=${PRGSPEECHSUF%.tar}
+PRGSPEECHNAME=${PRGSPEECHNAME:-$PRGNAM-speech-*}
+PRGSPEECHNAME=${PRGSPEECHNAME%$PRGSPEECHSUF}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGSRCNAME
+tar xvf $CWD/$PRGSRCNAME$PRGSRCSUF
+
+cd $PRGSRCNAME
+
+cp "$CWD/cmake"/*.cmake .
+
+declare patchdir="$CWD/patches"
+
+patch -p0 < "$patchdir/patch-${VERSION}_$BUILD"
+patch -p1 < "$patchdir/ordered_pointer_comparison.diff"
+
+BUILDDIR=build
+mkdir -p $BUILDDIR
+
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+cd $BUILDDIR
+
+# ATTENTION: The settings currently do NOT affect the installation
+# destinations!
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+cmake \
+	-DCMAKE_INSTALL_PREFIX=/usr \
+	-DCMAKE_INSTALL_LIBDIR=/usr/lib${LIBDIRSUFFIX} \
+	-DCMAKE_INSTALL_SYSCONFDIR=/etc \
+	-DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+	-DCMAKE_INSTALL_MANDIR=/usr/man \
+	-DCMAKE_INSTALL_DOCDIR=/usr/doc/$PRGNAM-$VERSION \
+	-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+	-DDISABLE_SERVER=${DISABLE_SERVER:-ON} \
+	-DUSE_SYSTEM_BOOST=${USE_SYSTEM_BOOST:-ON} \
+	-DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD:-11} \
+	..
+
+make
+
+# auto install is not working, so we have to do it
+# manually like a peasant.
+
+#make install DESTDIR=$PKG
+
+cd $TMP/$PRGSRCNAME
+
+bindir=$PKG/usr/bin
+vsbasedir=$PKG/usr/share/games/vegastrike
+vsdatadir=$vsbasedir/data
+objconvdir=$vsbasedir/objconv
+
+mkdir -p $vsbasedir $bindir $objconvdir
+
+for f in ./build/vegaserver ./build/vegastrike ./build/setup/vssetup;do
+	if [[ -e "$f" ]];then
+		chmod +x $f
+		cp $f $bindir
+	fi
+done
+
+for f in ./build/objconv/asteroidgen ./build/objconv/replace ./build/objconv/trisort ./build/objconv/mesh_tool ;do
+	if [[ -e "$f" ]];then
+		chmod +x $f
+		cp $f $objconvdir
+	fi
+done
+
+tar xvf $CWD/$PRGDATANAME$PRGDATASUF
+
+PARTSFIX=${PARTSFIX:-YES}
+
+case ${PARTSFIX^^} in
+Y|YES|T|TRUE|ON|1)
+	cd $PRGDATANAME
+	patch -p0 < "$patchdir/patch_partsfix-${VERSION}_$BUILD"
+	cd -
+	;;
+*)
+	;;
+esac
+
+mv $PRGDATANAME $vsdatadir
+
+tar xvf $CWD/$PRGEXTRANAME$PRGEXTRASUF
+tar xvf $CWD/$PRGMUSICNAME$PRGMUSICSUF
+tar xvf $CWD/$PRGSPEECHNAME$PRGSPEECHSUF
+
+mv $PRGMUSICNAME/* $vsdatadir
+
+for d in $PRGEXTRANAME $PRGSPEECHNAME;do
+	echo "copying: $d"
+	find "$d" -type f -printf '%P\n' |
+		while read f;do
+			# all paths will contain at least one '/' in this case
+			mkdir -p "$vsdatadir/${f%/*}"
+			mv "$d/$f" "$vsdatadir/$f"
+		done
+done
+
+echo "stripping libraries"
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp AUTHORS COPYING CYGWIN.NOTES ChangeLog DOCUMENTATION INSTALL NEWS README README.MACOSX.rtf README.sgi $PKG/usr/doc/$PRGNAM-$VERSION
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE
+

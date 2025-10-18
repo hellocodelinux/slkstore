@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=SpaceZero
+Comment=A 2D Real Time Strategy space combat game
+Exec=/usr/games/spacezero
+Icon=/usr/share/pixmaps/spacezero.png
+Terminal=false
+Type=Application
+Categories=Game;StrategyGame;
+GenericName=Game

@@ -1,0 +1,48 @@
+qiv (Quick Image Viewer)
+
+Quick Image Viewer (qiv) is a very small and pretty fast GDK/Imlib
+image viewer. Features include zoom, maxpect, scale down, fullscreen,
+brightness/contrast/gamma correction, slideshow, pan with keyboard
+and mouse, rotate left/right, flip, delete (move to .qiv-trash/),
+jump to image x, jump forward/backward x images, filename filter, and
+you can use qiv to set your X11-Desktop background.
+
+These formats are supported by default:
+
+GIF TIFF XPM PNG PPM PNM PGM BMP JPEG SVG ICO TGA ICNS
+
+Optional supported formats:
+
+Format                  | Optional dependenc(y|ies)
+------------------------+-----------------------------------------------
+HEIF, AVIF              | libheif
+------------------------+-----------------------------------------------
+JP2 (JPEG2000)          | jp2-pixbuf-loader
+------------------------+-----------------------------------------------
+PCX                     | pcx-pixbuf-loader
+------------------------+-----------------------------------------------
+PSD (PhotoShop native)  | gdk-pixbuf-psd
+------------------------+-----------------------------------------------
+RAW (camera images,     | libopenraw. Note that only a few raw image
+    various extensions) | formats will actually display with qiv. These
+                        | include .crw (Canon), .erf (Epson), and
+                        | .nef (Nikon). YMMV.
+------------------------+-----------------------------------------------
+WEBP                    | webp-pixbuf-loader
+------------------------+-----------------------------------------------
+WMF (Windows MetaFile)  | libwmf-type1-fonts (only needed for .wmf files
+                        | with embedded text, but all the ones I tested
+                        | do have text...)
+------------------------+-----------------------------------------------
+XCF (Gimp native)       | xcf-pixbuf-loader
+------------------------+-----------------------------------------------
+
+These are runtime dependencies, so they can be installed at any time
+without rebuilding qiv.
+
+To easily build all the optional dependencies, use sbopkg with the
+qiv-allfmt.sqf in the SlackBuild directory.
+
+Upgrade note: Starting with version 3.0.0, qiv no longer uses
+imlib2. If you have images that would display in qiv-2.3.x, but not in
+3.0.x, *please* contact the SlackBuild maintainer, so I can fix it!

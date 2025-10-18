@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Slackware build script for Tempus Irae
+
+# Original author: Hunter Sezen.
+# Modified and now maintained by B. Watson <urchlay@slackware.uk>.
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240903 bkw:
+# - new maintainer.
+# - relicense as WTFPL.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=Tempus-Irae
+VERSION=${VERSION:-1.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -eu
+
+# install gamedata in opt instead of usr
+if [ "${OPT:-no}" != "no" ]; then
+  DATA='/opt/AlephOne'
+else
+  DATA='/usr/share/AlephOne/gamedata'
+fi
+
+ZIPNAME=$(printf %s $PRGNAM | tr - _)
+ZIPFILE=$ZIPNAME.zip
+WRAPPER=$(printf %s $PRGNAM | tr 'A-Z' 'a-z')
+DATADIR=$PKG$DATA
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT $DATADIR
+cd $TMP
+unzip $CWD/$ZIPFILE -d $DATADIR
+
+if [ -f $CWD/Tempus_Premium_Landscapes.zip ]; then
+  unzip $CWD/Tempus_Premium_Landscapes.zip -d $DATADIR
+  cp -a $DATADIR/Tempus_Premium_Landscapes/* $DATADIR/$ZIPNAME
+  rm -r $DATADIR/Tempus_Premium_Landscapes
+fi
+
+chown -R root:root $DATADIR
+
+# NB: the usual find predicate is different (zipfile stores +x permissions
+# on some files for no good reason)
+find $DATADIR \
+ \( -type f -exec chmod 644 {} + \) -o \
+ \( -type d -exec chmod 755 {} + \)
+
+# Write launcher script to the user's path
+mkdir -p $PKG/usr/games
+cat > $PKG/usr/games/$WRAPPER <<EOF
+#!/bin/sh
+ALEPHONE_DATA="$DATA/$ZIPNAME"
+export ALEPHONE_DATA
+exec alephone "\$@"
+EOF
+chmod +x $PKG/usr/games/$WRAPPER
+
+# Write a desktop file
+mkdir -p $PKG/usr/share/applications
+cat > $PKG/usr/share/applications/$WRAPPER.desktop <<EOF
+[Desktop Entry]
+Name=$(printf %s $PRGNAM | tr - " ")
+Exec=/usr/games/$WRAPPER
+Icon=alephone
+Type=Application
+Comment=$(printf %s $PRGNAM | tr - " ") (first-person shooter game)
+Categories=Game;ActionGame;
+EOF
+
+# Fix windows formatted scripts
+set -- $DATADIR/*/Scripts/*
+for script do
+  tr '\r' '\n' < "$script" > "$script-tmp"
+  mv -- "$script-tmp" "$script"
+done
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

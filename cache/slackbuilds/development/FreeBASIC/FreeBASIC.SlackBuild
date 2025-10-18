@@ -1,0 +1,165 @@
+#!/bin/bash
+
+# Slackware build script for FreeBASIC
+
+# Copyright 2014-2024  Dimitris Zlatanidis  Orestiada, Greece
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20201211 bkw: modified by SlackBuilds.org, to build FreeBASIC from source
+# instead of using prebuilt binary packages. There are various reasons for
+# wanting to do this:
+
+# - The prebuilt binaries were built on an OS where the terminfo fuctions
+#   from ncurses were split into a separate library (libtinfo). Using
+#   the binary package on Slackware 14.2 means creating a libtinfo
+#   symlink in /usr/lib64, which can cause problems later (e.g. if
+#   something else links with it, no harm done... until you removepkg
+#   FreeBASIC). Also, there are reports on the mailing list of fbc
+#   being unable to compile FreeBASIC code that uses curses, even with
+#   the symlink in place. Building it on our OS prevents this issue.
+#   The folks on the mailing list "solved" this problem by reverting to
+#   the FreeBASIC version from the 14.0 repo, which is what prompted
+#   me to fix this build...
+
+# - In the same vein, the prebuilt binaries have /usr/lib/freebasic hardcoded,
+#   so there had to be a symlink to lib64 on Slackware64.
+
+# - General paranoia about trusting prebuilt binaries.
+
+# - If we build it, we get FreeBASIC bindings for various libraries that
+#   are installed, e.g. mysql and libart_lgpl.
+
+# - I was hoping that compiling from source would fix a couple other
+#   problems. The sdl2-hello example segfaults with both the prebuilt
+#   and built-from-source fbc :(
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=FreeBASIC
+VERSION=${VERSION:-1.10.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# If the variable PRINT_PACKAGE_NAME is set, then this script will report what
+# the name of the created package would be, and then exit. This information
+# could be useful to other scripts.
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+SRCVER=$VERSION-source-bootstrap
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$SRCVER
+tar xvf $CWD/$PRGNAM-$SRCVER.tar.xz
+cd $PRGNAM-$SRCVER
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+[ "$LIBDIRSUFFIX" = "64" ] && extra="ENABLE_LIB64=1"
+
+# This is interesting: we have "precompiled sources", which means
+# FreeBASIC source that was 'compiled' to C source. So to bootstrap
+# fbc, we first build the precompiled C to make a minimal fbc binary,
+# then use that to build the real fbc from the FreeBASIC sources.
+make bootstrap
+
+FBC="$( pwd )/bootstrap/fbc"
+FBFLAGS="-i $( pwd )/inc"
+
+# fbdoc needs its own FBFLAGS. Loosely based on a patch from ponce.
+sed -i -e 's,\<FBFLAGS\>,XFBFLAGS,g' \
+       -e 's,\$(XFBFLAGS),$(FBFLAGS) &,' \
+    doc/fbdoc/makefile
+
+# multiple make commands, with mostly the same args
+run_make() {
+  make \
+    V=1 \
+    FBC="$FBC" \
+    FBFLAGS="$FBFLAGS" \
+    prefix=/usr \
+    ENABLE_STRIPALL=1 \
+    INSTALL_PROGRAM="install -s" \
+    DESTDIR=$PKG \
+    $extra \
+    "$@"
+}
+
+run_make
+run_make install
+
+# Build and install the manual.
+run_make -C doc/libfbdoc
+run_make -C doc/fbdoc
+run_make -C doc/manual html/DocToc.html txt/fbdoc.txt
+
+mkdir -p $PKG/usr/man/man1
+gzip -9c < doc/fbc.1 > $PKG/usr/man/man1/fbc.1.gz
+
+# zero length files...
+find examples/ -name deleteme.txt -exec rm {} +
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a doc/*.txt doc/manual/txt/ doc/manual/html/ examples/ \
+      $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+ln -s DocToc.html $PKG/usr/doc/$PRGNAM-$VERSION/html/index.html
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

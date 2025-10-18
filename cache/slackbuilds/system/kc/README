@@ -1,0 +1,22 @@
+kc is a console-based password storing application using an encrypted
+XML document as its database.
+
+Features include:
+ * fixed string or regex based search
+ * OpenSSH agent support for protecting the database
+ * YubiKey challenge-response support for protecting the database
+ * encrypted or plain text database import/export
+ * multiple keychains per database
+ * copy passwords to various clipboards
+ * editline (libedit) and readline support
+
+This SlackBuild has build options to control some of its behavior:
+LIBSCRYPT: If this variable is set, kc will be built with scrypt
+      encrypted passwords support. It needs the libscrypt library
+      for this, that is also available from SBo.
+EDITLINE: If this variable is set, kc will use editline for its
+      command line interface; otherwise, readline will be used.
+PCRE: If this variable is set, kc will use libcpre to enable
+      perl-compatible regular expressions while searching.
+      Note that POSIX regular expressions are supported without
+      the need of this.

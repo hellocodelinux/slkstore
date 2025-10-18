@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Slackware build script for pforth
+# https://github.com/philburk/pforth
+
+# Written by Zbigniew Baniewski, <Zbigniew [dot] Baniewski [at] gmail [dot] com>
+# Modified by Willy Sudiarto Raharjo <willysr@slackware-id.org>
+
+# 20220318 bkw: Modified by SlackBuilds.org: fix build on 32-bit.
+# WARNING: the fix silences some compiler warnings that look like
+# they might actually cause problems. YMMV.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=pforth
+VERSION=${VERSION:-2.0.1}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.?z
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+# 20220318 bkw: hate -Werror. but, see WARNING above...
+sed -i '/-Werror/d' csrc/CMakeLists.txt
+
+CFLAGS="$SLKCFLAGS" CXXFLAGS="$SLKCFLAGS" cmake .
+make VERBOSE=1
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a license.txt $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a *.md $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/usr/bin $PKG/usr/share/pforth/${VERSION}
+( cd fth
+  strip pforth pforth_standalone
+  install -m 0755 pforth $PKG/usr/bin/pforth
+  install -m 0644 pforth.dic $PKG/usr/share/pforth/${VERSION}/pforth.dic
+  install -m 0755 pforth_standalone $PKG/usr/bin/pforth_standalone )
+( cd $PKG/usr/bin ; ln -s pforth_standalone pfs )
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# Slackware build script for ttf-arphic-uming
+
+# Copyright 2014 ancker.du <ancker.du@gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20220218 bkw: Modified by SlackBuilds.org:
+# - update for v0.2.20080216.2 and apply a Debian patch that fixes the
+#   syntax in the .conf files. This was required because (a) every app
+#   that uses fontconfig was spewing a ton of warnings on startup
+#   (whether or not it actually used these fonts), and (b) the
+#   'convert' command from ImageMagick was aborting.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=ttf-arphic-uming
+VERSION=${VERSION:-0.2.20080216.2}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/fonts-arphic-uming\_${VERSION}.orig.tar.bz2
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+ -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+# 20220218 bkw: patch from debian:
+# http://deb.debian.org/debian/pool/main/f/fonts-arphic-uming/fonts-arphic-uming_0.2.20080216.2-11.debian.tar.xz
+patch -p1 < $CWD/30-fix-fontconfig-syntax.patch
+
+mkdir -p $PKG/usr/share/fonts/TTF
+cp -a *.ttc $PKG/usr/share/fonts/TTF
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a CONTRIBUTERS FONTLOG Font_Comparison_ShanHeiSun_UMing.odt \
+      Font_Comparison_ShanHeiSun_UMing.pdf INSTALL \
+      KNOWN_ISSUES NEWS README README.Bitmap license \
+      $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/etc/fonts/conf.{d,avail}
+cp -a *.conf $PKG/etc/fonts/conf.avail
+( cd $PKG/etc/fonts/conf.d && ln -s ../conf.avail/* .)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,12 @@
+PRGNAM="rmac"
+VERSION="2.2.14_20221221"
+HOMEPAGE="https://atariage.com/forums/topic/264842-rmac-the-grandchild-of-madmac-assembler-finally-gets-6502-support/"
+DOWNLOAD="https://slackware.uk/~urchlay/src/rmac-2.2.14_20221221.tar.xz \
+          https://slackware.uk/~urchlay/src/madmac-examples.tar.xz"
+MD5SUM="c329d5c0cc01b46529f171b1033f7699 \
+        3d6dff2b72815935c322c91277ea5074"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES=""
+MAINTAINER="B. Watson"
+EMAIL="urchlay@slackware.uk"

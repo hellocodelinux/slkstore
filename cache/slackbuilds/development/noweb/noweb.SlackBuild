@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# Slackware build script for noweb
+
+# Copyright 2010-2024 Kyle Guinn <elyk03@gmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=noweb
+VERSION=${VERSION:-2.13}
+SRCVER=$(echo $VERSION | tr . _)
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$(uname -m)" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$(uname -m) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+DOCS="CHANGES COPYRIGHT LICENSE README examples/"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$SRCVER
+tar xvf $CWD/$PRGNAM-$SRCVER.tar.gz
+cd $PRGNAM-$SRCVER
+chown -R root:root .
+chmod -R u+w,go-w,a+rX-st .
+
+# Adds PREFIX and DESTDIR support along with various other simplifications
+patch -p1 < $CWD/patches/make_cleanup.diff
+
+# Postpone texhash until doinst.sh
+sed -i 's/texhash/true/g' src/Makefile
+
+# Does something like s/nawk/awk/ on several scripts
+(cd src && ./awkname awk)
+
+# Fix timestamps.  The general problem is that noweb's sources (and even
+# a Makefile) are written in noweb syntax and need to be "tangled" (code
+# chunks extracted to an ordinary source file) using notangle, requiring
+# a working version of noweb to already be installed.  To bootstrap, the
+# tarball provides pre-tangled files that we must `touch` so that `make`
+# does not regenerate them.  We assume the touched files are up-to-date,
+# which may not always be true.  This script does not attempt rebuilding
+# the package to fix any such issues.
+#
+# First, prevent Makefile from regenerating itself before `make boot`.
+touch src/Makefile
+# Now `make boot` should touch the remaining files needed to bootstrap.
+# Beware, this may touch files not provided in the tarball (typically
+# documentation), creating empty files that will not be properly
+# generated later.  Before version 2.13, this included the man pages.
+make -C src boot
+
+make -j1 -C src all install \
+  ICONC="icont" \
+  LIBSRC="icon" \
+  PREFIX="/usr" \
+  MAN="/usr/man" \
+  TEXINPUTS="/usr/share/texmf-local/tex/latex/$PRGNAM" \
+  ELISP="/usr/share/emacs/site-lisp" \
+  CFLAGS="$SLKCFLAGS" \
+  DESTDIR="$PKG"
+
+find $PKG/usr/man -type f -exec gzip -9 {} +
+for i in $(find $PKG/usr/man -type l); do ln -s $(readlink $i).gz $i.gz; rm $i; done
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

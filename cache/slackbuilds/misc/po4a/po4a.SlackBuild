@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Slackware build script for po4a
+
+# Originally written by Didier Spaier Paris, France
+# Now maintained by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240816 bkw: update for v0.73.
+
+# 20230701 bkw: BUILD=2:
+# - install translations to /usr/share/locale, *not* /usr/locale!
+
+# 20230103 bkw: update for v0.69.
+
+# 20220110 bkw:
+# - new maintainer.
+# - relicense as WTFPL with permission from Didier.
+# - update for v0.65.
+# - force a UTF-8 locale instead of making it a hoop for the user
+#   to notice and jump through.
+# - move some of the details from README to a separate README_SBo.txt.
+# - ARCH=noarch.
+# - run the tests if TESTS=yes, as user nobody so they actually work.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+PRGNAM=po4a
+VERSION=${VERSION:-0.73}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+# There is no compiled code here.
+ARCH=noarch
+
+SRCNAM="$(printf $PRGNAM | cut -d- -f2-)"
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $SRCNAM-$VERSION
+tar xvf $CWD/$SRCNAM-$VERSION.tar.gz
+cd $SRCNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# 20230701 bkw: upstream makes a bad assumption about where the locale dir
+# lives: assumes it's in the same dir as man/. this would be right if our
+# man pages were in /usr/share/man, but sice we use /usr/man, we end up
+# with translations installed to /usr/locale. ugh.
+sed -i '/\$localedir *=~/s,/locale,/share/locale,' Po4aBuilder.pm
+
+perl Build.PL \
+  prefix=/usr \
+  installdirs=vendor \
+  destdir=$PKG
+./Build
+
+# 20220110 bkw: Tests fail if run as root. Also they're time-consuming.
+# Run them only if requested, and do it as "nobody".
+if [ "${TESTS:-no}" = "yes" ]; then
+  chown -R nobody:nogroup t
+  su nobody -s /bin/sh -c "./Build test"
+fi
+
+./Build install \
+  --install_path bindoc=/usr/man/man1 \
+  --install_path libdoc=/usr/man/man3
+
+find $PKG -name perllocal.pod -o -name ".packlist" -o -name "*.bs" | \
+  xargs rm -f || true
+find $PKG -depth -type d -empty -delete || true
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a COPYING NEWS README* TODO changelog $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+    |-----handy-ruler------------------------------------------------------|
+sdcc: sdcc (Small Device C Compiler)
+sdcc:
+sdcc: SDCC is a retargettable, optimizing Standard C (ANSI C89, ISO C99, ISO
+sdcc: C11) compiler suite that targets the Intel MCS51 based microprocessors
+sdcc: (8031, 8032, 8051, 8052, etc.), Maxim (formerly Dallas) DS80C390
+sdcc: variants, Freescale (formerly Motorola) HC08 based (hc08, s08), Zilog
+sdcc: Z80 based MCUs (Z80, Z180, SM83, Rabbit 2000, 2000A, 3000A, TLCS-90),
+sdcc: Padauk (pdk14, pdk15) and STMicroelectronics STM8.  Work is in
+sdcc: progress on supporting the Padauk pdk13 and MOS 6502 targets;
+sdcc: Microchip PIC16 and PIC18 targets are unmaintained.  SDCC can be
+sdcc: retargeted for other microprocessors.

@@ -1,0 +1,19 @@
+wolf4sdl (Wolfenstein 3D engine)
+
+Wolf4SDL is an open-source SDL port of id Software's classic
+first-person shooter Wolfenstein 3D. It is meant to keep the original
+feel while taking advantage of some modern improvements.
+
+This build includes the game data files from the shareware/demo versions
+of Wolfenstein 3D and its sequel Spear of Destiny.
+
+To play the full versions of the games, you need the *.wl*, *.sod,
+and/or *.sd* files from your installed copies of the games. Copy them to
+"/usr/share/games/wolf3d". Filenames must be all-lowercase.
+
+This version of Wolf4SDL has some gameplay features that make it play
+more like a modern FPS game. To try this, run e.g.
+
+$ wolf4sdl-wolf3d-demo --modern
+
+See the man page for more information.

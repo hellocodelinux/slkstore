@@ -1,0 +1,295 @@
+#!/bin/bash
+
+# Slackware build script for mysql-workbench
+
+# Originally written by Andre Geraldo Vieira <andre.geraldo@gmail.com>
+# Copyright 2013-2025 Willy Sudiarto Raharjo <willysr@slackbuilds.org>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=mysql-workbench
+PRGNAM2=mysql
+VERSION=${VERSION:-8.0.43}
+VERSION_MYSQL=8.4.6
+PRGNAM3=boost
+VERSION_BOOST=1.87.0
+VERSION_BOOST_SRC=`echo $VERSION_BOOST | tr . _`
+PRGNAM4=mysql-connector-c++
+VERSION_MYSQL_CONNECTOR=9.4.0
+PRGNAM5=gdal
+VERSION_GDAL=3.11.1
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+SRCVERSION=$VERSION-src
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG $TMP/install-bundle
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+
+# Extract Boost
+rm -rf ${PRGNAM3}_${VERSION_BOOST_SRC}
+tar xvf $CWD/${PRGNAM3}_${VERSION_BOOST_SRC}.tar.bz2
+
+# Building MySQL
+rm -rf $PRGNAM2-${VERSION_MYSQL}
+tar xvf $CWD/$PRGNAM2-${VERSION_MYSQL}.tar.gz
+cd $PRGNAM2-${VERSION_MYSQL}
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \+ -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \+
+
+SLKCFLAGS+=" -Wno-error"
+
+mkdir -p build
+cd build
+cmake \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+  -DWITHOUT_SERVER=ON \
+  -DBUILD_CONFIG=mysql_release \
+  -DINSTALL_LIBDIR="lib${LIBDIRSUFFIX}" \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DSYSCONFDIR=/etc/mysql \
+  -DMYSQL_DATADIR=/var/lib/mysql \
+  -DWITH_BOOST=$TMP/${PRGNAM3}_${VERSION_BOOST} \
+  -DCMAKE_BUILD_TYPE=Release ..
+
+make
+make install DESTDIR=$TMP/install-bundle
+
+cd ../..
+
+# Building mysql-connector-c++
+rm -rf $PRGNAM4-$VERSION-src
+tar xvf $CWD/${PRGNAM4}-${VERSION_MYSQL_CONNECTOR}-src.tar.gz
+cd $PRGNAM4-${VERSION_MYSQL_CONNECTOR}-src
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# Thanks to Arch Linux
+sed -i \
+		-e '/cmake_policy/Is|[23]\.[.0-9]\+|3.12|' \
+		-e '/cmake_minimum_required/Is|[23]\.[.0-9]\+|3.12|' \
+		$(find "$TMP/$PRGNAM4-${VERSION_MYSQL_CONNECTOR}-src"/ -name 'CMakeLists.txt')
+
+# Fix for GCC 15
+patch -p1 < $CWD/0005-gcc-15.patch
+
+mkdir -p build
+cd build
+cmake \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+  -Wno-dev \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DWITH_JDBC=ON \
+  -DCMAKE_INSTALL_LIBDIR=/usr/lib${LIBDIRSUFFIX} \
+  -DINSTALL_LIB_DIR=lib${LIBDIRSUFFIX} \
+  -DMYSQL_DIR="$TMP/install-bundle/" \
+  -DMYSQL_CONFIG_EXECUTABLE="$TMP/install-bundle/usr/bin/mysql_config" \
+  -DCMAKE_BUILD_TYPE=Release ..
+
+make
+make install DESTDIR=$TMP/install-bundle
+
+cd ../..
+
+# Building gdal
+rm -rf ${PRGNAM5}-${VERSION_GDAL}
+tar xvf $CWD/${PRGNAM5}-${VERSION_GDAL}.tar.xz
+cd ${PRGNAM5}-${VERSION_GDAL}
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+mkdir -p build
+cd build
+  cmake \
+    -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DLIB_SUFFIX=${LIBDIRSUFFIX} \
+    -DMAN_INSTALL_DIR=/usr/man \
+    -DGDAL_USE_JASPER='OFF' \
+    -DGDAL_USE_MYSQL='OFF' \
+    -DBUILD_CSHARP_BINDINGS='FALSE' \
+	-DBUILD_JAVA_BINDINGS='FALSE' \
+	-DBUILD_PYTHON_BINDINGS='FALSE' \
+    -DCMAKE_BUILD_TYPE=Release ..
+
+make LD_LIBRARY_PATH="$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/"
+make LD_LIBRARY_PATH="$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/" DESTDIR="$TMP/install-bundle/" install
+cd ../../
+
+# Building mysql-workbench
+rm -rf $PRGNAM-community-$SRCVERSION
+tar xvf $CWD/$PRGNAM-community-$SRCVERSION.tar.gz
+cd $PRGNAM-community-$SRCVERSION
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+sed -i '/^\s*set/s| -Werror||' CMakeLists.txt
+
+sed -i '/target_compile_options/s|PRIVATE|PRIVATE -fno-lto|' library/sql.parser/source/CMakeLists.txt
+
+# Patch from Ponce
+patch -p1 < $CWD/config_and_ifconfig_paths.patch
+
+# disable stringop-truncation for GCC 8.x
+sed -i '/^set/s|-Wall|-Wall -Wno-stringop-truncation|' CMakeLists.txt
+
+# make sure to link against bundled libraries
+sed -i "/target_link_libraries/s|\\$|-L$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/ \\$|" backend/wbpublic/CMakeLists.txt
+
+# Fix boost 1.73
+patch -p1 < $CWD/boost-1.73.0.patch
+
+patch -Np1 < $CWD/0003-include-list.patch
+
+# Only apply this for python 3.12+
+PYTHONVER=$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
+if [ $PYTHONVER != 3.9 ]; then
+  patch -p1 < $CWD/0003-swig-4-3.patch
+fi
+
+# Install antlr Java JAR
+cp $CWD/antlr-4.13.2-complete.jar $TMP/install-bundle/antlr-4.13.2-complete.jar
+
+sed -i 's|4.11.1|4.13.2|' CMakeLists.txt
+
+# patch for GCC 13.0
+patch -p1 < $CWD/gcc13.patch
+
+mkdir -p wb-build
+cd wb-build
+cmake \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS -D_GLIBCXX_USE_CXX11_ABI=1" \
+  -Wno-dev \
+  -DCMAKE_INSTALL_PREFIX:PATH=/usr \
+  -DCMAKE_CXX_FLAGS="-std=c++17" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLIB_INSTALL_DIR=/usr/lib${LIBDIRSUFFIX} \
+  -DMySQL_CONFIG_PATH="$TMP/install-bundle/usr/bin/mysql_config" \
+  -DMySQLCppConn_LIBRARY="$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/libmysqlcppconn.so" \
+  -DMySQLCppConn_INCLUDE_DIR="$TMP/install-bundle/usr/include/jdbc" \
+  -DGDAL_INCLUDE_DIR="$TMP/install-bundle/usr/include" \
+  -DGDAL_LIBRARY="$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/libgdal.so" \
+  -DWITH_ANTLR_JAR="$TMP/install-bundle/antlr-4.13.0-complete.jar" \
+  -DUNIXODBC_CONFIG_PATH="/usr/bin/odbc_config" \
+  -DUNIXODBC_INCLUDE_DIRS="/usr/include/unixodbc" \
+  -DUSE_BUNDLED_MYSQLDUMP=1 \
+   ..
+
+make -j1
+make install DESTDIR=$PKG
+
+cd ..
+
+# Add Slackware Linux Profile
+install -m0644 $CWD/slackware_linux_profile.xml $PKG/usr/share/mysql-workbench/mysql.profiles/Slackware_Linux_15.0_\(MySQL_5.6_Package\).xml
+
+# install bundled mysql and mysqldump
+install -m0755 "$TMP/install-bundle/usr/bin/mysql"{,dump} $PKG/usr/lib${LIBDIRSUFFIX}/mysql-workbench/
+
+# icons
+for SIZE in 16 24 32 48 64 96 128; do
+# set modify/create for reproducible builds
+  convert -scale ${SIZE} +set date:create +set date:modify \
+    "images/icons/MySQLWorkbench-128.png" \
+    "mysql-workbench.png"
+    install -D -m0644 "mysql-workbench.png" "$PKG/usr/share/icons/hicolor/${SIZE}x${SIZE}/apps/mysql-workbench.png"
+done
+
+# install bundled libraries
+for LIBRARY in $(find "$TMP/install-bundle/usr/lib${LIBDIRSUFFIX}/" -type f -regex '.*/lib\(gdal\|mysql\(client\|cppconn\)\)\.so\..*'); do
+  BASENAME="$(basename "${LIBRARY}")"
+  SONAME="$(readelf -d "${LIBRARY}" | grep -Po '(?<=(Library soname: \[)).*(?=\])')"
+  install -D -m0755 "${LIBRARY}" "$PKG"/usr/lib${LIBDIRSUFFIX}/mysql-workbench/"${BASENAME}"
+  ln -s "${BASENAME}" "$PKG"/usr/lib${LIBDIRSUFFIX}/mysql-workbench/"${SONAME}"
+done
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+# Fix ldconfig path
+sed -i "s|ldconfig|/sbin/ldconfig|" $PKG/usr/bin/mysql-workbench
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mv AUTHORS *.txt $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+rm -rf $PKG/usr/share/doc
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

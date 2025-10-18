@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Slackware build script for libpng-legacy12
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20220125 bkw: BUILD=2, get rid of .la file. Nothing that depends on
+# this needs it, and it might come back to bite us someday...
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=libpng-legacy12
+VERSION=${VERSION:-1.2.57}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+UPSTREAM_VER=${UPSTREAM_VER:-1.4.20}
+UPSTREAM_BUILD=${UPSTREAM_BUILD:-1}
+UPSTREAM_TAG=${UPSTREAM_TAG:-_slack14.1}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ "$ARCH" = "x86_64" ]; then
+  SRCARCH=$ARCH
+ LIBDIRSUFFIX="64"
+ # 2023-05-17 DW: allow any x86
+elif [[ $ARCH = i?86 ]]; then
+  SRCARCH=i486
+ LIBDIRSUFFIX=
+else
+  echo "$ARCH architecture is unsupported." >/dev/stderr
+  exit 1
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+UPSTREAM=libpng-$UPSTREAM_VER-$SRCARCH-$UPSTREAM_BUILD$UPSTREAM_TAG
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP/$PRGNAM $PKG $OUTPUT
+rm -rf $TMP/$PRGNAM
+mkdir -p $TMP/$PRGNAM
+cd $TMP/$PRGNAM
+tar xvf $CWD/$UPSTREAM.txz
+
+# Include only the shared lib, plus SBo-specific docs.
+mkdir -p $PKG/usr/lib$LIBDIRSUFFIX
+cp -a \
+  ./usr/lib$LIBDIRSUFFIX/libpng12.so.*.*.* \
+  $PKG/usr/lib$LIBDIRSUFFIX
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/README > $PKG/usr/doc/$PRGNAM-$VERSION/README
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+# make our doinst.sh from upstream's
+grep libpng12.so ./install/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

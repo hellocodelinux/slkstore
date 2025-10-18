@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# Slackware build script for oblige-legacy4
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20250806 bkw: BUILD=5, fix for impending fltk-1.4 upgrade.
+# 20230107 bkw: BUILD=4, remove INSTALL.txt from doc dir.
+
+# 20211020 bkw: BUILD=3
+# - make the icon transparent
+# - new-style icons (also transparent)
+# - update man page, README, slack-desc slightly
+
+# 20170621 bkw: fix build on -current.
+
+# 20140916 bkw: bump BUILD to 2.
+# - add man page
+# - add mention of Hexen in README
+
+# 20140827 bkw:
+# - rename this build to oblige-legacy4 so we can update oblige to v6.
+#   keep both around for now, as v6 lacks heretic/quake support.
+
+# 20140213 bkw: bump BUILD to 2.
+# Makefile.unixy updated so it installs data/doom[12]_boss (thanks to Black
+# Rider for the bug report). Also get rid of +x permissions on the data files
+# in /usr/share.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=oblige-legacy4
+VERSION=${VERSION:-4.28b}
+BUILD=${BUILD:-5}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+else
+  SLKCFLAGS="-O2"
+fi
+
+set -e
+
+OLDNAM="oblige"
+SRCVER=${VERSION//./}
+SRCNAM="Oblige" # grrrr!
+
+rm -rf $PKG
+mkdir -p $TMP $PKG/usr/bin $PKG/usr/share/$PRGNAM $OUTPUT
+cd $TMP
+rm -rf ${SRCNAM}-${VERSION}-source
+unzip $CWD/$OLDNAM-$SRCVER-source.zip
+cd ${SRCNAM}-${VERSION}-source
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+# Makefile.unixy originally came from the oblige author, I've hacked
+# it up to make it work with oblige 4.x and SBo's fltk13.
+cp $CWD/Makefile.unixy Makefile
+
+# Fix a missing include
+sed -i '1i#include <unistd.h>' gui/lib_util.cc
+
+# -current's gcc doesn't allow assigning a bool to a pointer without
+# a cast:
+sed -i '/button_line *= *false/s,false,0,' gui/ui_console.cc
+
+# Legacy version shouldn't use same /usr/share and dotfile dir as
+# current version.
+sed -i "s,\.$OLDNAM,.$PRGNAM,g" doc/File_Layout.txt gui/main.cc
+sed -i "s,share/$OLDNAM,share/$PRGNAM," gui/main.cc
+
+# 20250806 bkw: this is *really fucking stupid*: upstream put in a
+# check that says "FLTK 1.3.0 or newer", but it actually checks for
+# 1.3.x (so 1.4.x will fail).
+sed -i '/FL_MINOR_VERSION/s,!=,<,' gui/ui_window.cc
+
+make INSTALL_PREFIX=/usr OPTIMISE="$SLKCFLAGS"
+make install INSTALL_PREFIX=$PKG/usr
+
+mkdir -p $PKG/usr/share/pixmaps $PKG/usr/share/applications
+cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
+
+# 128.png was created by extracting oblige.ico, then using the gimp
+# to turn the white background into transparency. The rest were scaled
+# down from that, with convert -resize.
+for i in $CWD/icons/*.png; do
+  px=$( basename $i | cut -d. -f1 )
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  cat $i > $dir/$PRGNAM.png
+done
+
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# man page written for this build
+mkdir -p $PKG/usr/man/man6
+gzip -9c < $CWD/$PRGNAM.6 > $PKG/usr/man/man6/$PRGNAM.6.gz
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+rm -f INSTALL.txt
+cp *.txt doc/*.txt $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

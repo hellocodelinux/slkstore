@@ -1,0 +1,17 @@
+kForth is an implementation of the Forth programming language
+and environment. The user may write Forth programs with an editor,
+load these program files from kForth, and run them.
+
+kForth-32, version 2.x provides a large subset of, and conforms
+primarily to the Forth-94 standard (ANS Forth) for the Forth
+language.
+However, it also includes new concepts and words from the
+Forth-2012 specification. kForth-32 v 2.x is intended to bridge
+the gap from the older kForth-32 1.x branch to a future kForth-32
+3.x series, the 32-bit counterpart of kForth-64, which is more
+closely in conformance with Forth-2012.
+
+kForth-32 is designed to be installed on a 32-bit linux operating
+system.
+It will not install on 64-bit Slackware unless multilib support is
+installed.

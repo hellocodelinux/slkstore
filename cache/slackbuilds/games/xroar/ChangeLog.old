@@ -1,0 +1,56 @@
+# 20191130 bkw:
+# - update for 0.35.4
+# - restore the SDL1 build, now that it builds again
+# - remove the possibility of including ROMs in the package, because:
+# - make xroar-roms a required dependency
+
+# 20181201 bkw: update for 0.35.2
+
+# 20180828 bkw:
+# - update for 0.35
+# - build with --without-oss by default, add OSS=yes option
+# - get rid of alsa_first.diff (doesn't apply any more anyway)
+# - add PULSE=no option
+# - move cruft out of here & into ChangeLog.old
+# - SDL 1.x build broke in 0.35, so remove SDL2=no and add SDL2
+#   to REQUIRES.
+
+# 20170822 bkw:
+# - update for 0.34.8
+# - add SDL2=no and GTKGLEXT=no options, mostly for my own testing
+# - record build options in slack-desc
+
+# 20170122 bkw: update for 0.34.7
+
+# 20161016 bkw:
+# - update for 0.34.5
+# - move binary to /usr/games
+# - mention SDL2 in README
+# - fix jack option (--with-jack, not --enable-jack)
+
+# 20150912 bkw:
+# - update for 0.33.2
+# - use upstream's man page, get rid of mine
+
+# 20140824 bkw:
+# - update for 0.32
+# - somehow I lost the POD source to the man page, recreate from xroar.6
+
+# 20140313 bkw:
+# - update for 0.31.1
+# - change download link to upstream's, looks OK now
+# - update alsa_first.diff (module.c -> src/module.c)
+# - update man page (new options, convert to POD)
+# - add jack support
+
+# 20130617 bkw:
+# - update for 0.29.5
+
+# 20121218 bkw:
+# - update for 0.28.1
+# - change download link to my own server, since upstream changes their URL
+#   for every release
+# - include missing .png file for HTML doc
+# - add patch to prefer ALSA over OSS
+# - LDFLAGS=-lm (wasn't needed for old version)
+# - mention gtkglext in README as an optional dep

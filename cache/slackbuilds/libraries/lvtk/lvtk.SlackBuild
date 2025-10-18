@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Slackware build script for lvtk
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20170302 bkw: use long-format github URL
+
+# 20151110 bkw:
+# - Update for v1.2.0
+# - Install the example plugins if DOCS=yes. They were already being built.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=lvtk
+VERSION=${VERSION:-1.2.0}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS -std=c++11" \
+LDFLAGS="-lboost_system" \
+./waf configure \
+	--prefix=/usr \
+	--libdir=/usr/lib$LIBDIRSUFFIX \
+	--disable-examples
+
+./waf build
+./waf install --destdir=$PKG
+
+# only build the doxygen stuff if enabled. requires graphviz.
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+if [ "${DOCS:-no}" = "yes" ] ; then
+  ./waf configure --docs build
+  cp -a build/doc/* $PKG/usr/doc/$PRGNAM-$VERSION
+  cp -a examples $PKG/usr/doc/$PRGNAM-$VERSION/examples
+  mkdir -p $PKG/usr/lib$LIBDIRSUFFIX/lv2
+  cp -a build/examples/$PRGNAM.lv2 $PKG/usr/lib$LIBDIRSUFFIX/lv2
+fi
+
+# Only ttl2c and the lv2 plugins actually get stripped, because the
+# libs in /usr/lib(64)?/ are static. No idea how (or even if) waf can
+# be coerced into building shared libs instead. The static libs are
+# pretty small anyway, not worth hacking things up to make them dynamic.
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+cp -a AUTHORS COPYING README ChangeLog $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

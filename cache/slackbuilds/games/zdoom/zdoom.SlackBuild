@@ -1,0 +1,205 @@
+#!/bin/bash
+
+# Slackware build script for zdoom
+
+# Originally written by Pablo Santamaria (email removed)
+
+# Modified and now maintained by B. Watson <urchlay@slackware.uk>. Original
+# version had no license, modified version released under the WTFPL,
+# see http://www.wtfpl.net/txt/copying/ for details.
+
+# 20220318 bkw: fix 32-bit build (disable asm).
+# 20211012 bkw: BUILD=2
+# - Fix -current build.
+# - New-style icons.
+
+# 20170207 bkw:
+# - Take over maintenance, update for v2.8.1, BUILD=1. Upstream
+#   says zdoom development has halted, so 2.8.1 should be the last
+#   version ever.
+# - i486 => i586.
+# - Add SDL2 to REQUIRES as upstream no longer supports SDL1.
+# - Remove TiMidity++ from REQUIRES as it's no longer required (likely,
+#   it never was).
+# - Use .tar.gz source from github rather than .7z from zdoom.org. The
+#   source is identical except for CRLF line endings and a generated
+#   gitinfo.h file.
+# - Remove p7zip from REQUIRES, now that we're using .tar.gz source.
+# - Fix the build so when fmodapi is built in, it'll actually *work*.
+#   Original version of this script required fmodapi at compile time,
+#   but failed to install liboutput_sdl.so, meaning fmodapi wasn't
+#   usable at runtime.
+# - Replace crappy looking 16x16 "Z" icon with a larger higher-res version,
+#   the "Z" from this image: https://zdoom.org/wiki/File:Logo_phpBB.gif
+# - Various cosmetic script fixes.
+
+# Note to the purists out there: I listed fmodapi as a hard dependency and
+# OpenAL as optional. Actually, they're both optional. One or the other
+# is required for the game to make sound at all though. I'd say the vast
+# majority of users (myself included) would consider a sound-less Doom
+# engine an incomplete implementation of the game, and would get annoyed
+# if a default build didn't include sound. You may disagree with this,
+# but please do so quietly, as though you also had been compiled without
+# sound support :)
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=zdoom
+VERSION=${VERSION:-2.8.1}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+# Decide whether to build OpenAL support in.
+OPENAL="${OPENAL:-auto}"
+if [ "$OPENAL" = "auto" ]; then
+  if [ -e /usr/include/AL ]; then
+    OPENAL=yes
+  else
+    OPENAL=no
+  fi
+fi
+
+case "$OPENAL" in
+  y*|Y*|t*|T*|1|[oO][nN])
+    OPENAL=yes
+    OPENALOPT="-DNO_OPENAL=OFF"
+    WITHOPENAL=WITH
+    ;;
+  *)
+    OPENAL=no
+    OPENALOPT="-DNO_OPENAL=ON"
+    WITHOPENAL=WITHOUT
+    ;;
+esac
+
+# I could do the same as above for fluidsynth, but it's not necessary.
+# By default, zdoom loads it dynamically at runtime, and if it's missing,
+# the game runs anyway... and if fluidsynth is installed after the fact,
+# it'll Just Work (no need to recompile). Also, TiMidity++ is purely an
+# optional runtime dep.
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+
+# gitinfo.h made like so:
+## git clone https://github.com/rheit/zdoom.git
+## git reset <commit ID, as listed on github's releases page>
+## cd zdoom/tools/updaterevision
+## cmake .
+## make
+## ./updaterevision ../../../gitinfo.h
+# Without this, we get fugly <unknown version> in the window's title.
+
+cat $CWD/gitinfo.h > src/gitinfo.h
+
+# Set default directory for IWADs (share with other doom engines, e.g. prboom)
+sed -i 's|/usr/local/share/|/usr/share/games/doom/|' src/posix/i_system.h
+
+# fmodapi support tries to find its lib in the current dir, fix it:
+sed -i \
+  "s,setPluginPath(progdir),setPluginPath(\"/usr/lib$LIBDIRSUFFIX/$PRGNAM\")," \
+  src/sound/fmodsound.cpp
+
+# silly gcc version detection assumes the major version will always be
+# only one digit, this broke when we got gcc 10.
+sed -i '/REGEX *MATCH/s,\[3-9\],[1-9][0-9]*,g' game-music-emu/CMakeLists.txt
+
+mkdir release
+cd release
+
+# 20220318 bkw: the x86 asm code won't build on 15.0, so it's disabled.
+# The x86_64 build never used it.
+cmake \
+  -DNO_ASM=ON \
+  -DCMAKE_CXX_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_C_FLAGS:STRING="$SLKCFLAGS" \
+  -DCMAKE_BUILD_TYPE="Release" \
+  -DFMOD_LIBRARY=/usr/lib${LIBDIRSUFFIX}/libfmodex${LIBDIRSUFFIX}.so \
+  $OPENALOPT \
+  ..
+
+make
+
+mkdir -p \
+  $PKG/usr/games \
+  $PKG/usr/share/applications \
+  $PKG/usr/share/pixmaps \
+  $PKG/usr/share/icons/hicolor/48x48/apps \
+  $PKG/usr/share/games/doom \
+  $PKG/usr/lib$LIBDIRSUFFIX/$PRGNAM
+
+# No 'make install' target, though there are some cmake_install.cmake files.
+# Manual install is simple enough anyway.
+install -s -m755 $PRGNAM $PKG/usr/games
+[ -e liboutput_sdl.so ] && \
+  install -s -m755 liboutput_sdl.so $PKG/usr/lib$LIBDIRSUFFIX/$PRGNAM
+install -m644 $PRGNAM.pk3 $PKG/usr/share/games/doom/
+install -m644 $CWD/$PRGNAM.desktop $PKG/usr/share/applications/
+
+for i in $CWD/icons/*.png; do
+  px=$( basename $i | cut -d. -f1 )
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  cat $i > $dir/$PRGNAM.png
+done
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+cd ..
+
+# Get rid of CRLF endings in the docs.
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+for i in docs/*; do
+  sed 's,\r,,' $i > $PKGDOC/$( basename $i )
+done
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+# Make slack-desc tell us whether OpenAL was built in or not.
+mkdir -p $PKG/install
+sed "s,@WITHOPENAL@,$WITHOPENAL,g" $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh  > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

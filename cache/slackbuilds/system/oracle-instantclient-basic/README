@@ -1,0 +1,7 @@
+Oracle Instant Client is a free Oracle database client.
+
+It provides core functionality for all OCI, OCCI and
+JDBC-OCI applications.
+
+Oracle-xe and JRE or JDK packages are optional and depends on your
+needs.

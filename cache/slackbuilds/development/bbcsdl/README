@@ -1,0 +1,26 @@
+BBC BASIC for SDL 2.0 (BBCSDL) is an entirely free and Open Source
+cross-platform implementation of BBC BASIC for Windows, MacOS,
+Linux (x86 CPU only), Raspberry Pi OS (RPi3 or later), Android,
+iOS or for running in a browser.
+It combines the simplicity of BASIC with the sophistication of a
+structured language, allowing you to write utilities and games,
+use sound and graphics, and perform calculations.
+The Desktop editions (Windows, MacOS, Linux, Raspberry Pi)
+include a BASIC program editor with syntax colouring, live
+indentation, search & replace and many other features.
+Built-in diagnostic aids such as run-time trace, listing of
+variables, single-step execution and a profiler make debugging
+even the most complex programs straightforward.
+
+This package installs to /opt/bbcsdl and is a rebuild of the open
+sources available at https://github.com/rtrussell/BBCSDL
+
+The Box2D (Box2D321.so) libraries are downloaded and bundled
+from the original release by R.T.Russell available
+at https://www.bbcbasic.co.uk/bbcsdl/bbclinux.zip.
+If you do not need it you can exclude the library by passing
+BOX2D=no as parameter like this:
+
+BOX2D=no ./bbcsdl.SlackBuild
+
+Many program examples are installed at /opt/bbcsdl/examples/

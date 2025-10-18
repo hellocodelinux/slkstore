@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+        |-----handy-ruler------------------------------------------------------|
+a2jmidid: a2jmidid (ALSA sequencer to JACK MIDI bridging for jack2)
+a2jmidid:
+a2jmidid: This project aims to ease the usage of legacy, non JACK enabled
+a2jmidid: applications, in a JACK MIDI enabled system, when using jack2.
+a2jmidid:
+a2jmidid: (e.g. connect bristol/azr3 with qtractor/rosegarden/seq24)
+a2jmidid:
+a2jmidid: Note: The latest jack release contains a2jmidid functionality by
+a2jmidid: itself.
+a2jmidid:
+a2jmidid:

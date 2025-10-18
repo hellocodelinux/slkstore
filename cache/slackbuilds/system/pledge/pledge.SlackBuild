@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Slackware build script for pledge
+
+# Original author 2023 Juan M. Lasca <email removed>
+# Modified and now maintained by B. Watson <urchlay@slackware.uk>
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20240221 bkw: BUILD=2
+# - Take over maintenance
+# - Relicense as WTFPL (per mailing list)
+# - Fix minor grammar/spelling issues in README and slack-desc
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=pledge
+VERSION=${VERSION:-20230908_8693ebe}
+COMMIT=8693ebe15a30bd4235165ad72a469da29ca067cf
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$COMMIT
+tar xvf $CWD/$PRGNAM-$COMMIT.tar.gz
+cd $PRGNAM-$COMMIT
+chown -R root:root .
+find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} + -o \
+        \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} +
+
+make CFLAGS="$SLKCFLAGS"
+
+LIB=$PKG/usr/lib$LIBDIRSUFFIX/$PRGNAM
+mkdir -p $LIB $PKG/usr/bin
+install -s -m0755 o/pledge o/sandbox.so $LIB
+ln -s ../lib$LIBDIRSUFFIX/$PRGNAM/pledge $PKG/usr/bin
+
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -a README.md LICENSE $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

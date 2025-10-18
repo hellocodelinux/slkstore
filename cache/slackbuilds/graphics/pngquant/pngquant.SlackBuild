@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# Slackware build script for pngquant
+
+# Ryan P.C. McQuen | Everett, WA | ryanpcmcquen@member.fsf.org
+# 2017 - Dhaby Xiloj - <slack.dhabyx@gmail.com>
+
+# Copyright 2013-2015 Kyle Guinn <elyk03@gmail.com>, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20230701 bkw: Modified by SlackBuilds.org, BUILD=2:
+# - strip binary and shared lib.
+# - remove INSTALL from doc dir (compile instructions only).
+# - add README note saying OPENMP=yes is broken.
+#
+# Note: upstream switched from C to Rust. The last C release was
+# 2.18.0 (Feb 3, 2023), which this build should probably be updated
+# for (assuming it doesn't break imgmin or tuxpaint, which depend on
+# this).
+#
+# The 3.0.x releases don't look like they're API compatible. I would
+# rather stab myself in the eye with a rusty fork than deal with Rust,
+# but someone might want to look into 3.0.x (possibly as a separate
+# SlackBuild, leaving this one at 2.18.0).
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=pngquant
+VERSION=${VERSION:-2.9.0}
+BUILD=${BUILD:-2}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+if [ -z "$ARCH" ]; then
+  case "$(uname -m)" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$(uname -m) ;;
+  esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+DOCS="CHANGELOG COPYRIGHT README.md"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+set -e
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM-$VERSION
+tar xvf $CWD/$PRGNAM-$VERSION-src.tar.gz
+cd $PRGNAM-$VERSION
+chown -R root:root .
+chmod -R u+w,go-w,a+rX-st .
+
+# 20230701 bkw: building with OPENMP=yes is broken on Slackware 15.0,
+# which I suppose is why this was disabled by default. I thought using
+# CC=clang might help, but it doesn't.
+if [ "${OPENMP:-no}" != "no" ]; then
+  openmp="--with-openmp"
+fi
+
+./configure \
+  --prefix=/usr \
+  $openmp \
+  CFLAGS="$SLKCFLAGS"
+
+sed -i -e 's#share/man#man#' Makefile
+
+make
+make -C lib shared
+strip $PRGNAM
+make PREFIX=$PKG/usr install
+
+# manual installation of libraries:
+install -s -D -m0755 lib/libimagequant.so.0 $PKG/usr/lib${LIBDIRSUFFIX}/libimagequant.so.0
+install    -D -m0644 lib/libimagequant.a $PKG/usr/lib${LIBDIRSUFFIX}/libimagequant.a
+install    -D -m0644 lib/libimagequant.h $PKG/usr/include/libimagequant.h
+
+gzip -9 $PKG/usr/man/man*/*
+
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

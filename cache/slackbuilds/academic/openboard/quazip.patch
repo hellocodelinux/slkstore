@@ -1,0 +1,41 @@
+--- OpenBoard-1.6.0a/plugins/cffadaptor/UBCFFAdaptor.pro.orig	2020-04-07 08:26:29.240677360 +0700
++++ OpenBoard-1.6.0a/plugins/cffadaptor/UBCFFAdaptor.pro	2020-04-07 08:27:03.695993158 +0700
+@@ -39,7 +39,7 @@
+     QMAKE_POST_LINK += bash postScript_mac.sh "$$DESTDIR" "$$SANKORE_DIR/$$BUILD_DIR/product/Open-Sankore.app/Contents/MacOS"
+ }
+ 
+-LIBS     += "-L$$THIRD_PARTY_PATH/quazip/lib/$$SUB_DIR" "-lquazip"
++LIBS     += "-lquazip1-qt5"
+ 
+ QT       += xml xmlpatterns core
+ QT       += gui
+@@ -51,10 +51,7 @@
+ 
+ INCLUDEPATH += src
+ 
+-DEPENDPATH  += $$THIRD_PARTY_PATH/quazip/
+-INCLUDEPATH += $$THIRD_PARTY_PATH/quazip/
+-include($$THIRD_PARTY_PATH/quazip/quazip.pri)
+-
++INCLUDEPATH += /usr/include/QuaZip-Qt5-1.1/quazip/
+ 
+ SOURCES += \
+     src/UBCFFAdaptor.cpp
+@@ -66,4 +63,4 @@
+     src/UBCFFConstants.h
+ 
+ RESOURCES += \
+-    resources/resources.qrc
+\ No newline at end of file
++    resources/resources.qrc
+--- OpenBoard-1.7.0/OpenBoard.pro.orig  2023-12-10 12:06:17.808153181 +0700
++++ OpenBoard-1.7.0/OpenBoard.pro       2023-12-10 12:10:09.448432404 +0700
+@@ -470,7 +470,7 @@
+         INCLUDEPATH += "/usr/include/quazip6"
+     } else {
+         LIBS += -lquazip5
+-        INCLUDEPATH += "/usr/include/quazip5"
++        INCLUDEPATH += "/usr/include/QuaZip-Qt5-1.1/quazip"
+     }
+ 
+     LIBS += -lpoppler

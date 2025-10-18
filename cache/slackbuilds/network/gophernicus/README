@@ -1,0 +1,5 @@
+gophernicus (gopher server)
+
+Gophernicus is a modern full-featured (and hopefully) secure gopher
+daemon for inetd or xinetd. See README.SBo for instructions on how to
+configure inetd or xinetd to run gophernicus.

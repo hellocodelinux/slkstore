@@ -1,0 +1,17 @@
+Fusion Icon is a simple system tray applet for starting and controlling
+Compiz. Upon launch, it will attempt to start Compiz automatically. 
+You may need to select a window decorator if one does not
+appear.
+
+For correct installation, build in this order:
+compiz-bcop
+protobuf3 (optional but recommended)
+libcompizconfig
+compizconfig-python
+ccsm
+compiz-plugins-main
+compiz-plugins-extra (optional)
+compiz-plugins-experimental (optional)
+emerald (optional)
+emerald-themes (optional)
+fusion-icon (optional)

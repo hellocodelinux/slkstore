@@ -1,0 +1,14 @@
+xview (X11 toolkit for OPEN LOOK applications)
+
+XView is a cross-platform X11 toolkit which implements OPEN LOOK
+specification. It was originally created by Sun Microsystems (now
+Oracle), since then it was developed by community. It comes with
+several OPEN LOOK applications, including window managers (olwm,
+olvwm), text editors (oledit, textedit), clock (olclock) and a
+simple calculator (olcalc).
+
+Due to conflict with /sbin/clock, XView's clock was renamed to olclock.
+
+Note to 64-bit users: xview isn't "64-bit clean". The window managers
+(olwm, olvwm) work, but the applications crash with a segfault on
+startup.

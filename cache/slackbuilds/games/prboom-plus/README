@@ -1,0 +1,35 @@
+prboom-plus (Doom source port)
+
+PrBoom+ is a Doom source port developed from the original PrBoom
+project.
+
+Features uncapped framerate, widescreen aspect ratios, soundfont
+support, variable gamespeed, re-record, walkcam, chasecam, full
+mouselook, variable FOV, and other features along with full
+compatibility with the original Doom/Doom2 engines.
+
+The documentation refers to a directory into which an IWAD
+file (doom.wad, doom2.wad, tnt.wad, plutonia.wad, or the
+shareware doom1.wad) may be placed. The IWAD directory is
+/usr/share/games/doom. If you don't have any IWADs, install
+doom_shareware_data to play shareware Doom.
+
+Optional dependencies, autodetected:
+portmidi - for the PortMIDI backend. Most users won't need this.
+dumb - somehow, this can be used for music. No idea how to enable it,
+       but if dumb is detected, prboom-plus will link with it.
+
+*** NOTE ***
+
+Currently the SDL MIDI player is broken. The default player in this
+build is OPL2. You won't be able to select SDL from the "Preferred
+MIDI Player" menu in the game options. If you have an old config
+file that sets snd_midiplayer to "sdl", the music will sound *really*
+messed up. If this happens, simply edit ~/.prboom-plus/prboom-plus.cfg
+and remove the line containing snd_midiplayer. Or just delete the
+file, to start with default settings.
+
+If you don't like the sound of the OPL2 music, you can try using
+FluidSynth instead (Options -> General -> Preferred MIDI Player in the
+user interface). Other options (PortMIDI and ALSA) may be usable but
+will require more setup, outside the scope of this README.

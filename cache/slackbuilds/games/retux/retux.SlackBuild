@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Slackware build script for retux
+
+# Written by B. Watson (urchlay@slackware.uk)
+
+# Licensed under the WTFPL. See http://www.wtfpl.net/txt/copying/ for details.
+
+# 20230713 bkw: update for v1.6.2.
+
+# 20211229 bkw:
+# - updated for v1.6.1.
+# - s/python/python3/.
+# - new-style icons.
+# - pathlib doesn't seem to be required any longer.
+# - new dep: python3-sge.
+
+# 20200206 bkw: add missing pygame dep to REQUIRES.
+
+# 20180217 bkw:
+# Updated for v1.3.5. Added new (undocumented!) pathlib dependency.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=retux
+VERSION=${VERSION:-1.6.2}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+ARCH=noarch
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+DIRNAME=$PRGNAM-$VERSION-src
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $DIRNAME
+unzip $CWD/$DIRNAME.zip
+cd $DIRNAME
+
+# upstream perms a bit wonky, force them:
+chown -R root:root .
+find . -type d -exec chmod 755 {} +
+find . -type f -exec chmod 644 {} +
+chmod 755 *.py
+
+# we don't need these, they take up 12MB in the package and are never used.
+find . -name sources -print0 | xargs -0 rm -rf
+
+# don't use setup.py, it's for building a 'frozen' executable.
+# in fact we don't need any .py file other than retux.py.
+mv $PRGNAM.py $PRGNAM.py.keep
+rm -f *.py requirements.txt
+mv $PRGNAM.py.keep $PRGNAM.py
+
+# allow launching via symlink. without this, it can't find its data files.
+sed -i '/^DATA/i__file__ = os.path.realpath(__file__)' $PRGNAM.py
+
+# setup.py doesn't do this for us. it's not 100% necessary but does
+# speed things up ever so slightly at runtime:
+python3 -m compileall .
+
+mkdir -p \
+  $PKG/usr/share/games/$PRGNAM \
+  $PKG/usr/games \
+  $PKG/usr/doc/$PRGNAM-$VERSION
+
+mv COPYING README.txt $PKG/usr/doc/$PRGNAM-$VERSION
+sed -i 's,\r,,' $PKG/usr/doc/$PRGNAM-$VERSION/*
+
+mv * $PKG/usr/share/games/$PRGNAM
+ln -s ../share/games/$PRGNAM/$PRGNAM.py $PKG/usr/games/$PRGNAM
+
+for px in 16 32 48 64 128; do
+  size=${px}x${px}
+  dir=$PKG/usr/share/icons/hicolor/$size/apps
+  mkdir -p $dir
+  convert -background none -resize $size \
+          $PKG/usr/share/games/$PRGNAM/data/images/misc/icon.svg \
+          $dir/$PRGNAM.png
+done
+
+mkdir -p $PKG/usr/share/pixmaps
+ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
+
+# .desktop file written for this SlackBuild
+mkdir -p $PKG/usr/share/applications
+cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

@@ -1,0 +1,199 @@
+#!/bin/bash
+
+# Slackware build script for openoffice.org
+
+# Originally written by Niki Kovacs <info@microlinux.fr)
+# Rewritten for slackbuilds.org by Ryan P.C. McQuen
+# Copyright 2018-2019 Donald Cooley South Haven, Indiana USA
+# With help from Ekin Akoglu to fix missing menu icons and script cleanup,
+# and a diff from Dominik Drobek to remove unnecessary RPM cruft.
+# Ryan P.C. McQuen | Everett, WA | ryanpcmcquen@member.fsf.org
+# Copyright 2023 Juan M. Lasca <juanmlasca@gmail.com>
+# Copyright 2024 Dimitris Zlatanidis Orestiada, Greece
+
+#
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=openoffice.org
+SRCNAM=openoffice
+VERSION=${VERSION:-4.1.15}
+BUILD_ID=${BUILD_ID:-9813}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+SRCSHORT=$(echo $VERSION | cut -f1 -d.)
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# change this if you want to install a different language
+OOLANG=${OOLANG:-en-US}
+
+# Change source package name
+if [ "$ARCH" = "x86_64" ]; then
+  SRCARCH="x86-64"
+  PKGARCH="$ARCH"
+elif [ "$ARCH" = "arm" ]; then
+  printf "\n$ARCH is unsupported for OOo...\n\n"
+  exit 1
+else
+  SRCARCH="x86"
+  PKGARCH="i586"
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-${VERSION}-$PKGARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+set -e
+
+# Building the final name.
+TARNAME="Apache_OpenOffice_${VERSION}_Linux_${SRCARCH}_install-rpm_${OOLANG}.tar.gz"
+
+# Ignore this - it's just to get the toplevel directory name of the
+# extracted tarball archive
+SOURCEDIR=$(tar tzf $CWD/$TARNAME 2>/dev/null | head -n 1 | tr -d \/)
+# If the above operation failed for some reason, unset SOURCEDIR so that
+# the "set -eu" below will cause us to bail out with an error
+# Normally SOURCEDIR=en-US
+[ -z $SOURCEDIR ] && unset SOURCEDIR
+
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+mkdir -p $PKG/usr/bin/
+mkdir -p $PKG/usr/share/applications/
+rm -rf $TMP/$SOURCEDIR
+
+tar xvf $CWD/$TARNAME -C $TMP
+
+cd $TMP/$SOURCEDIR/RPMS
+chown -R root:root .
+find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+# We don't want this, so we delete the *onlineupdate*.rpm
+rm -f *onlineupdate*.rpm
+
+# Extract the files from the *.rpm
+for FILE in *.rpm ; do rpm2cpio < $FILE | cpio -imdv ; done
+
+cd desktop-integration
+rpm2cpio < openoffice$VERSION-freedesktop-menus-$VERSION-$BUILD_ID.noarch.rpm | cpio -imdv
+cd -
+
+mv opt $PKG
+
+cd $PKG
+
+## Create symlinks in /usr/bin to actual binaries
+cd $PKG/usr/bin/
+  for FILE in \
+    sbase scalc sdraw simpress smath soffice spadmin swriter unopkg ; do
+      rm -f $FILE
+      ln -sfv ../../opt/${SRCNAM}${SRCSHORT}/program/$FILE open-$FILE ;
+  done
+cd -
+
+## Correct scripts so that they don't conflict with other soffice derivatives
+cd $PKG/opt/${SRCNAM}${SRCSHORT}/program
+  for FILE in \
+    sbase scalc sdraw simpress smath spadmin swriter unopkg; do
+    sed -i 's/soffice/open-soffice/' $FILE
+  done
+  ln -s soffice.bin open-soffice.bin
+cd -
+
+## By default, replace 'Raleigh' with 'Adwaita' as the default theme,
+## unless the option DEFAULT_TO_RALEIGH is set to 'YES'.
+## Changed based on comments by Petar Petrov
+if [ "$DEFAULT_TO_RALEIGH" = "YES" ]; then
+    patch -p0 $PKG/opt/${SRCNAM}${SRCSHORT}/program/soffice < $CWD/patches/01-gtk2_theme.patch;
+fi
+
+## fix desktop files, so they can launch
+cat <<EOT > $PKG/usr/bin/${SRCNAM}${SRCSHORT}
+#!/bin/sh
+/opt/${SRCNAM}${SRCSHORT}/program/soffice "\$@"
+EOT
+chmod 755 $PKG/usr/bin/${SRCNAM}${SRCSHORT}
+
+## desktop files!
+for APP in base calc draw impress math writer; do
+  cp -av $PKG/opt/${SRCNAM}${SRCSHORT}/share/xdg/$APP.desktop $PKG/usr/share/applications/open-$APP.desktop ;
+done
+
+## menu icons!
+cp -R $TMP/$SOURCEDIR/RPMS/desktop-integration/usr/share/icons $PKG/usr/share/
+
+# The following was adapted from a patch submitted by Petar Petrov
+# Do we want a submenu? For more info:
+# https://slackalaxy.com/2021/08/08/xfce-multilevel-menu/
+SUBMENU=${SUBMENU:-"YES"}
+if [ "$SUBMENU" = "YES" ]; then
+  # Use a separate "OpenOffice" menu entry within "Office"
+  mkdir -p $PKG/etc/xdg/menus/applications-merged
+  cp $CWD/submenus/openoffice.menu $PKG/etc/xdg/menus/applications-merged
+  
+  # Menu directory structure
+  mkdir -p $PKG/usr/share/desktop-directories
+  cp $CWD/submenus/openoffice.directory $PKG/usr/share/desktop-directories
+
+  # The category in the .desktop files is commented out to avoid duplication in menus
+  sed -i "s:Categories:#Categories:" $PKG/usr/share/applications/*.desktop
+fi
+
+## Move docs to their expected locations
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cd $PKG/opt/${SRCNAM}${SRCSHORT}
+  mv README* share/readme/* $PKG/usr/doc/$PRGNAM-$VERSION
+	rmdir share/readme
+cd -
+
+cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+rm -rf $TMP/$OOLANG/RPMS
+mv $TMP/$OOLANG $PKG/opt/${SRCNAM}${SRCSHORT}/lang/
+
+# Fix ownership and permissions and make the package
+chown -R root:root .
+find . -type d -exec chmod 755 {} \;
+find $PKG '(' -name "*.so" -o -name "*.so.*" ')' -exec chmod +x {} \;
+chmod -R u+rw,go+r-w,a-s .
+
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-${VERSION}-$PKGARCH-$BUILD$TAG.$PKGTYPE

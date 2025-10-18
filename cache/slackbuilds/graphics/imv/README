@@ -1,0 +1,28 @@
+imv (image viewer for X and/or Wayland)
+
+imv is a command line image viewer intended for use with tiling window
+managers. Features:
+
+* Native Wayland and X11 support
+* Support for dozens of image formats including:
+  * PNG
+  * JPEG
+  * Animated GIFs (requires FreeImage or libnsgif)
+  * SVG
+  * TIFF
+  * Various RAW formats (requires FreeImage)
+  * Photoshop PSD files (requires FreeImage)
+  * WEBP
+  * HEIF/AVIF (requires libheif)
+* Configurable key bindings and behaviour
+* Highly scriptable with IPC via imv-msg
+
+Optional dependencies (autodetected):
+
+- FreeImage (support for GIF, RAW, PSD formats)
+- libnsgif (support for GIF)
+- libheif (support for HEIF/AVIF)
+- libjxl (support for JXL aka JPEG XL)
+
+If you don't have at least one of FreeImage or libnsgif, imv won't
+support GIF images at all.

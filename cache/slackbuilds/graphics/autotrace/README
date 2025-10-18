@@ -1,0 +1,9 @@
+AutoTrace is a utility for converting bitmap into vector graphics.
+
+Features:
+- Tracing outline and midline
+- Color reduction and Despeckling
+- Supports a lot of input and output formats
+
+NOTE: AutoTrace will use SBo's graphics/GraphicsMagick if installed,
+otherwise it will default to Slackware's stock ImageMagick.

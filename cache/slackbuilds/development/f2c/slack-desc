@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+   |-----handy-ruler------------------------------------------------------|
+f2c: f2c (a Fortran-to-C converter)
+f2c:
+f2c: by S. I. Feldman, David M. Gay, Mark W. Maimone, and N. L. Schryer
+f2c:
+f2c: From netlib. Includes libf2c.
+f2c:
+f2c: The general idea: f2c foo.f; gcc foo.c -lf2c -lm
+f2c:
+f2c: If combining with gfortran, see the -ff2c option in the gfortran man
+f2c: page.
+f2c:

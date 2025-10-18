@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=KAdventure
+Comment=Simple 2D puzzle game: guide the man to the exit.
+Exec=/usr/games/KAdventure
+Icon=KAdventure
+Terminal=false
+StartupNotify=false
+Type=Application
+Categories=Game;LogicGame;

@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Slackware build script for Lazarus IDE
+
+# 2023-2025 Maintained by Antonio Leal <antonioleal@yahoo.com>
+# 2021-2022 Maintained by B. Watson <urchlay@slackware.uk>
+# Originally written by Andre Barboza <email removed>
+
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# 20231229 ALe: Upgrade to Lazarus 3.0
+# - moved fpc-source to fpc package (with new option for the user to exclude it).
+# - added option to build lazarus with qt5 instead of gtk2.
+# - commented lhelp link correction as sbopkglint does not complain anymore.
+
+# 20220414 bkw: BUILD=2
+# - fix PRINT_PACKAGE_NAME when ARCH not set in environment.
+# - add gtk-update-icon-cache to doinst.sh.
+# - remove empty files from doc dir.
+# - fix broken symlink.
+
+# 20210905 bkw:
+# - take over maintenance
+# - update for v2.0.12
+# - get rid of fpc-source dep; include the source in this package
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=lazarus
+VERSION=${VERSION:-4.2}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+
+LCL=${LCL:-gtk2}
+OPT=${OPT:--v000}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    *) ARCH=$( uname -m ) ;;
+   esac
+fi
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/tmp/SBo}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "i586" ] && [ "$ARCH" != "i686" ]; then
+  printf "\nThis won't build on $ARCH.\n\n"
+  exit 1
+fi
+
+set -e
+
+fixperms() {
+  chown -R root:root .
+  find -L . -type l -o \
+            -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
+         \! -perm /111 -a \! -perm 644 -a -exec chmod 644 {} \+
+}
+
+# extract source tarball
+rm -rf $PKG
+mkdir -p $TMP $PKG $OUTPUT
+cd $TMP
+rm -rf $PRGNAM
+tar xvf $CWD/$PRGNAM-$VERSION-0.tar.gz
+cd $PRGNAM
+
+# fix permssions
+fixperms
+
+# patch things up
+sed -i -e 's:share/man:man:' install/man/Makefile
+
+# Compilation doesn't need ./configure
+make clean
+make -j1 bigide \
+  PREFIX=/usr \
+  LCL_PLATFORM=${LCL} \
+  OPT=${OPT}
+make install \
+  INSTALL_PREFIX=$PKG/usr \
+  INSTALL_MAN_DIR=$PKG/usr/man
+
+# fix links at /usr/bin
+( cd $PKG/usr/bin
+  ln -sf ../share/lazarus/lazarus
+  ln -sf ../share/lazarus/lazbuild
+  ln -sf ../share/lazarus/startlazarus
+)
+# add link to lazarus-ide man page
+( cd $PKG/usr/man/man1
+  ln -sf lazarus-ide.1.gz lazarus.1.gz
+)
+
+# strip binaries and libraries
+find $PKG -print0 -type f -a -perm /111 | \
+     xargs -0 file -m /etc/file/magic/elf | \
+     grep -e "executable" -e "shared object" | \
+     grep ELF | \
+     cut -f 1 -d : | \
+     xargs strip --strip-unneeded 2> /dev/null || true
+
+# install desktop file, icon, and mime entry
+mkdir -p $PKG/usr/share/{applications,pixmaps,mime/packages}
+cat install/lazarus.desktop > $PKG/usr/share/applications/lazarus.desktop
+cat images/ide_icon48x48.png > $PKG/usr/share/pixmaps/lazarus.png
+cat install/lazarus-mime.xml > $PKG/usr/share/mime/packages/lazarus-mime.xml
+
+# copy documentation and examples
+PKGDOC=$PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKGDOC
+cp -ra COPYING* README.md docs/* examples/ $PKGDOC
+cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
+
+rm -f $PKGDOC/INSTALL.txt
+find $PKGDOC -depth -type d -empty -delete
+
+# 20220414 bkw: this symlink is mistargeted... fixed, and don't freak out
+# if sbopkglint complains about a filesystem loop (there really is one).
+# 20231229 ALe: sbopkglint does not complain anymore
+#rm -f $PKG/usr/share/lazarus/components/chmhelp/lhelp/lhelp.app/Contents/MacOS/lhelp
+#ln -s ../../../../lhelp $PKG/usr/share/lazarus/components/chmhelp/lhelp/lhelp.app/Contents/MacOS/lhelp
+
+# build package
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

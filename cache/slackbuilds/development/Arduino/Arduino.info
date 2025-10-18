@@ -1,0 +1,98 @@
+PRGNAM="Arduino"
+VERSION="1.8.19"
+HOMEPAGE="https://www.arduino.cc/"
+DOWNLOAD="https://github.com/arduino/Arduino/archive/1.8.19/Arduino-1.8.19.tar.gz \
+          https://github.com/arduino/arduino-examples/archive/1.9.1/arduino-examples-1.9.1.zip \
+          https://github.com/arduino-libraries/Ethernet/archive/2.0.0/Ethernet-2.0.0.zip \
+          https://github.com/arduino-libraries/GSM/archive/1.0.6/GSM-1.0.6.zip \
+          https://github.com/arduino-libraries/Stepper/archive/1.1.3/Stepper-1.1.3.zip \
+          https://github.com/arduino-libraries/TFT/archive/1.0.6/TFT-1.0.6.zip \
+          https://github.com/arduino-libraries/WiFi/archive/1.2.7/WiFi-1.2.7.zip \
+          https://github.com/firmata/arduino/archive/2.5.8/arduino-2.5.8.zip \
+          https://github.com/arduino-libraries/Bridge/archive/1.7.0/Bridge-1.7.0.zip \
+          https://github.com/arduino-libraries/Robot_Control/archive/1.0.4/Robot_Control-1.0.4.zip \
+          https://github.com/arduino-libraries/Robot_Motor/archive/1.0.3/Robot_Motor-1.0.3.zip \
+          https://github.com/arduino-libraries/RobotIRremote/archive/2.0.0/RobotIRremote-2.0.0.zip \
+          https://github.com/arduino-libraries/SpacebrewYun/archive/1.0.2/SpacebrewYun-1.0.2.zip \
+          https://github.com/arduino-libraries/Temboo/archive/1.2.1/Temboo-1.2.1.zip \
+          https://github.com/arduino-libraries/Esplora/archive/1.0.4/Esplora-1.0.4.zip \
+          https://github.com/arduino-libraries/Mouse/archive/1.0.1/Mouse-1.0.1.zip \
+          https://github.com/arduino-libraries/Keyboard/archive/1.0.2/Keyboard-1.0.2.zip \
+          https://github.com/arduino-libraries/SD/archive/1.2.4/SD-1.2.4.zip \
+          https://github.com/arduino-libraries/Servo/archive/1.1.8/Servo-1.1.8.zip \
+          https://github.com/arduino-libraries/LiquidCrystal/archive/1.0.7/LiquidCrystal-1.0.7.zip \
+          https://github.com/Adafruit/Adafruit_CircuitPlayground/archive/1.11.3/Adafruit_CircuitPlayground-1.11.3.zip \
+          https://github.com/arduino-libraries/WiFi101-FirmwareUpdater-Plugin/releases/download/v0.12.0/WiFi101-Updater-ArduinoIDE-Plugin-0.12.0.zip \
+          http://downloads.arduino.cc/libastylej-2.05.1-5.zip \
+          http://downloads.arduino.cc/liblistSerials/liblistSerials-1.4.2-2.zip \
+          http://downloads.arduino.cc/tools/arduino-builder-linux32-1.6.1.tar.bz2 \
+          http://downloads.arduino.cc/tools/arduino-builder-linux64-1.6.1.tar.bz2 \
+          http://downloads.arduino.cc/tools/avrdude-6.3.0-arduino17-i686-pc-linux-gnu.tar.bz2 \
+          http://downloads.arduino.cc/tools/avrdude-6.3.0-arduino17-x86_64-pc-linux-gnu.tar.bz2 \
+          https://downloads.arduino.cc/cores/avr-1.8.3.tar.bz2 \
+          http://downloads.arduino.cc/tools/arduinoOTA-1.3.0-linux_386.tar.bz2 \
+          http://downloads.arduino.cc/tools/arduinoOTA-1.3.0-linux_amd64.tar.bz2 \
+          https://github.com/arduino/toolchain-avr/archive/7.3.0-atmel3.6.1-arduino7/toolchain-avr-7.3.0-atmel3.6.1-arduino7.tar.gz \
+          https://ftp.gnu.org/gnu/autoconf/autoconf-2.64.tar.bz2 \
+          https://ftp.gnu.org/gnu/automake/automake-1.11.1.tar.bz2 \
+          http://downloads.arduino.cc/tools/opensource/Atmel-AVR-GNU-Toolchain/3.6.1/avr-binutils.tar.bz2 \
+          https://ftp.gnu.org/gnu/gmp/gmp-5.0.2.tar.bz2 \
+          https://ftp.gnu.org/gnu/mpfr/mpfr-3.1.0.tar.bz2 \
+          http://repository.timesys.com/buildsources/m/mpc/mpc-0.9/mpc-0.9.tar.gz \
+          https://ftp.gnu.org/gnu/gcc/gcc-7.3.0/gcc-7.3.0.tar.xz \
+          http://downloads.arduino.cc/tools/opensource/Atmel-AVR-GNU-Toolchain/3.6.1/avr-libc.tar.bz2 \
+          http://downloads.arduino.cc/tools/opensource/Atmel-AVR-GNU-Toolchain/3.6.1/avr8-headers.zip \
+          http://downloads.arduino.cc/tools/opensource/Atmel-AVR-GNU-Toolchain/3.6.1/avr-gdb.tar.bz2 \
+          http://packs.download.atmel.com/Atmel.ATmega_DFP.1.4.351.atpack \
+          http://packs.download.atmel.com/Atmel.ATtiny_DFP.1.4.310.atpack \
+          http://packs.download.atmel.com/Atmel.AVR-Dx_DFP.1.0.27.atpack"
+MD5SUM="b51b86f1d8ca30c4553dc241b438c958 \
+        74b09589ac4ae50a07b6fb52f1b02e65 \
+        802ac3652c78a0880f17aa27f3cf3612 \
+        2fd953ff5cb893a2e8abd589f1cf9e40 \
+        dfb0923a0fddb2d02a1c7446edfc854d \
+        5b2d8e9b809cdcfd6b46f5a073fb17e0 \
+        cd5c085a552bcbe81c5d3c55082e23cf \
+        1381565dcff2932ea8bf2de64f331960 \
+        b8b8563ef9703dc1ae7c2d7a2f680cd5 \
+        36caacb88199d8a95b9af5bf3e65abd4 \
+        ac371dc0472efc32293657af906650c6 \
+        7856560f6a60cd328785f34f3f58e32a \
+        0a649577bf617338a9ccbaf83a6d07ba \
+        385252899ccd98f3655b98656a35b72a \
+        b066c4b117cd035b4e941016e04617af \
+        39018b239c31f89e97cab344c0d42fca \
+        fd3d73a9817159f9260372ceb7fa3cef \
+        baaab729f4b393f6241d3e90458176db \
+        c0063b88b10266fb90634991cc973724 \
+        06a6a913262d17e65367c0819e69cbec \
+        4bcbb09a86bb7479ad5f844f944b34fe \
+        96e77fa2f696fd1d75cfb536fd0890dc \
+        d2cbb4d8a7973e7e32480044b7a45a1d \
+        959f7d41f8cafe4a98de6bd454d83980 \
+        4ff1668e956935638d76c93e0d082916 \
+        bcf1da478a801dc79e330150add7f21f \
+        03189d1c410f31f759d2b8061c627022 \
+        70a6d91bfbf7543f28eb105b03b8b1d7 \
+        2d985ca272e4bd9774078ae9c2cb4077 \
+        0026275a9e820bd67a4ab3304bb36054 \
+        67dffddcefa50f199b6465f19171ade8 \
+        c16f84b6d5b18e00327820c38b17daf7 \
+        ef400d672005e0be21e0d20648169074 \
+        c2972c4d9b3e29c03d5f2af86249876f \
+        a4def5b7f4923a5e61d0c34e33165434 \
+        0bbaedc82fb30315b06b1588b9077cd3 \
+        238ae4a15cc3a5049b723daef5d17938 \
+        0d6acab8d214bd7d1fbbc593e83dd00d \
+        be2da21680f27624f3a87055c4ba5af2 \
+        9de9bf4c5622706eba2f2e3c57eb6e11 \
+        ad0ec1ac892e08a5a9275ad97dffe2c7 \
+        97a8ec640265cc5ff8a50e599ab55367 \
+        3b68dda26d68f570e6b3c874a7174f29 \
+        075a7e297950d1c226c0a6c06a737da8 \
+        37c2778af2ce01aea6090689326617bb"
+DOWNLOAD_x86_64=""
+MD5SUM_x86_64=""
+REQUIRES="apache-ant zulu-openjdk8 guile2.0"
+MAINTAINER="Mario Preksavec"
+EMAIL="mario at slackware dot hr"

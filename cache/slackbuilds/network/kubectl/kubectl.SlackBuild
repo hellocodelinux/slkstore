@@ -1,0 +1,137 @@
+#!/bin/bash
+#
+# Slackware build script for kubectl
+#
+# Copyright 2019-2022  Dimitris Zlatanidis  Orestiada, Greece
+# Copyright 2025 r1w1s1 <r1w1s1@fastmail.com>
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#
+# SlackBuild script for kubectl
+# ===========================
+# By:          r1w1s1 (https://fosstodon.org/@r1w1s1)
+# For:         kubectl
+# Descr:       kubectl is a command-line tool for controlling Kubernetes clusters.
+# URL:         https://kubernetes.io/
+# Changelog:
+# v1.32.1:     10/Feb/2025 by r1w1s1 - Initial build from sources.
+# v1.32.3:     18/Mar/2025 by r1w1s1 - Update version.
+# v1.32.4:     23/Apr/2025 by r1w1s1 - Update version.
+# v1.33.0:     13/May/2025 by r1w1s1 - Update version.
+# v1.33.1:     15/May/2025 by r1w1s1 - Update version.
+# v1.33.2:     18/Jun/2025 by r1w1s1 - Update version.
+# v1.33.3:     15/Jul/2025 by r1w1s1 - Update version.
+# v1.33.4:     13/Ago/2025 by r1w1s1 - Update version.
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+# improves robustness, error handling, and security
+set -euo pipefail
+IFS=$'\n\t'
+
+PKGBASE=kubernetes
+PRGNAM=kubectl
+VERSION=${VERSION:-1.33.4}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}
+ARCH=${ARCH:-}
+PRINT_PACKAGE_NAME=${PRINT_PACKAGE_NAME:-}
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+set -e
+
+TMP=${TMP:-/tmp/SBo}
+PKG=${TMP}/package-${PRGNAM}
+OUTPUT=${OUTPUT:-/tmp}
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+rm -rf "$PKG"
+mkdir -p "$TMP" "$PKG" "$OUTPUT"
+cd "$TMP"
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+elif [ "$ARCH" = "aarch64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+rm -rf ${PRGNAM}-${VERSION}
+rm -rf ${PKGBASE}-${VERSION}
+tar xvf $CWD/${PKGBASE}-${VERSION}.tar.gz
+cd ${PKGBASE}-${VERSION}
+
+# Set up Go environment
+export GOPATH=$(pwd)/.gopath
+mkdir -p $GOPATH
+export PATH=$GOPATH/bin:$PATH
+
+# Build kubectl with Slackware optimization flags
+export GOFLAGS="-buildmode=pie"  # Only Go compiler flags here
+export LDFLAGS="-s -compressdwarf=true" # Linker flags go here
+export CGO_CFLAGS="$SLKCFLAGS"  # C compiler flags
+make WHAT=cmd/kubectl
+
+# Install the binary
+mkdir -p "$PKG/usr/bin"
+install -m 0755 _output/bin/kubectl $PKG/usr/bin/kubectl
+
+# Install shell completions
+mkdir -p $PKG/usr/share/bash-completion/completions/
+_output/bin/kubectl completion bash > $PKG/usr/share/bash-completion/completions/${PRGNAM}
+
+mkdir -p $PKG/usr/share/zsh/site-functions/
+_output/bin/kubectl completion zsh > $PKG/usr/share/zsh/site-functions/${PRGNAM}
+
+find $PKG -print0 | xargs -0 file | grep -e "executable" -e "shared object" | grep ELF \
+  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p "$PKG/usr/doc/${PRGNAM}-${VERSION}"
+cp -a LICENSE README.md $PKG/usr/doc/${PRGNAM}-${VERSION}
+
+cat $CWD/${PRGNAM}.SlackBuild > $PKG/usr/doc/${PRGNAM}-${VERSION}/${PRGNAM}.SlackBuild
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+cd $PKG
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE

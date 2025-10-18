@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+           |-----handy-ruler------------------------------------------------------|
+dolphin-emu: dolphin-emu (Gamecube/Wii Emulator)
+dolphin-emu:
+dolphin-emu: Dolphin is a GameCube / Wii emulator, allowing you to play games for
+dolphin-emu: these two platforms on PC with improvements. 
+dolphin-emu:
+dolphin-emu: Homepage: https://dolphin-emu.org
+dolphin-emu:
+dolphin-emu:
+dolphin-emu:
+dolphin-emu:
+dolphin-emu:
