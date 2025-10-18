@@ -43,13 +43,13 @@ nav {
 }
 
 nav a {
-    color: #f0f0f0;
+    color: #ffffff;
     text-decoration: none;
     margin-left: 1rem;
 }
 
 nav a:hover {
-    color: #a0a0a0;
+    color: #5bb5ff;
 }
 
 .page-body {
@@ -437,36 +437,7 @@ footer p {
 }
 
 .about {
-    font-size: 16px;
     padding: 20px;
-    width: 70%;
-    margin: 30px auto;
-    border-radius: 20px;
-    text-align: center;
-    background-color: #121212;
-    color: #f0f0f0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-shadow: 0 0 30px #ffffff1a;
-    border: 2px solid #333333;
-}
-
-.about h2 {
-    font-size: 26px;
-    color: #000000;
-    text-shadow:
-        0 0 5px #00ffff,
-        0 0 10px #00ffff,
-        0 0 20px #00ffff,
-        0 0 40px #00ffff,
-        0 0 80px #00ffff;
-    margin-bottom: 100px;
-}
-
-.about p,
-.about a,
-.about span {
-    font-size: 16px;
-    color: hsl(0, 0%, 100%);
-    text-shadow: 0 0 2px #00ffff, 0 0 5px #00ffff;
-    line-height: 1.6;
+    width: 90%;
+    margin: 0 auto; 
 }

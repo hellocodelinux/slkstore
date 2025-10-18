@@ -101,7 +101,7 @@ if ($theme === 'dark') {
 } else {
     echo '<a href="?theme=dark" class="theme-icon">🌙</a>';
 }
-echo '<a href="modules/about.php">About</a>';
+echo '<a href="#" onclick="document.querySelector(\'main\').innerHTML=\'<iframe src=&quot;modules/about.php&quot; style=&quot;width:100%;height:400%;border:none;&quot;></iframe>\';return false;">About</a>';
 echo '</nav></div></header>';
 
 // --- MAIN CONTENT ---
