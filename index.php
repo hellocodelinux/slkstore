@@ -258,7 +258,7 @@ $total_programs = count($products);
 $found_programs = isset($display_products) ? count($display_products) : 0;
 echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore (By SlackDCE). All rights reserved.</p>';
 echo '<div class="status-bar">';
-echo "Programs in this view: $found_programs / Total programs: $total_programs :::: ";
+echo "Programs in this view: $found_programs / $total_programs - ";
 // Read and display information from the PACKAGES.TXT.gz file.
 $line = @gzopen('cache/PACKAGES.TXT.gz', 'r');
 if ($line) {
@@ -267,5 +267,5 @@ if ($line) {
     echo htmlspecialchars($first_line);
     gzclose($line);
 }
-echo ' - Slackware 15 (64 bit) - ' . date('Y-m-d') . '<br>';
+echo ' - Slackware 15 (64 bit) <br>';
 echo '</div></div></footer></body></html>';

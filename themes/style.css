@@ -39,7 +39,7 @@ h1 {
 }
 
 nav {
-   text-shadow: 2px 2px 4px #000000;
+    text-shadow: 2px 2px 4px #000000;
 }
 
 nav a {
@@ -362,7 +362,7 @@ footer p {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 70%;
+    width: fit-content;
     margin: 0 auto;
     margin-top: 20px;
 }
@@ -415,7 +415,7 @@ footer p {
 
 .app-detailx {
     padding: 20px;
-    width: 70%;
+    width: fit-content;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -439,5 +439,17 @@ footer p {
 .about {
     padding: 20px;
     width: 90%;
-    margin: 0 auto; 
+    margin: 0 auto;
+}
+
+.app-detailm {
+    padding: 20px;
+    width: fit-content;
+    margin: 0 auto;
+    font-size: 14px;
+    color: #cccccc
+}
+
+.app-detailm b {
+    color: #5bb5ff;
 }

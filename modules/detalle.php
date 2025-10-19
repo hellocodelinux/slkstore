@@ -85,6 +85,17 @@ echo '<button class="app-install" ' . ($installed ? 'disabled' : '') . '>Install
 echo '<button class="app-remove" ' . ($installed ? '' : 'disabled') . '>Remove</button>';
 echo '</div></div>';
 
+// Display application details from packages.php
+echo '<div class="app-detailm">';
+echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
+echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
+echo '<b>Version:</b> ' . htmlspecialchars($found['version']) . '<br>';
+echo '<b>Description:</b> ' . htmlspecialchars($found['desc']) . '<br>';
+echo '<b>Compressed Size:</b> ' . htmlspecialchars($found['sizec']) . '<br>';
+echo '<b>Uncompressed Size:</b> ' . htmlspecialchars($found['sizeu']) . '<br>';
+echo '<b>Full Package Name:</b> ' . htmlspecialchars($found['full']) . '<br>';
+echo '</div>';
+
 // Display the README content if available.
 if ($readme_content !== '') {
     echo '<pre class="app-detail">' . htmlspecialchars($readme_content) . '</pre>';
@@ -101,9 +112,9 @@ if ($info_content) {
     if (! empty($info_content['HOMEPAGE'])) {
         echo '<pre>Home: ' . htmlspecialchars($info_content['HOMEPAGE']) . '<br>';
     }
-    if (! empty($info_content['DOWNLOAD'])) {
-        echo 'Source: https://slackbuilds.org/<br>';
-    }
+
+    echo 'Source: https://slackbuilds.org/<br>';
+
     if (! empty($info_content['MAINTAINER'])) {
         echo 'Maintainer: ' . htmlspecialchars($info_content['MAINTAINER']) . '<br>';
     }
