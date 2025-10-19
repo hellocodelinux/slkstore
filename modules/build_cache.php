@@ -91,62 +91,48 @@ if (! file_exists($packages_file) || time() - filemtime($packages_file) > 86400)
 
 }
 
-// --- DOWNLOAD AND EXTRACT SLACKBUILDS.ORG REPOSITORY ---
+// --- SYNC SLACKBUILDS.ORG REPOSITORY VIA RSYNC ---
 
-// Fetch the latest tags from the SlackBuilds.org GitHub repository.
-$r = fetch_url('https://api.github.com/repos/SlackBuildsOrg/slackbuilds/tags');
-if ($r['code'] === 200 && $r['content'] !== '') {
-    $tags       = json_decode($r['content'], true);
-    $latest_tag = '';
-    // Find the latest valid version tag from the fetched tags.
-    foreach ($tags as $t) {
-        if (preg_match('/^\d+\.\d+\-\d{8}\.\d+$/', $t['name'])) {
-            $latest_tag = $t['name'];
-            break;
-        }
-    }
-    if ($latest_tag !== '') {
-        // Get the currently stored tag.
-        $current_tag = file_exists($tag_file) ? trim(file_get_contents($tag_file)) : '';
-        // Determine if a new download is needed.
-        $download_new = ! file_exists($slackbuilds_tar) || $current_tag !== $latest_tag;
+logmsg('Syncing slackbuilds repository via rsync. This may take a while.');
 
-        if ($download_new) {
-            // Download the new tarball if a new version is found.
-            $tar_url = "https://github.com/SlackBuildsOrg/slackbuilds/archive/refs/tags/$latest_tag.tar.gz";
-            $t       = fetch_url($tar_url);
-            if ($t['code'] === 200 && strlen($t['content']) > 100000) {
-                file_put_contents($slackbuilds_tar, $t['content']);
-                file_put_contents($tag_file, $latest_tag);
-                logmsg("downloaded new slackbuilds $latest_tag");
+// Ensure the target directory exists.
+if (!is_dir($slackbuilds_dir)) {
+    mkdir($slackbuilds_dir, 0755, true);
+}
 
-                // Clean up old directory and extract the new tarball.
-                if (is_dir($slackbuilds_dir)) {
-                    shell_exec("rm -rf " . escapeshellarg($slackbuilds_dir));
-                }
+// The rsync source URL for Slackware 15.0.
+$rsync_url = 'rsync://slackbuilds.org/slackbuilds/15.0/';
 
-                mkdir($slackbuilds_dir, 0755, true);
-                shell_exec("tar -xzf " . escapeshellarg($slackbuilds_tar) . " -C " . escapeshellarg($slackbuilds_dir) . " --strip-components=1");
-                logmsg("extracted slackbuilds to cache/slackbuilds");
-            } else {
-                logmsg("failed download tar code=" . $t['code']);
-            }
+// We no longer need the tag file or the tarball with rsync.
+if (file_exists($tag_file)) {
+    unlink($tag_file);
+}
+if (file_exists($slackbuilds_tar)) {
+    unlink($slackbuilds_tar);
+}
 
-        } else if (! is_dir($slackbuilds_dir) || count(scandir($slackbuilds_dir)) <= 2) {
-            // Extract the tarball if the directory is missing or empty.
-            mkdir($slackbuilds_dir, 0755, true);
-            shell_exec("tar -xzf " . escapeshellarg($slackbuilds_tar) . " -C " . escapeshellarg($slackbuilds_dir) . " --strip-components=1");
-            logmsg("extracted slackbuilds to cache/slackbuilds (folder missing)");
-        } else {
-            logmsg("slackbuilds up to date $latest_tag");
-        }
+// Construct and execute the rsync command.
+// -a: archive mode (preserves permissions, etc.)
+// -v: verbose
+// -z: compress file data during transfer
+// --delete: delete extraneous files from the destination
+$rsync_command = sprintf(
+    'rsync -avz --delete %s %s',
+    escapeshellarg($rsync_url),
+    escapeshellarg($slackbuilds_dir . '/') // The trailing slash on dest is important for rsync.
+);
 
-    } else {
-        logmsg('no valid version tag');
-    }
+$output = [];
+$return_var = 0;
+exec($rsync_command . ' 2>&1', $output, $return_var);
 
+if ($return_var === 0) {
+    logmsg('Slackbuilds rsync sync successful.');
 } else {
-    logmsg('error fetching tags code=' . $r['code']);
+    logmsg('Slackbuilds rsync sync failed. rsync exit code: ' . $return_var);
+    if (!empty($output)) {
+        logmsg('rsync output: ' . implode("\n", $output));
+    }
 }
 
 // --- REBUILD CACHE FROM PACKAGES.TXT.gz ---
@@ -219,14 +205,39 @@ if ($needs_update && $current_hash) {
                 $pkg['desc'] = $desc;
 
                 // Find a matching icon for the package.
-                $base = strtolower($pkg['name']);
-                $icon = '/../icons/terminal.svg'; // Default icon.
-                foreach ($icons as $n => $f) {
-                    if ($n == $base || strpos($base, $n) !== false || strpos($n, $base) !== false) {$icon = '/../icons/' . basename($f);
-                        break;}
+                $baseName = strtolower($pkg['name']);
+                $iconPath = null;
+
+                // Check for an exact match first for efficiency.
+                if (isset($icons[$baseName])) {
+                    $iconPath = '/../icons/' . basename($icons[$baseName]);
+                } else {
+                    // If no exact match, iterate for a partial match with improved logic.
+                    foreach ($icons as $iconName => $filePath) {
+                        $found = false;
+                        // For short icons (1-2 chars), be more strict to avoid incorrect matches like 'r' in 'dramsim'.
+                        if (strlen($iconName) < 3) {
+                            // Match if package name starts with the icon name (e.g., 'r-project' and 'r').
+                            // Also match if the full package name is part of the icon name (e.g., 'audacious' and 'audacious-plugins').
+                            if (strpos($baseName, $iconName) === 0 || strpos($iconName, $baseName) !== false) {
+                                $found = true;
+                            }
+                        } else {
+                            // For longer icons, use the original broader partial match.
+                            if (strpos($baseName, $iconName) !== false || strpos($iconName, $baseName) !== false) {
+                                $found = true;
+                            }
+                        }
+
+                        if ($found) {
+                            $iconPath = '/../icons/' . basename($filePath);
+                            break; // Found a match, stop searching.
+                        }
+                    }
                 }
 
-                $pkg['icon'] = $icon;
+                // Assign the found icon, or the default if no match was found.
+                $pkg['icon'] = $iconPath ?: '/../icons/terminal.svg';
 
                 // Add the completed package data to the cache array.
                 $products_cache[] = $pkg;
