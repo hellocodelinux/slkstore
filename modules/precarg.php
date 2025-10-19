@@ -54,7 +54,8 @@ if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
 
     // Flush the output buffer to ensure the message is displayed
     // before the long-running cache build process starts.
-    ob_flush(); flush();
+    ob_flush();
+    flush();
 
     // Include and execute the script to build the application cache.
     include 'build_cache.php';

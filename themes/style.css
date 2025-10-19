@@ -520,3 +520,55 @@ footer p {
 .button.no:hover {
     background-color: #aa0000;
 }
+
+/* Styles for pacman.php */
+.pacman {
+    padding: 20px;
+}
+
+.installed-packages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.installed-package-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #333333;
+    border: 1px solid #444444;
+    justify-content: space-between;
+}
+
+.package-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.package-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.package-name {
+    font-size: 14px;
+}
+
+.package-version {
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.update-button {
+    background-color: #0055aa;
+    padding: 0px 15px;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #000000;
+    font-weight: bold;
+}
