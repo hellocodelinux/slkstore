@@ -47,17 +47,17 @@ echo '<body class="' . $theme . ' precar-body">';
 
 // Check if the user has confirmed the update via a POST request.
 if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
-    // If confirmed, display the "Please wait" message.
+    // If confirmed, display the "Please wait" message and start the cache build.
     echo '<div class="precar">
     Updating... Please wait
     </div>';
 
     // Flush the output buffer to ensure the message is displayed
     // before the long-running cache build process starts.
-    flush();
+    ob_flush(); flush();
 
     // Include and execute the script to build the application cache.
-    // include 'build_cache.php';
+    include 'build_cache.php';
 
     // After building the cache, redirect to the index page using an HTML meta refresh tag.
     // This avoids using JavaScript.

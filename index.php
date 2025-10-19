@@ -37,6 +37,10 @@ if ($theme === 'light') {
     }, $css);
 }
 
+$readmex = file('README.md');
+$version = trim(end($readmex));
+
+
 // --- CATEGORY AND SEARCH HANDLING ---
 
 // Get the current category from the URL query parameters. Default to 'Welcome'.
@@ -86,7 +90,7 @@ echo '<body class="' . $theme . '">';
 
 // --- HEADER SECTION ---
 echo '<header><div class="page-container"><div class="container">';
-echo '<h1 class="logo">SlkStore v1.0</h1>';
+echo '<h1 class="logo">SlkStore ' . $version . '</h1>';
 
 // Search form
 echo '<form method="get" class="search-form">';
@@ -161,7 +165,7 @@ if (isset($_GET['app'])) {
     if (strtolower($current_category) === 'welcome' && ! $search) {
         echo '<div class="banner"><div class="banner-left"><div class="banner-te">SlkStore - Slackware 15.0 Apps</div>';
         echo '<div class="banner-tex">powered by slackdce repository</div></div>';
-        echo '<div class="banner-right"><img src="icons/slkstore.png" class="icon"></div></div>';
+        echo '<div class="banner-right"><img src="cache/icons/slkstore.png" class="icon"></div></div>';
 
         // Display a random selection of applications from each category.
         foreach ($all_categories as $category) {
@@ -260,16 +264,19 @@ echo '</main></div>';
 echo '<footer>';
 $total_programs = count($products);
 $found_programs = isset($display_products) ? count($display_products) : 0;
-echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore (By SlackDCE). All rights reserved.</p>';
+echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore ' . $version . ' (By SlackDCE). All rights reserved.</p>';
 echo '<div class="status-bar">';
 echo "Programs in this view: $found_programs / $total_programs - ";
-// Read and display repository information from the PACKAGES.TXT.gz file.
-$line = @gzopen('cache/PACKAGES.TXT.gz', 'r');
-if ($line) {
-    $first_line = trim(gzgets($line));
-    $first_line = str_replace('PACKAGES.TXT; ', '', $first_line);
-    echo htmlspecialchars($first_line);
-    gzclose($line);
+// Read and display repository information from the PACKAGES.TXT file.
+$packages_txt_path = 'cache/PACKAGES.TXT';
+if (file_exists($packages_txt_path)) {
+    $line = @fopen($packages_txt_path, 'r');
+    if ($line) {
+        $first_line = trim(fgets($line));
+        $first_line = str_replace('PACKAGES.TXT; ', '', $first_line);
+        echo htmlspecialchars($first_line);
+        fclose($line);
+    }
 }
 echo ' - Slackware 15 (64 bit) <br>';
 echo '</div></div></footer></body></html>';

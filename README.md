@@ -2,7 +2,6 @@
 
 ---
 
-
 # 🛍️ Slkstore: The Software Center for Slackware
 
 ## 🚀 What is Slkstore?
