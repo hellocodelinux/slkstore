@@ -38,3 +38,5 @@ This project is under the **Creative Commons Attribution-NonCommercial-NoDerivat
 
 ---
 *Created with ❤️ for the Slackware community.*
+
+v1.0

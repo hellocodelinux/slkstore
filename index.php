@@ -2,11 +2,11 @@
 
 // --- THEME HANDLING ---
 
-// Define the configuration file path for the theme
+// Define the path for the theme configuration file.
 $config_file = 'themes/theme.conf';
 
 // Check if the theme configuration file exists and read the theme from it.
-// Default to 'dark' if the file doesn't exist.
+// If the file doesn't exist, default to the 'dark' theme.
 if (file_exists($config_file)) {
     $theme = trim(file_get_contents($config_file));
 } else {
@@ -14,17 +14,19 @@ if (file_exists($config_file)) {
 }
 
 // Check if a theme is specified in the URL query parameters.
-// If it is, update the theme and save it to the configuration file.
+// If a valid theme is provided ('dark' or 'light'), update the current theme
+// and save it to the configuration file for persistence.
 if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
     $theme = $_GET['theme'];
     file_put_contents($config_file, $theme);
 }
 
-// Read the base CSS file.
+// Read the base CSS stylesheet.
 $css = file_get_contents('themes/style.css');
 
-// If the theme is 'light', invert the colors in the CSS.
-// This is a simple way to create a light theme from a dark one.
+// If the current theme is 'light', dynamically invert the colors in the CSS.
+// This provides a simple mechanism to switch between dark and light themes
+// by programmatically altering the color values.
 if ($theme === 'light') {
     $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
         $hex = $m[1];
@@ -37,65 +39,68 @@ if ($theme === 'light') {
 
 // --- CATEGORY AND SEARCH HANDLING ---
 
-// Get the current category from the URL, default to 'Welcome'.
+// Get the current category from the URL query parameters. Default to 'Welcome'.
 $current_category = isset($_GET['category']) ? $_GET['category'] : 'Welcome';
 
-// Define the list of all available categories.
+// Define the list of all available application categories.
 $all_categories = [
     'Academic', 'Accessibility', 'Audio', 'Business', 'Desktop', 'Development', 'Games', 'Gis', 'Graphics',
     'Ham', 'Haskell', 'Libraries', 'Misc', 'Multimedia', 'Network', 'Office', 'Perl', 'Python', 'Ruby', 'System',
 ];
 
-// Sort the categories alphabetically.
+// Sort the categories alphabetically for consistent ordering.
 sort($all_categories);
 
-// Add 'Welcome' to the beginning of the categories list.
+// Add the 'Welcome' category to the beginning of the list.
 array_unshift($all_categories, 'Welcome');
 
-// Get the search term from the URL, if any.
+// Get the search term from the URL query parameters, if provided.
 $search = isset($_GET['search']) ? strtolower($_GET['search']) : '';
 
 // --- CACHE AND DATA LOADING ---
 
-// Define the path for the package cache file.
+// Define the path for the cached packages data file.
 $cache_file = 'cache/packages.php';
 
-// If the cache file doesn't exist, build it by including the build script.
-if (! file_exists($cache_file)) {
-    include 'modules/build_cache.php';
+// If the cache file does not exist, generate it by running the build script.
+// This ensures that the application data is available for the store.
+if (!file_exists($cache_file)) {
+    header('Location: modules/precarg.php');
+    exit;
 }
 
-// Include the cache file to load the product data.
+// Load the cached product data.
 include $cache_file;
-$products = $products_cache; // Assign cached products to a variable.
+$products = $products_cache; // Assign the cached products to a working variable.
 
-// Include the script to check the installation status of applications.
+// Include the script to determine the installation status of applications.
 include 'modules/insta_status.php';
 
 // --- HTML RENDERING ---
 
-// Start rendering the HTML document.
+// Begin rendering the HTML document.
 echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">';
 echo '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
 echo '<title>SlkStore - Slackware Apps</title><style>' . $css . '</style></head>';
 echo '<body class="' . $theme . '">';
 
-// --- HEADER ---
+// --- HEADER SECTION ---
 echo '<header><div class="page-container"><div class="container">';
 echo '<h1 class="logo">SlkStore v1.0</h1>';
 
 // Search form
 echo '<form method="get" class="search-form">';
 echo '<input type="text" name="search" placeholder="Search apps..." value="' . (isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '') . '" class="search-input">';
-echo '<input type="hidden" name="theme" value="' . $theme . '">'; // Preserve theme on search
+echo '<input type="hidden" name="theme" value="' . $theme . '">'; // Preserve the current theme across searches.
 echo '<button type="submit" class="search-button">Go</button>';
 echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Home</button>';
 echo '</form>';
 
-// Navigation
+// Main navigation
 echo '<nav>';
-echo '<a href="' . ($theme === 'light' ? '?theme=light' : '#') . '">Upgrade</a>';
-// Theme switcher icon
+echo '<a href="#" onclick="document.querySelector(\'main\').innerHTML=\'<iframe src=&quot;modules/pacman.php&quot; style=&quot;width:100%;height:400%;border:none;&quot;></iframe>\';return false;">Upgrade</a>';
+
+// Theme switcher icon (sun or moon)
 if ($theme === 'dark') {
     echo '<a href="?theme=light" class="theme-icon">☀️</a>';
 } else {
@@ -112,7 +117,7 @@ echo '<aside id="sidebar"><h3 class="sidebar-title">Categories</h3>';
 foreach ($all_categories as $category) {
     $active_class = (strtolower($current_category) == strtolower($category)) ? ' active' : '';
     $link         = '?category=' . urlencode($category);
-    // Preserve theme and search parameters in category links
+    // Preserve theme and search parameters in category links.
     if ($theme === 'light') {
         $link .= '&theme=light';
     }
@@ -126,11 +131,11 @@ echo '</aside>';
 // --- CONTENT AREA ---
 echo '<main>';
 
-// Check if a specific application is requested.
+// Check if a specific application is requested to be displayed.
 if (isset($_GET['app'])) {
     $app   = $_GET['app'];
     $found = null;
-    // Find the application in the products list.
+    // Search for the requested application in the product list.
     foreach ($products as $p) {
         if (strtolower($p['name']) === strtolower($app)) {
             $found = $p;
@@ -149,16 +154,16 @@ if (isset($_GET['app'])) {
         echo '<p>Application not found.</p>';
     }
 } else {
-    // --- DEFAULT VIEW (CATEGORY OR WELCOME PAGE) ---
+    // --- DEFAULT VIEW (EITHER WELCOME PAGE OR CATEGORY LISTING) ---
     echo '<h2>' . htmlspecialchars(ucfirst($current_category)) . '</h2>';
 
-    // If it's the Welcome page and there's no search, show the banner and featured apps.
+    // If on the Welcome page and not searching, display a banner and featured apps.
     if (strtolower($current_category) === 'welcome' && ! $search) {
         echo '<div class="banner"><div class="banner-left"><div class="banner-te">SlkStore - Slackware 15.0 Apps</div>';
         echo '<div class="banner-tex">powered by slackdce repository</div></div>';
         echo '<div class="banner-right"><img src="icons/slkstore.png" class="icon"></div></div>';
 
-        // Display a random selection of apps from each category.
+        // Display a random selection of applications from each category.
         foreach ($all_categories as $category) {
             if ($category === 'Welcome') {
                 continue;
@@ -180,9 +185,8 @@ if (isset($_GET['app'])) {
             $count = 0;
             foreach ($cat_products as $product) {
                 if ($count >= 8) {
-                    break;
+                    break; // Show up to 8 applications per category on the welcome page.
                 }
-                // Show up to 8 apps per category
 
                 $link = '?app=' . urlencode($product['name']);
                 if ($theme === 'light') {
@@ -193,7 +197,7 @@ if (isset($_GET['app'])) {
                 $status = is_installed($product['name']) ? 'installed' : 'not-installed';
                 echo '<div class="insta ' . $status . '"></div>';
                 echo '<img class="product-icon" src="' . htmlspecialchars($product['icon']) . '">';
-                // Extract description from parenthesis if available
+                // Extract a cleaner description from parenthesis if available.
                 $desc = $product['desc'];
                 if (preg_match('/\(([^)]+)\)/', $desc, $m)) {
                     $desc = $m[1];
@@ -211,7 +215,7 @@ if (isset($_GET['app'])) {
         // --- CATEGORY/SEARCH RESULTS VIEW ---
         echo '<div class="product-grid">';
         $display_products = [];
-        // Filter products based on search or category.
+        // Filter products based on the current search term or category.
         foreach ($products as $p) {
             if ($search && strpos(strtolower($p['name']), $search) !== false) {
                 $display_products[] = $p;
@@ -223,7 +227,7 @@ if (isset($_GET['app'])) {
         if (! $display_products) {
             echo "<p>No applications found.</p>";
         } else {
-            // Display the filtered products.
+            // Display the filtered list of products.
             foreach ($display_products as $product) {
                 $link = '?app=' . urlencode($product['name']);
                 if ($theme === 'light') {
@@ -234,7 +238,7 @@ if (isset($_GET['app'])) {
                 $status = is_installed($product['name']) ? 'installed' : 'not-installed';
                 echo '<div class="insta ' . $status . '"></div>';
                 echo '<img class="product-icon" src="' . htmlspecialchars($product['icon']) . '">';
-                // Extract description from parenthesis if available
+                // Extract a cleaner description from parenthesis if available.
                 $desc = $product['desc'];
                 if (preg_match('/\(([^)]+)\)/', $desc, $m)) {
                     $desc = $m[1];
@@ -259,7 +263,7 @@ $found_programs = isset($display_products) ? count($display_products) : 0;
 echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore (By SlackDCE). All rights reserved.</p>';
 echo '<div class="status-bar">';
 echo "Programs in this view: $found_programs / $total_programs - ";
-// Read and display information from the PACKAGES.TXT.gz file.
+// Read and display repository information from the PACKAGES.TXT.gz file.
 $line = @gzopen('cache/PACKAGES.TXT.gz', 'r');
 if ($line) {
     $first_line = trim(gzgets($line));

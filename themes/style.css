@@ -453,3 +453,70 @@ footer p {
 .app-detailm b {
     color: #5bb5ff;
 }
+
+.confirmation-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #2c2c2c;
+    border: 1px solid #444444;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 2px 2px 4px #000000;
+    z-index: 1000;
+    width: 500px;
+    text-align: center;
+}
+
+.confirmation-message {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: #5bb5ff;
+    text-shadow: 2px 2px 4px #000000;
+}
+
+
+.confirmation-question {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: #f0f0f0;
+    text-shadow: 2px 2px 4px #000000;
+    margin-top: 20px;
+}
+
+.confirmation-buttons {
+    display: flex;
+    justify-content: space-around;
+}
+
+.button.yes,
+.button.no {
+    display: inline-block;
+    width: 100px;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #000000;
+    text-decoration: none;
+    text-shadow: 2px 2px 4px #000000;
+    color: #f0f0f0;
+    text-align: center;
+}
+
+.button.yes {
+    background-color: #006600;
+}
+
+.button.no {
+    background-color: #660000;
+}
+
+.button.yes:hover {
+    background-color: #00aa00;
+}
+
+.button.no:hover {
+    background-color: #aa0000;
+}
