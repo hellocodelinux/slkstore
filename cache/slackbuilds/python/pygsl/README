@@ -1,4 +1,0 @@
-PyGSL (a python interface for the GNU scientific library)
-
-PyGSL is a Python interface to the GSL library. The wrapper
-covers nearly everything GSL provides.

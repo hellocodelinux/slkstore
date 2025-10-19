@@ -1,3 +1,0 @@
-ruby2ruby provides a means of generating pure ruby code easily from
-RubyParser compatible Sexps. This makes making dynamic language
-processors in ruby easier than ever!

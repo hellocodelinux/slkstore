@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Wolfenstein 3D (Full Version)
-Icon=wolf4sdl
-Exec=/usr/games/wolf4sdl-wolf3d-full
-Terminal=false
-Categories=Game;ActionGame;

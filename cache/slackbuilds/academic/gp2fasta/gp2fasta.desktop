@@ -1,7 +1,0 @@
-[Desktop Entry]
-Categories=Education;
-Exec=gp2fasta
-Icon=gp2fasta
-Name=GP2Fasta
-StartupNotify=false
-Type=Application

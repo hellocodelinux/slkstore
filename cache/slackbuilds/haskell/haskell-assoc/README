@@ -1,4 +1,0 @@
-swap and assoc: Symmetric and Semigroupy Bifunctors
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

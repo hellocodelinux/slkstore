@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Xonotic
-Categories=Game;
-Exec=xonotic-glx
-Icon=xonotic
-Terminal=false
-StartupNotify=false

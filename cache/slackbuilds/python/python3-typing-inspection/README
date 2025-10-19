@@ -1,4 +1,0 @@
-python3-typing-inspection (Runtime typing introspection tools)
-
-typing-inspection provides tools to inspect type annotations at
-runtime.

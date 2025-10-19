@@ -1,2 +1,0 @@
-#!/bin/sh
-/usr/bin/mono /usr/bin/Mesen-X "\$@"

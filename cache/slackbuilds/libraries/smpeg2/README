@@ -1,3 +1,0 @@
-smpeg2 provides MP3 support for SDL2_mixer
-
-It comes with an example program plaympeg which will play mp3 files

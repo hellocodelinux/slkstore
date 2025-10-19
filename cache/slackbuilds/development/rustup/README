@@ -1,4 +1,0 @@
-rustup - The Rust toolchain installer
-
-This follows the upstream installation. After installing this
-package, run rustup-init as your user and follow the instructions.

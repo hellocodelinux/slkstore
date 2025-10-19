@@ -1,7 +1,0 @@
-unac (remove accents from text)
-
-unac is a C library (libunac) and command (unaccent) that removes
-accents from a string of text; it replaces accented characters in the
-given character set with their unaccented (ASCII) equivalents.
-
-See also: perl/perl-text-unaccent, for a Perl module based on this.

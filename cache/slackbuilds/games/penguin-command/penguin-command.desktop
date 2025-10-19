@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Penguin-Command
-Type=Application
-Comment=Missile Attack game
-Exec=/usr/games/penguin-command
-Icon=penguin-command
-Terminal=false
-Categories=Game;ArcadeGame;

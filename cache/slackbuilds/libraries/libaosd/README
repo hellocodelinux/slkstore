@@ -1,5 +1,0 @@
-libaosd (Atheme On Screen Display library)
-
-libaosd is an advanced on screen display library. It supports many 
-modern features like anti-aliased text and composited rendering via
-XComposite, as well as support for rendering Cairo and Pango layouts.

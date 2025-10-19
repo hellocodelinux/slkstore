@@ -1,3 +1,0 @@
-#!/bin/sh
-cd /usr/share/java
-exec java -jar calcoo.jar

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=xgps
-GenericName=GPS information
-Comment=Display GPS information from a gpsd daemon
-Exec=xgps
-Icon=/usr/share/pixmaps/gpsd-logo.png
-Terminal=false
-Type=Application
-Categories=Utility;

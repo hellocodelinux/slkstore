@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=/usr/bin/xmonad
-TryExec=/usr/bin/xmonad
-Name=xmonad
-Comment=xmonad -- tiling window manager

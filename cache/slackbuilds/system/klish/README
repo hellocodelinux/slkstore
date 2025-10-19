@@ -1,4 +1,0 @@
-The klish is a framework for implementing a CISCO-like CLI
-on a UNIX systems.  It is configurable by XML files. The
-KLISH stands for Kommand Line Interface Shell. I know that
-"command" starts with "c" :) .

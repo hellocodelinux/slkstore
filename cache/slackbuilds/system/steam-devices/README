@@ -1,4 +1,0 @@
-steam-devices (Steam and SteamVR udev rules)
-
-List of devices Steam and SteamVR will want read/write permissions
-on, to help downstream distributions create udev rules/etc

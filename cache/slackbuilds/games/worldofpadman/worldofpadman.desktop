@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=World of Padman
-Comment=Open-source first-person shooter game
-Exec=/usr/games/wop
-Icon=wop
-Terminal=false
-Type=Application
-Categories=Game;ActionGame;

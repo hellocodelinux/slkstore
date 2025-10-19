@@ -1,3 +1,0 @@
-#!/bin/bash
-
-/opt/zxbasic/python/bin/python3.13 /opt/zxbasic/zxbpp.py "$@"

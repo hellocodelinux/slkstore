@@ -1,7 +1,0 @@
-vanguards is a controller addon for Tor onion services.
-
-It's aimed at Tor onion services that require high security as
-soon as possible, ahead of their official Tor-code releases.
-
-Having Tor installed is not required for building.
-The Tor installation does not have to be from SBo.

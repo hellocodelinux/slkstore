@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Tintii
-Comment=A smart photo filter for striking colour select effects
-Exec=tintii
-Icon=/usr/share/pixmals/tintii.png
-Terminal=false
-Type=Application
-Categories=Graphics;Photography;
-GenericName=Graphics

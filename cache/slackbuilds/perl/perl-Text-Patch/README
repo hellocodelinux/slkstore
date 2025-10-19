@@ -1,3 +1,0 @@
-Text::Patch combines source text with given diff (difference) data.
-Diff data is produced by Text::Diff module or by the standard diff
-utility (man diff, see -u option).

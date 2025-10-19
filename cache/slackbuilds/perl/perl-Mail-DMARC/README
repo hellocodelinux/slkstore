@@ -1,3 +1,0 @@
-This module is a suite of tools for implementing DMARC. It adheres to
-the 2013 DMARC draft, intending to implement every MUST and every
-SHOULD.

@@ -1,8 +1,0 @@
-ignition-math2 (A small, fast, and high performance math library)
-
-A small, fast, and high performance math library.
-This library is a self-contained set of classes and functions
-suitable for robot applications.
-
-NOTE:
-This package can co-exist with ignition-math

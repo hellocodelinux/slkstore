@@ -1,3 +1,0 @@
-Coccinelle allows programmers to easily write some complex
-style-preserving source-to-source transformations on C source code,
-like for instance to perform some refactorings.

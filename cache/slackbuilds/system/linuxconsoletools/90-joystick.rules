@@ -1,2 +1,0 @@
-# Restore any stored calibration for the device
-KERNEL=="js*", ACTION=="add", RUN+="/usr/bin/jscal-restore %E{DEVNAME}"

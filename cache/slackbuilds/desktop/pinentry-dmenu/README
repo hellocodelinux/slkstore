@@ -1,8 +1,0 @@
-pinentry-dmenu is a pinentry program with the charm of dmenu.
-
-This program is a fork from spine which is also a fork from
-dmenu.
-
-To use pinentry-dmenu add in ~/.gnupg/gpg-agent.conf:
-
-pinentry-program <absolute path to pinentry-dmenu>

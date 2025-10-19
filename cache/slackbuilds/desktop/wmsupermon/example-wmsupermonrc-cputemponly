@@ -1,8 +1,0 @@
-[tmp]
-Source = /sys/class/hwmon/hwmon0/temp1_input
-Scale  = 1000
-Range  = 37 .. 70
-
-[[wmsupermon]]
-tmp = number -label
-tmp = graph

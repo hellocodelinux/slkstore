@@ -1,4 +1,0 @@
-wmgtemp (temperature monitoring dockapp)
-
-wmgtemp is a dock app for WindowMaker that graphically displays the CPU
-and SYS temperatures using the lm_sensors package.

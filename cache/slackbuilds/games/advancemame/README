@@ -1,8 +1,0 @@
-advancemame (Multi Arcade Machine Emulator)
-
-Advancemame is a derivative of the well known "mame" emulator.
-It works easily on linux, with joystick support, fullscreen
-support, and more "out of the box."
-
-By default, advancemame is built with SDL2. If you want to build
-advancemame with SDL-1.2, set SDL2=no in the script's environment.

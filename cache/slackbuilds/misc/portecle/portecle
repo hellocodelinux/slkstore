@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cd /usr/share/portecle/
-java -jar portecle.jar

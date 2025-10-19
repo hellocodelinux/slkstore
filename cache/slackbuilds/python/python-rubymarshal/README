@@ -1,3 +1,0 @@
-python-rubymarshal (read and write Ruby-marshalled data)
-
-Only basic Ruby data types can be read and written.

@@ -1,3 +1,0 @@
-gnome-python-desktop contains a few python modules for GNOME.
-
-evince, gnome-media, and totem-pl-parser are optional dependencies.

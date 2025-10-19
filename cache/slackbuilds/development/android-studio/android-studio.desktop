@@ -1,9 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Exec=android-studio
-Name=Android Studio IDE
-GenericName=Android Studio IDE
-Icon=android-studio
-StartupNotify=true
-Categories=Development;IDE;Qt;KDE;GTK;GNOME;

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=asterixInspector
-GenericName=A viewer for EUROCONTROL ASTERIX files
-Categories=Utility;Education;
-Exec=asterixInspector
-Icon=/usr/share/pixmaps/asterixInspector.svg
-Terminal=false
-Type=Application
-StartupNotify=true

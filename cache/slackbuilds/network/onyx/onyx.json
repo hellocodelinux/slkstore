@@ -1,7 +1,0 @@
-{
-  "name": "onyx",
-  "description": "OverbiteNX Gopher system component",
-  "path": "/usr/bin/onyx",
-  "type": "stdio",
-  "allowed_extensions": [ "overbitenx@floodgap.com" ]
-}

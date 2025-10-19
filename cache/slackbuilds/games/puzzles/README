@@ -1,8 +1,0 @@
-This is a collection of puzzle games written by Simon Tatham. They run
-natively on various platforms including Linux, Windows, and Mac OS X.
-
-You may optionally get the latest version from
-
-https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles.tar.gz
-
-and execute the script with VERSION=latest

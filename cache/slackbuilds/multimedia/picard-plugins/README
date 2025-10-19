@@ -1,4 +1,0 @@
-MusicBrainz Picard Plugins
-
-aubio and python3-numpy are optional autodetected dependencies for the
-BPM plugin. The BPM plugin will not be installed without them.

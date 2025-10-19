@@ -1,4 +1,0 @@
-Whalebird is an Electron based Mastodon, Pleroma and Misskey client.
-
-This SlackBuild repackages the upstream rpm package. This rpm is only
-available for 64-bit systems.

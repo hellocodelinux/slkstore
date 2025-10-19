@@ -1,2 +1,0 @@
-Devel::Declare can install subroutines called declarators which locally 
-take over Perl's parser, allowing the creation of new syntax.

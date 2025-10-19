@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Clock Signal (Qt)
-Type=Application
-Exec=/usr/games/clksignal
-Icon=clksignal
-Hidden=true
-Terminal=false
-Categories=Game;Emulator;

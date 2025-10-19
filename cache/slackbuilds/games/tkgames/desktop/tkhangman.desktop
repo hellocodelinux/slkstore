@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=TkHangMan
-Comment=Word puzzle game
-Exec=tkhangman
-Icon=tkhangman
-Type=Application
-Terminal=false
-Categories=Game;LogicGame;

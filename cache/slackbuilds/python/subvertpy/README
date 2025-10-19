@@ -1,3 +1,0 @@
-Alternative Python bindings for Subversion, split out from bzr-svn.
-The goal is to have complete, portable and "Pythonic" Python
-bindings.

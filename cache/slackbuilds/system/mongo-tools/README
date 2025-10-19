@@ -1,7 +1,0 @@
-Mongo-Tools is a set of tools for MongoDB.
-
-Includes: bsondump, mongoimport, mongoexport, mongodump,
-  mongorestore, mongostat, mongofiles, and mongotop
-
-NOTE: this script requires Internet connection to download
-fsnotify sub modules

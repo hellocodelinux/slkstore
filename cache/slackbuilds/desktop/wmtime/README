@@ -1,9 +1,0 @@
-wmtime (time dockapp for WindowMaker)
-
-WMTime, guess what, displays the time and date and gives you
-some nice additional features too...
-
-If you're upgrading from a previous version of wmtime and wonder what
-happened to the locale support: wmtime now uses the system's locales
-for the days of the week and month names. It supports more languages
-than it did before, and respects LANG in the environment.

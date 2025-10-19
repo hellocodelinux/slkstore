@@ -1,4 +1,0 @@
-Collection of useful functions for use with Template Haskell.
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

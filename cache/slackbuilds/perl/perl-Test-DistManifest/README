@@ -1,3 +1,0 @@
-perl-Test-DistManifest (Author test that validates a package MANIFEST)
-This module provides a simple method of testing that a MANIFEST
-matches the distribution.

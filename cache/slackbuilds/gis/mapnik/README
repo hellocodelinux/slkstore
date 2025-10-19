@@ -1,7 +1,0 @@
-Mapnik is a free toolkit for developing mapping applications. Mapnik
-can be used for both desktop map design and web development.
-
-Optional dependencies: 
-- gdal: GDAL and OGR plugin support
-- postgresql: PostGIS plugin support
-- proj: reprojection support

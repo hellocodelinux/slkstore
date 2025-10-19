@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Yvonne
-Comment=Atari 8-bit image viewer
-Exec=yvonne
-Icon=yvonne
-Terminal=false
-Type=Application
-Categories=Graphics;2DGraphics;Viewer;

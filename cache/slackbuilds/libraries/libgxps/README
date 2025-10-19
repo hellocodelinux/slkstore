@@ -1,4 +1,0 @@
-libgxps is a GObject based library for handling and rendering
-XPS documents.
-
-This is an optional dependency for some packages like evince

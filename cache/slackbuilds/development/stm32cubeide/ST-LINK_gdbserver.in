@@ -1,5 +1,0 @@
-#!/bin/bash
-
-exec -- @ST_LINK_GDBSERVER@ \
-  --stm32cubeprogrammer-path @STM32_CUBEPROGRAMMER_DIR@ \
-  "${@}"

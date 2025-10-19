@@ -1,9 +1,0 @@
-Quaternion is a cross-platform desktop IM client for the Matrix
-protocol.
-
-SlackBuild notes:
-
-* -DUSE_INTREE_LIBQMC=0 is set to use the system copy of libQuotient.
-  Using the in-tree version requires the sources to be fetched
-  recursively via git, since it's a submodule. You probably don't want
-  to change this.

@@ -1,7 +1,0 @@
-ptop (top-like system monitor)
-
-An awesome task manager written in python. A more awesome top-like
-thing in your terminal!
-
-The executable is called "ptop.py", because there's already a "ptop"
-in the fpc package. This way there's no conflict.

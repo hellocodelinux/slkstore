@@ -1,6 +1,0 @@
-Kvazaar is an open source HEVC encoder. It is still
-under development and does not implement all the
-features of HEVC. Performance will increase as more coding
-tools are added.
-
-This is an optional dependency of FFmpeg.

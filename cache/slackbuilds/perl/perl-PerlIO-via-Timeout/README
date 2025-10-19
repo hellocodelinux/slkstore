@@ -1,1 +1,0 @@
-PerlIO layer that adds read & write timeout to a handle.

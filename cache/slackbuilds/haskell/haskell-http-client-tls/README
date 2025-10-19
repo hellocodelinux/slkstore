@@ -1,4 +1,0 @@
-http-client backend using the connection package and tls library.
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

@@ -1,3 +1,0 @@
-libircclient is a small but powerful library, which implements
-client-server IRC protocol. It is designed to be small, fast, portable
-and compatible to RFC standards, and most IRC clients.

@@ -1,8 +1,0 @@
-[Desktop Entry]
-Exec=/usr/bin/rezound %U
-Name=ReZound
-Comment=ReZound: an audio file editor
-Terminal=false
-Type=Application
-Icon=rezound
-Categories=AudioVideo

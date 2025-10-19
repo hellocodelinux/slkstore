@@ -1,3 +1,0 @@
-DNSSEC extension to Net::DNS.  This module implements the 
-cryptographic signature generation and verification functions
-that are relevant for DNSSEC operations.

@@ -1,3 +1,0 @@
-python3-hatch-nodejs-version (Hatch plugin)
-
-This package reads pyproject.toml metadata from package.json. 

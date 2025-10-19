@@ -1,7 +1,0 @@
-jaconv is a interconverter for hiragana,katakana,hatakaku and
-zenkaku.
-
-Example:
-
-print(jaconv.alphabet2kana('mamisan'))
-まみさん

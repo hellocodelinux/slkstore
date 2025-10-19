@@ -1,9 +1,0 @@
-[Desktop Entry]
-Exec=xjadeo
-Icon=/usr/share/xjadeo/qjadeo_102.xpm
-Name=jadeo
-GenericName=Video player for sync with jack
-GenericName[el]=Προβολή ταινίας σε συγχρονισμό με το jack
-StartupNotify=true
-Type=Application
-Categories=AudioVideo;

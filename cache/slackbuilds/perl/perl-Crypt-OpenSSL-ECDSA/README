@@ -1,2 +1,0 @@
-This module provides an interface to the ECDSA (Elliptic Curve
-Digital Signature Algorithm) functions in OpenSSL.

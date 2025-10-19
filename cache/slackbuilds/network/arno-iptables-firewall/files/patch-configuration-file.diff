@@ -1,8 +1,0 @@
-256c256
-< ENV_FILE="/usr/local/share/arno-iptables-firewall/environment"
----
-> ENV_FILE="/usr/share/arno-iptables-firewall/environment"
-260c260
-< PLUGIN_BIN_PATH="/usr/local/share/arno-iptables-firewall/plugins"
----
-> PLUGIN_BIN_PATH="/usr/share/arno-iptables-firewall/plugins"

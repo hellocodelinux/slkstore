@@ -1,3 +1,0 @@
-perl-Device-SerialPort (Perl serial port access library)
-
-Provides Linux/POSIX emulation of Win32::SerialPort functions.

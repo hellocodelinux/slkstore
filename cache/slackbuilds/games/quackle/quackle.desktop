@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Quackle
-GenericName=Crossword Game
-Comment=Game similar to Scrabble(tm)
-Exec=/usr/games/quackle
-Icon=quackle
-Terminal=false
-Type=Application
-Categories=Game;BoardGame

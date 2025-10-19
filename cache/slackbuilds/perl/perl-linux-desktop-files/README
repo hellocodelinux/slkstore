@@ -1,4 +1,0 @@
-perl-linux-desktop-files (perl module to parse .desktop files)
-
-Linux::DesktopFiles, a very fast and simple way to parse the Linux
-desktop files.

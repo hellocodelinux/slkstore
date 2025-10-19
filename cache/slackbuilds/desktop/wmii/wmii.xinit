@@ -1,5 +1,0 @@
-#!/bin/sh
-
-until wmii; do
-  true
-done

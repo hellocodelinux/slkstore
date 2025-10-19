@@ -1,2 +1,0 @@
-method_source provides the source and comment methods to the Method and 
-UnboundMethod and Proc classes.

@@ -1,1 +1,0 @@
-perl-Mail-DKIM signs/verifies smtp mail with DKIM/DomainKey signatures.

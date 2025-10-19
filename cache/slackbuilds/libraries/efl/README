@@ -1,6 +1,0 @@
-Enlightenment Foundation Library
-It provides the basic building blocks for creating applications and
-user interfaces.
-
-NOTE: You must remove any previous installation of efl before running
-this script, otherwise the build will fail.

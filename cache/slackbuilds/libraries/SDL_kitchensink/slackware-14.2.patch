@@ -1,9 +1,0 @@
-diff -Naur SDL_kitchensink-1.0.4-o/CMakeLists.txt SDL_kitchensink-1.0.4/CMakeLists.txt
---- SDL_kitchensink-1.0.4-o/CMakeLists.txt	2018-07-13 17:18:32.000000000 +0200
-+++ SDL_kitchensink-1.0.4/CMakeLists.txt	2018-07-23 10:05:19.626764361 +0200
-@@ -1,4 +1,4 @@
--cmake_minimum_required(VERSION 3.7)
-+cmake_minimum_required(VERSION 3.5)
- project(SDL_kitchensink C)
- include(GNUInstallDirs)
- set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)

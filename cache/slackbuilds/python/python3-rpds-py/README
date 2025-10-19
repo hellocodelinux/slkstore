@@ -1,3 +1,0 @@
-python3-rpds-py (Python bindings to Rust's pers. data struc. "rpds")
-
-Python bindings to the Rust rpds crate for persistent data structures.

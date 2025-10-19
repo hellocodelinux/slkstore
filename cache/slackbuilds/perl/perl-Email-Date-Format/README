@@ -1,4 +1,0 @@
-perl-Email-Date-Format (produce RFC 2822 date strings)
-
-This module provides a simple means for generating an RFC 2822
-compliant datetime string.

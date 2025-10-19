@@ -1,3 +1,0 @@
-ttfautohint-py is a python binding for ttfautohint. It uses
-ctypes to load libttfautohint shared library and call the
-TTF_autohint function.

@@ -1,3 +1,0 @@
-bindfs is a FUSE filesystem for mounting a directory to another
-location, similarly to mount --bind. The permissions inside the
-mountpoint can be altered using various rules.

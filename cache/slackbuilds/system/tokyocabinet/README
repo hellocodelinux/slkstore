@@ -1,3 +1,0 @@
-Tokyo Cabinet is a fast and efficient key/value database. It provides 
-schema-less storage through hash tables, B-tree tables and
-fixed-length arrays.

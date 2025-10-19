@@ -1,5 +1,0 @@
-swift is a jabber client from the Isode company
-
-Note: swift does not support OMEMO or OTR, as it was designed with
-vendored encryption in mind (not present in the public version). It
-does not support several "modern XMPP" XEPs, so YMMV.

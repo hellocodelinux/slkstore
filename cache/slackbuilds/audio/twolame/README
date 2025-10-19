@@ -1,4 +1,0 @@
-TwoLAME is an optimised MP2 (MPEG-1 Audio Layer II) encoder.
-It has a simple command line interface, uses libsndfile to handle a
-wide range of input files, and features its own thread-safe library
-with API similar to LAME (a MP3 encoder).

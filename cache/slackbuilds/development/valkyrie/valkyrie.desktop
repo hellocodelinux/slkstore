@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Valkyrie
-Comment=Qt4-based GUI for the Valgrind
-Exec=valkyrie
-Icon=valkyrie
-Categories=Development
-Terminal=false
-Type=Application

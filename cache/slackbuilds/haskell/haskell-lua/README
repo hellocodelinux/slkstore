@@ -1,4 +1,0 @@
-Lua, an embeddable scripting language
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

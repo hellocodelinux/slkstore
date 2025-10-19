@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Pac-Man Arena
-Comment=3D Pac-Man with explosions
-Exec=/usr/games/pacman-arena
-Icon=pacman-arena
-Terminal=false
-Type=Application
-Categories=Game;ArcadeGame;

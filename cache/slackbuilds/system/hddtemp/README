@@ -1,5 +1,0 @@
-hddtemp is a small and daemonizable utility designed to read the
-S.M.A.R.T. information from the given hard disk and report the
-temperature of the disk.
-
-Note: hddtemp does not support eMMC or NVMe devices.

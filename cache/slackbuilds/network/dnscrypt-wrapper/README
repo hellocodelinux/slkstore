@@ -1,5 +1,0 @@
-dnscrypt-wrapper is a server-side DNSCrypt proxy that adds DNSCrypt
-support to any name resolver.
-
-Be sure to read README.Slackware for information on configuring/running
-dnscrypt-wrapper as a daemon!

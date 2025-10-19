@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Yabasic
-GenericName=Yabasic
-Exec=yabasic
-Icon=yabasic
-Terminal=true
-Type=Application
-Categories=Development
-StartupNotify=false

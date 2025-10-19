@@ -1,9 +1,0 @@
-MediaInfo supplies technical and tag information about a video or
-audio file.
-
-The CLI version is built by default and the GUI version will be built
-automatically if wxGTK3 is installed. Either can be manually disabled
-by passing GUI=no or CLI=no to the SlackBuild script, but at least one
-must be enabled to build the program.
-
-wxGTK3 is an optional, autodetected dependency required for the GUI.

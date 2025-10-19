@@ -1,5 +1,0 @@
-Hspec is a testing framework for Haskell. It is inspired by the Ruby
-library RSpec.
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

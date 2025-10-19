@@ -1,2 +1,0 @@
-isoduration offers ways of representing ISO 8601 date/time durations.
-It addresses the shortcomings of isodate.

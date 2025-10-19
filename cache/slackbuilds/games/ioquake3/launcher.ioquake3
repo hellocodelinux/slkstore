@@ -1,3 +1,0 @@
-#!/bin/sh
-cd /usr/share/games/quake3
-exec ./ioquake3.*

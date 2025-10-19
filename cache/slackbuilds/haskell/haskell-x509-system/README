@@ -1,4 +1,0 @@
-Handle per-operating-system X.509 accessors and storage.
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

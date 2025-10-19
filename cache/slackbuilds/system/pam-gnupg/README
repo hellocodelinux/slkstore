@@ -1,3 +1,0 @@
-A PAM module that hands over your login password to
-gpg-agent, which can be useful if you are using a
-GnuPG-based password manager like pass.

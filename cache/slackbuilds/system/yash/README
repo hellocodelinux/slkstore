@@ -1,5 +1,0 @@
-Yash (yet another shell) is a POSIX-compliant command line shell written
-by Yuki Watanabe (aka magicant) in C99 (ISO/IEC 9899:1999). It was
-originally written as a university assignment, but the code has since
-been re-written from scratch to meet POSIX requirements. Yash is
-intended to be the most POSIX-compliant shell in the world.

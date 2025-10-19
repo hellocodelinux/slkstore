@@ -1,7 +1,0 @@
-ezQuake is a modern QuakeWorld client Combining the features 
-of all modern QuakeWorld clients, ezQuake makes QuakeWorld 
-easier to start and play. 
-
-ezQuake is only a game engine modification; you still need the
-original quake *.pak game files to play ezQuake.  Save the 
-pak files in /usr/share/games/ezquake/id1.

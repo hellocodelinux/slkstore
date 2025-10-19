@@ -1,4 +1,0 @@
-fs (Python's Filesystem abstraction layer)
-
-In the same way that file objects abstract a single file,
-FS objects abstract an entire filesystem.

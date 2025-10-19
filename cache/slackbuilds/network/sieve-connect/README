@@ -1,3 +1,0 @@
-sieve-connect is a Perl sieveshell-compatible ManageSieve client
-intended both for scripting and interactive use; supports TLS,
-certificate-based authentication support and tab-completion.

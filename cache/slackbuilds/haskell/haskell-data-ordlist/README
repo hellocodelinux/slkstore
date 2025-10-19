@@ -1,4 +1,0 @@
-This module provides set and multiset operations on ordered lists.
-
-After uninstalling, run this command to unregister the package from
-the ghc package database:   ghc-pkg recache

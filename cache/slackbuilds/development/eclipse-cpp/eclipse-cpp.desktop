@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=eclipse-cpp
-Name=Eclipse C/C++
-GenericName=Eclipse IDE for C/C++ Developers
-Icon=eclipse-cpp
-StartupNotify=true
-Categories=Qt;KDE;GNOME;Development;GTK;

@@ -1,4 +1,0 @@
-pipemeter (I/O pipe with progress and speed indicators)
-
-pipemeter copies its standard input to its standard output with a
-progress bar and/or speed indicator.

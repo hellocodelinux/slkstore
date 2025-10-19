@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Urban Lightscape
-Comment=A photo filter for exposure, brightness and lighting correction
-Exec=urbanlightscape
-Icon=/usr/share/pixmaps/urbanlightscape.png
-Terminal=false
-Type=Application
-Categories=Graphics;Photography;
-GenericName=Graphics

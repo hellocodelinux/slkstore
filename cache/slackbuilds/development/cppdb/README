@@ -1,2 +1,0 @@
-stand alone C++ Connectivity library that supports MySQL, PostgreSQL,
-Sqlite3 databases and generic ODBC drivers.

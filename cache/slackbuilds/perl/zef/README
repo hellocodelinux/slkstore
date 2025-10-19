@@ -1,3 +1,0 @@
-The zef package manager downloads and installs Raku modules.
-
-By default, the modules are installed in ~/.raku.

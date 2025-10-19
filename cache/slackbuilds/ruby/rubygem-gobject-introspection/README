@@ -1,3 +1,0 @@
-Ruby/GObjectIntrospection provides bindings of GObject Introspection
-and a loader module that can generate dynamically Ruby bindings of
-any GObject C libraries.

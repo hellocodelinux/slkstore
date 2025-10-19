@@ -1,4 +1,0 @@
-wmtop is Window Maker processes monitor dockable application
-
-wmtop maintains a view of the three top CPU (or memory) consuming
-processes displaying the amount of CPU used as a horizontal bar.

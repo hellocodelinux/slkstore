@@ -1,4 +1,0 @@
-QtFM is a small, lightweight file manager for Linux/BSD based on pure Qt
-and works great with minimal desktop environments like Fluxbox/Openbox.
-
-Optional dependency: qt5 is recommended.

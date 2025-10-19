@@ -1,9 +1,0 @@
-wmnet (network bandwidth monitor dockapp for WindowMaker)
-
-wmnet polls network statistics and does a few things with the data it
-gets. It has small blinking lights for the RX and TX of IP packets,
-a digital speedometer of your network's current speed, and a bar graph
-(like xload) plotting your throughput.
-
-Note: wmnet still works on modern Linux systems, but all the
-documentation about ipfwadm and ipchains is hopelessly outdated.

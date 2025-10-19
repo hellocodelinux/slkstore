@@ -1,2 +1,0 @@
-KERNEL=="uinput", GROUP="uinput-users", MODE="0660"
-KERNEL=="uhid", GROUP="uinput-users", MODE="0660"

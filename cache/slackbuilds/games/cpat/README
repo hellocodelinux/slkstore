@@ -1,5 +1,0 @@
-CPat is a curses based solitaire/patience collection. It's pretty stable
-and at present contains implementations of Freecell, Klondike, Spider,
-40 Thieves, Baker's Dozen, Scorpion, Penguin, Yukon, Stategy, Canfield
-and Duchess. The games are played in your favourite shell using keyboard
-commands.

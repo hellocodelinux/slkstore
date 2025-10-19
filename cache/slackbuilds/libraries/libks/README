@@ -1,3 +1,0 @@
-libks (a cross platform kitchen sink library)
-
-libks is required for FreeSWITCH, to enable the mod_verto module.

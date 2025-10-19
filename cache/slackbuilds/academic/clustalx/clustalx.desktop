@@ -1,7 +1,0 @@
-[Desktop Entry]
-Categories=Education;
-Exec=clustalx
-Icon=clustalx
-Name=ClustalX
-StartupNotify=false
-Type=Application

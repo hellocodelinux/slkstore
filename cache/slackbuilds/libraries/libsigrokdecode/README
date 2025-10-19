@@ -1,2 +1,0 @@
-libsigrokdecode is a shared library written in C, which provides
-(streaming) protocol decoding functionality.

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Categories=Game;
-Exec=digger /A
-Icon=digger
-Name=Digger
-StartupNotify=false
-Type=Application

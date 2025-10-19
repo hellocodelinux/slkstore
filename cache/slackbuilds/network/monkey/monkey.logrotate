@@ -1,7 +1,0 @@
-/var/log/monkey/*.log {
-  rotate 10
-  notifempty
-  compress
-  delaycompress
-  copytruncate
-}

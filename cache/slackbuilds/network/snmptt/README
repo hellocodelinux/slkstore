@@ -1,4 +1,0 @@
-SNMPTT (SNMP Trap Translator)
-
-SNMPTT (SNMP Trap Translator) is an SNMP trap handler written in
-Perl for use with the Net-SNMP / UCD-SNMP snmptrapd program

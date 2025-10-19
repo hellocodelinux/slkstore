@@ -1,3 +1,0 @@
-GN is a meta-build system that generates build files for Ninja.
-
-To build with samu instead of ninja, do: NINJA=samu ./gn.SlackBuild
