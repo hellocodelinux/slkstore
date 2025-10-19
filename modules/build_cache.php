@@ -5,16 +5,15 @@ ob_start();
 // --- CONFIGURATION AND INITIALIZATION ---
 
 // Define paths for cache files, directories, and remote URLs.
-$cache_file      = __DIR__ . '/../cache/packages.php';                                   // Path to the generated PHP cache file.
-$hash_file       = __DIR__ . '/../cache/packages.hash';                                  // Path to store the hash of PACKAGES.TXT.gz.
-$icon_dir        = __DIR__ . '/../icons/';                                               // Directory containing package icons.
-$packages_url    = 'https://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz'; // URL for the Slackware packages list.
-$packages_file   = __DIR__ . '/../cache/PACKAGES.TXT.gz';                                // Local path to store the downloaded packages list.
-$slackbuilds_tar = __DIR__ . '/../cache/slackbuilds.tar.gz';                             // Path to the SlackBuilds tarball.
-$slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';                                    // Directory to extract SlackBuilds into.
-$tag_file        = __DIR__ . '/../cache/slackbuilds.tag';                                // File to store the latest SlackBuilds tag.
-$logstore        = __DIR__ . '/../tmp/logstore.txt';                                     // Path to the log file for this script.
-$products_cache  = [];                                                                   // Initialize an array to hold package data.
+$cache_file      = __DIR__ . '/../cache/packages.php';       // Path to the generated PHP cache file.
+$hash_file       = __DIR__ . '/../cache/packages.hash';      // Path to store the hash of PACKAGES.TXT.gz.
+$icon_dir        = __DIR__ . '/../icons/';                   // Directory containing package icons.
+$packages_file   = __DIR__ . '/../cache/PACKAGES.TXT.gz';    // Local path to store the downloaded packages list.
+$slackbuilds_tar = __DIR__ . '/../cache/slackbuilds.tar.gz'; // Path to the SlackBuilds tarball.
+$slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';        // Directory to extract SlackBuilds into.
+$tag_file        = __DIR__ . '/../cache/slackbuilds.tag';    // File to store the latest SlackBuilds tag.
+$logstore        = __DIR__ . '/../tmp/logstore.txt';         // Path to the log file for this script.
+$products_cache  = [];                                       // Initialize an array to hold package data.
 
 /**
  * Appends a log message with a timestamp to the log file.
@@ -24,40 +23,6 @@ function logmsg($m)
 {
     global $logstore;
     file_put_contents($logstore, date('[Y-m-d H:i:s] ') . $m . "\n", FILE_APPEND);
-}
-
-/**
- * Fetches content from a URL. Uses cURL if available, otherwise falls back to file_get_contents.
- * @param string $url The URL to fetch.
- * @return array An array containing the HTTP status code and the content.
- */
-function fetch_url($url)
-{
-    if (function_exists('curl_version')) {
-        // Use cURL for fetching.
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'SlackBuildsChecker/1.0');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-        $content = curl_exec($ch);
-        $code    = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        return ['code' => $code, 'content' => $content];
-    } else {
-        // Fallback to file_get_contents if cURL is not available.
-        $opts    = ['http' => ['method' => 'GET', 'header' => "User-Agent: SlackBuildsChecker/1.0\r\nAccept: application/vnd.github.v3+json\r\n"], 'ssl' => ['verify_peer' => true]];
-        $ctx     = stream_context_create($opts);
-        $content = @file_get_contents($url, false, $ctx);
-        $code    = 0;
-        if (isset($http_response_header)) {
-            foreach ($http_response_header as $h) {
-                if (preg_match('#HTTP/\d+\.\d+\s+(\d+)#', $h, $m)) {$code = (int) $m[1];
-                    break;}
-            }
-        }
-        return ['code' => $code, 'content' => $content];
-    }
 }
 
 // --- SCRIPT EXECUTION START ---
@@ -77,18 +42,29 @@ if (! is_dir($icon_dir)) {
     mkdir($icon_dir, 0755, true);
 }
 
-// --- DOWNLOAD OFFICIAL SLACKWARE PACKAGES LIST (PACKAGES.TXT.gz) ---
+// --- SYNC OFFICIAL SLACKWARE PACKAGES LIST (PACKAGES.TXT.gz) via rsync ---
 
-// Download the file if it doesn't exist or is older than 24 hours (86400 seconds).
-if (! file_exists($packages_file) || time() - filemtime($packages_file) > 86400) {
-    $r = fetch_url($packages_url);
-    if ($r['code'] === 200 && $r['content'] !== '') {
-        file_put_contents($packages_file, $r['content']);
-        logmsg('downloaded PACKAGES.TXT.gz');
-    } else {
-        logmsg('failed PACKAGES.TXT.gz code=' . $r['code']);
+logmsg('Syncing PACKAGES.TXT.gz via rsync.');
+
+$packages_rsync_url = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz';
+
+$rsync_command_packages = sprintf(
+    'rsync -avz %s %s',
+    escapeshellarg($packages_rsync_url),
+    escapeshellarg($packages_file)
+);
+
+$output_packages     = [];
+$return_var_packages = 0;
+exec($rsync_command_packages . ' 2>&1', $output_packages, $return_var_packages);
+
+if ($return_var_packages === 0) {
+    logmsg('PACKAGES.TXT.gz rsync sync successful.');
+} else {
+    logmsg('PACKAGES.TXT.gz rsync sync failed. rsync exit code: ' . $return_var_packages);
+    if (! empty($output_packages)) {
+        logmsg('rsync output: ' . implode("\n", $output_packages));
     }
-
 }
 
 // --- SYNC SLACKBUILDS.ORG REPOSITORY VIA RSYNC ---
@@ -96,7 +72,7 @@ if (! file_exists($packages_file) || time() - filemtime($packages_file) > 86400)
 logmsg('Syncing slackbuilds repository via rsync. This may take a while.');
 
 // Ensure the target directory exists.
-if (!is_dir($slackbuilds_dir)) {
+if (! is_dir($slackbuilds_dir)) {
     mkdir($slackbuilds_dir, 0755, true);
 }
 
@@ -122,7 +98,7 @@ $rsync_command = sprintf(
     escapeshellarg($slackbuilds_dir . '/') // The trailing slash on dest is important for rsync.
 );
 
-$output = [];
+$output     = [];
 $return_var = 0;
 exec($rsync_command . ' 2>&1', $output, $return_var);
 
@@ -130,7 +106,7 @@ if ($return_var === 0) {
     logmsg('Slackbuilds rsync sync successful.');
 } else {
     logmsg('Slackbuilds rsync sync failed. rsync exit code: ' . $return_var);
-    if (!empty($output)) {
+    if (! empty($output)) {
         logmsg('rsync output: ' . implode("\n", $output));
     }
 }
@@ -166,8 +142,7 @@ if ($needs_update && $current_hash) {
                 $skip = false;
             } else {
                 continue;
-            }
-            }
+            }}
             if ($line === '') {
                 continue;
             }
