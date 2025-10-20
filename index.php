@@ -40,7 +40,6 @@ if ($theme === 'light') {
 $readmex = file('README.md');
 $version = trim(end($readmex));
 
-
 // --- CATEGORY AND SEARCH HANDLING ---
 
 // Get the current category from the URL query parameters. Default to 'Welcome'.
@@ -68,7 +67,7 @@ $cache_file = 'cache/packages.php';
 
 // If the cache file does not exist, generate it by running the build script.
 // This ensures that the application data is available for the store.
-if (!file_exists($cache_file)) {
+if (! file_exists($cache_file)) {
     header('Location: modules/precarg.php');
     exit;
 }
@@ -102,15 +101,14 @@ echo '</form>';
 
 // Main navigation
 echo '<nav>';
-echo '<a href="#" onclick="document.querySelector(\'main\').innerHTML=\'<iframe src=&quot;modules/pacman.php&quot; style=&quot;width:100%;height:400%;border:none;&quot;></iframe>\';return false;">Upgrade</a>';
-
+echo '<a href="#" onclick="window.scrollTo(0,0);var f=document.createElement(\'iframe\');f.src=\'modules/pacman.php\';f.style.width=\'100%\';f.style.border=\'none\';f.onload=function(){this.style.height=this.contentWindow.document.body.scrollHeight+\'px\';};document.querySelector(\'main\').innerHTML=\'\';document.querySelector(\'main\').appendChild(f);return false;">Upgrade</a>';
 // Theme switcher icon (sun or moon)
 if ($theme === 'dark') {
     echo '<a href="?theme=light" class="theme-icon">☀️</a>';
 } else {
     echo '<a href="?theme=dark" class="theme-icon">🌙</a>';
 }
-echo '<a href="#" onclick="document.querySelector(\'main\').innerHTML=\'<iframe src=&quot;modules/about.php&quot; style=&quot;width:100%;height:400%;border:none;&quot;></iframe>\';return false;">About</a>';
+echo '<a href="#" onclick="window.scrollTo(0,0);var f=document.createElement(\'iframe\');f.src=\'modules/about.php\';f.style.width=\'100%\';f.style.border=\'none\';f.onload=function(){this.style.height=this.contentWindow.document.body.scrollHeight+\'px\';};document.querySelector(\'main\').innerHTML=\'\';document.querySelector(\'main\').appendChild(f);return false;">About</a>';
 echo '</nav></div></header>';
 
 // --- MAIN CONTENT ---
@@ -153,7 +151,7 @@ if (isset($_GET['app'])) {
         if ($theme === 'light') {
             $url .= '&theme=light';
         }
-        echo '<iframe src="' . $url . '" style="width:100%;height:400%;border:none;"></iframe>';
+        echo '<script>var f=document.createElement("iframe");f.src="' . $url . '";f.style.width="100%";f.style.border="none";f.onload=function(){this.style.height=this.contentWindow.document.body.scrollHeight+"px";};document.querySelector("main").innerHTML="";document.querySelector("main").appendChild(f);</script>';
     } else {
         echo '<p>Application not found.</p>';
     }
