@@ -1,5 +1,8 @@
 <?php
 
+ob_flush();
+flush();
+
 // Set the path for the theme configuration file.
 $config_file = __DIR__ . '/../themes/theme.conf';
 

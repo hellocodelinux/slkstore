@@ -43,32 +43,38 @@ if ($theme === 'light') {
 // Begin rendering the HTML document.
 echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">';
 echo '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
-echo '<title>SlkStore - Slackware Apps</title><style>' . $css . '</style></head>';
+echo '<title>SlkStore - Slackware Apps</title><style>' . $css . '</style>';
+echo '<script>
+function showInIframe(url) {
+    window.scrollTo(0, 0);
+    var f = document.createElement("iframe");
+    f.src = url;
+    f.style.width = "100%";
+    f.style.border = "none";
+    f.onload = function() { this.style.height = this.contentWindow.document.body.scrollHeight + "px"; };
+    document.querySelector("main").innerHTML = "";
+    document.querySelector("main").appendChild(f);
+}
+</script></head>';
 echo '<body class="' . $theme . '">';
 
 // --- UPDATE CHECK ---
 
 $datas_dir  = __DIR__ . '/datas/';
-$check_file =  __DIR__ . '/tmp/slackdce_update_check.txt';
+$check_file = __DIR__ . '/tmp/slackdce_update_check.txt';
 $today      = date('Y-m-d');
 $last_check = @file_get_contents($check_file);
 
 if ($last_check !== $today) {
     // Display a loading overlay only when checking/updating
-    echo '<div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; z-index: 9999; display: flex; justify-content: center; align-items: center; font-size: 2em; color: white;">UPDATING...</div>';
-    ob_flush();
-    flush();
 
     $command = sprintf('rsync -ainq --delete rsync://slackware.uk/slackdce/slkstore/ %s', escapeshellarg($datas_dir));
     $output  = shell_exec($command);
 
     if (! empty(trim($output))) {
-        echo "<script>document.getElementById('loading-overlay').style.display = 'none';</script>";
         include "modules/precarg.php";
-        echo "<script>document.getElementById('loading-overlay').style.display = 'none';</script>";
         exit;
     }
-        echo "<script>document.getElementById('loading-overlay').style.display = 'none';</script>";
 
     file_put_contents($check_file, $today);
 }
@@ -133,14 +139,14 @@ echo '</form>';
 
 // Main navigation
 echo '<nav>';
-echo '<a href="#" onclick="window.scrollTo(0,0);var f=document.createElement(\'iframe\");f.src=\'modules/pacman.php\";f.style.width=\'100%\";f.style.border=\'none\";f.onload=function(){this.style.height=this.contentWindow.document.body.scrollHeight+\'px\";};document.querySelector(\'main\").innerHTML=\'\";document.querySelector(\'main\").appendChild(f);return false;">Upgrade</a>';
+echo '<a href="#" onclick="showInIframe(\'modules/pacman.php\'); return false;">Upgrade</a>';
 // Theme switcher icon (sun or moon)
 if ($theme === 'dark') {
     echo '<a href="?theme=light" class="theme-icon">☀️</a>';
 } else {
     echo '<a href="?theme=dark" class="theme-icon">🌙</a>';
 }
-echo '<a href="#" onclick="window.scrollTo(0,0);var f=document.createElement(\'iframe\");f.src=\'modules/about.php\";f.style.width=\'100%\";f.style.border=\'none\";f.onload=function(){this.style.height=this.contentWindow.document.body.scrollHeight+\'px\";};document.querySelector(\'main\").innerHTML=\'\";document.querySelector(\'main\").appendChild(f);return false;">About</a>';
+echo '<a href="#" onclick="showInIframe(\'modules/about.php\'); return false;">About</a>';
 echo '</nav></div></header>';
 
 // --- MAIN CONTENT ---
