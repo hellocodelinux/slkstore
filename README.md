@@ -1,7 +1,3 @@
-# under construction do not use
-
----
-
 # 🛍️ Slkstore: The Software Center for Slackware
 
 ## 🚀 What is Slkstore?
@@ -43,4 +39,4 @@ This project is under the **Creative Commons Attribution-NonCommercial-NoDerivat
 ---
 *Created with ❤️ for the Slackware community.*
 
-v1.0
+v1.1
