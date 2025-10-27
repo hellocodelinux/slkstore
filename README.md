@@ -5,6 +5,8 @@ You can test it; nothing in the operating system will be touched.
 
 * All the install, update, and remove functions are not included in the code until they are 100% tested.
 
+<img src="https://pbs.twimg.com/media/G4R6ZfqXUAQHH5N?format=jpg&name=large" alt="Slkstore screenshot" width="800">
+
 ## 🚀 What is Slkstore?
 
 Slkstore is a web-based software center designed specifically for **Slackware Linux**. It provides a user-friendly graphical interface to browse, search, and manage software packages available from the [SlackDCE](https://slackware.uk/slackdce/) repository.
