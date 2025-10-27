@@ -45,42 +45,21 @@ echo '<title>SlkStore - Slackware Apps</title><style>' . $css . '</style></head>
 // Add the current theme as a class to the body for further styling.
 echo '<body class="' . $theme . ' precar-body">';
 
-// Check if the user has confirmed the update via a POST request.
-if (isset($_POST['confirm']) && $_POST['confirm'] === 'yes') {
-    // If confirmed, display the "Please wait" message and start the cache build.
-    echo '<div class="precar">
-    Updating... Please wait
-    </div>';
+// Display the "Please wait" message and start the cache build.
+echo '<div class="precar">
+Updating... Please wait
+</div>';
 
-    // Flush the output buffer to ensure the message is displayed
-    // before the long-running cache build process starts.
-    ob_flush();
-    flush();
+// Flush the output buffer to ensure the message is displayed
+// before the long-running cache build process starts.
+ob_flush();
+flush();
 
-    // Include and execute the script to build the application cache.
-    include 'build_cache.php';
+// Include and execute the script to build the application cache.
+include 'build_cache.php';
 
-    // After building the cache, redirect to the index page using an HTML meta refresh tag.
-    // This avoids using JavaScript.
-    echo '<meta http-equiv="refresh" content="0;url=../index.php">';
-
-} else {
-    // If not confirmed, show the confirmation dialog within a form.
-    echo '<div class="confirmation-dialog">
-        <div class="confirmation-message">
-            If you accept, the system will be updated and will remain on this screen until it finishes.
-            <br>
-            Please be patient and do not close this window.
-        </div>
-        <div class="confirmation-question">
-            Do you want to continue?
-        </div>
-        <form method="post" action="precarg.php" class="confirmation-buttons">
-            <input type="hidden" name="confirm" value="yes">
-            <button type="submit" class="button yes">Yes</button>
-            <a href="../index.php" class="button no">No</a>
-        </form>
-    </div>';
-}
+// After building the cache, redirect to the index page using an HTML meta refresh tag.
+// This avoids using JavaScript.
+echo '<meta http-equiv="refresh" content="0;url=../index.php">';
 
 echo '</body></html>';

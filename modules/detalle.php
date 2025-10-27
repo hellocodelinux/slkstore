@@ -76,7 +76,7 @@ if (is_dir($app_dir)) {
 // Start generating the HTML output.
 echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . htmlspecialchars($found['name']) . '</title><style>' . $css . '</style></head><body class="' . $theme . '">';
 $icon = '../' . htmlspecialchars($found['icon']); // Adjust path for being in /modules
-// Display the application header with icon, name, version, and install/remove buttons.
+                                                  // Display the application header with icon, name, version, and install/remove buttons.
 echo '<div class="app-header" style="display:flex;align-items:center;gap:20px;">';
 echo '<img src="' . $icon . '" width="128" height="128" class="app-icon">';
 echo '<div class="app-title">' . htmlspecialchars($found['name']) . '<br>Version ' . htmlspecialchars(substr($found['version'], 0, 10)) . '</div>';
