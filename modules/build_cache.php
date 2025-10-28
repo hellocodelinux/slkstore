@@ -1,13 +1,12 @@
 <?php
 ob_start();
-set_time_limit(600);
+set_time_limit(900); // Increased time limit for robustness
 
 $cache_file      = __DIR__ . '/../cache/packages.php';
-$hash_file       = __DIR__ . '/../cache/packages.hash';
 $datas_dir       = __DIR__ . '/../datas/';
 $icon_dir        = __DIR__ . '/../cache/icons';
 $packages_file   = __DIR__ . '/../cache/PACKAGES.TXT';
-$slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';
+$packages_gz_file = __DIR__ . '/../datas/PACKAGES.TXT.gz';
 $logstore        = __DIR__ . '/../tmp/logstore.txt';
 $manifest_file   = __DIR__ . '/../cache/manifest.json';
 $products_cache  = [];
@@ -26,60 +25,55 @@ foreach ([dirname($logstore), $icon_dir, $datas_dir, __DIR__ . '/../cache'] as $
     }
 
 }
-
-// --- RSYNC DATAS ---
-$remote_url = 'rsync://slackware.uk/slackdce/slkstore/';
-logmsg("Syncing datas/ with $remote_url");
-exec(sprintf('rsync -avz --delete %s %s', escapeshellarg($remote_url), escapeshellarg($datas_dir)), $output, $ret);
-logmsg("rsync return code: $ret");
-logmsg("rsync output:\n" . implode("\n", $output));
-
-// --- CHECK FILES AND PROCESS ---
-$required_files       = ['ic', 'pkg', 'sl'];
 $local_manifest       = file_exists($manifest_file) ? json_decode(file_get_contents($manifest_file), true) : [];
 $package_list_updated = false;
 
-foreach ($required_files as $prefix) {
-    $matches = glob($datas_dir . $prefix . '-*.*');
-    if (! $matches) {
-        logmsg("Warning: Missing $prefix file after sync, skipping.");
-        continue;
+// --- RSYNC PACKAGES.TXT ---
+$remote_packages_url = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz';
+logmsg("Syncing PACKAGES.TXT.gz from $remote_packages_url");
+exec(sprintf('rsync -avz %s %s', escapeshellarg($remote_packages_url), escapeshellarg($packages_gz_file)), $output, $ret);
+logmsg("rsync PACKAGES.TXT.gz return code: $ret");
+logmsg("rsync PACKAGES.TXT.gz output:\n" . implode("\n", $output));
+
+$packages_hash = file_exists($packages_gz_file) ? md5_file($packages_gz_file) : '';
+if (!isset($local_manifest['packages']) || $local_manifest['packages']['hash'] !== $packages_hash) {
+    logmsg("PACKAGES.TXT.gz updated or new.");
+    $package_list_updated = true;
+    if (file_exists($packages_gz_file)) {
+        exec("gunzip -c " . escapeshellarg($packages_gz_file) . " > " . escapeshellarg($packages_file), $out, $ret);
+        logmsg("Unzipped PACKAGES.TXT.gz to cache/PACKAGES.TXT. Return code: $ret");
     }
+    $local_manifest['packages'] = ['filename' => basename($packages_gz_file), 'hash' => $packages_hash];
+} else {
+    logmsg("PACKAGES.TXT.gz is up to date.");
+}
 
-    $filename = basename($matches[0]);
-    $hash     = md5_file($datas_dir . $filename);
+// --- RSYNC ICONS (ic-*.tar.gz) ---
+$remote_icons_url = 'rsync://slackware.uk/slackdce/slkstore/ic-1.0.tar.gz';
+$icon_archive_path = $datas_dir . basename($remote_icons_url);
+logmsg("Syncing icons from $remote_icons_url");
+exec(sprintf('rsync -avz %s %s', escapeshellarg($remote_icons_url), escapeshellarg($icon_archive_path)), $output_ic, $ret_ic);
+logmsg("rsync icons return code: $ret_ic");
+logmsg("rsync icons output:\n" . implode("\n", $output_ic));
 
-    if (! isset($local_manifest[$prefix]) || $local_manifest[$prefix]['filename'] !== $filename || $local_manifest[$prefix]['hash'] !== $hash) {
-        logmsg("File $prefix updated or new: $filename");
-        if ($prefix === 'pkg') {
-            $package_list_updated = true;
+$icon_hash = file_exists($icon_archive_path) ? md5_file($icon_archive_path) : '';
+if (!isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $icon_hash) {
+    logmsg("Icons archive updated or new.");
+    $package_list_updated = true; // Force cache rebuild if icons change
+    if (file_exists($icon_archive_path)) {
+        if (!is_dir($icon_dir)) {
+            mkdir($icon_dir, 0755, true);
         }
+        // Clean old icons before extracting new ones
+        exec('rm -f ' . escapeshellarg($icon_dir) . '/*.svg', $out_rm, $ret_rm);
+        logmsg("Cleaned old icons. Return code: $ret_rm");
 
-        foreach (glob($datas_dir . $prefix . '-*.*') as $f) {
-            if (basename($f) !== $filename) {unlink($f);
-                logmsg("Removed old file: " . basename($f));}
-        }
-
-        $local_manifest[$prefix] = ['filename' => $filename, 'hash' => $hash];
-    } else {
-        logmsg("File $prefix up to date: $filename");
+        exec("tar -xzf " . escapeshellarg($icon_archive_path) . " -C " . escapeshellarg($icon_dir) . " --strip-components=1", $out_tar, $ret_tar);
+        logmsg("Extracted icons. Return code: $ret_tar");
     }
-
-    $file_path = $datas_dir . $filename;
-    if (! file_exists($file_path)) {logmsg("File $file_path does not exist, skipping extraction");
-        continue;}
-
-    if ($prefix === 'pkg') {
-        exec("gunzip -c " . escapeshellarg($file_path) . " > " . escapeshellarg($packages_file), $out, $ret);
-        $package_list_updated = true;
-    } else {
-        $dir = ($prefix === 'ic') ? $icon_dir : $slackbuilds_dir;
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        exec("tar -xzf " . escapeshellarg($file_path) . " -C " . escapeshellarg($dir) . " --strip-components=1", $out, $ret);
-    }
+    $local_manifest['icons'] = ['filename' => basename($icon_archive_path), 'hash' => $icon_hash];
+} else {
+    logmsg("Icons are up to date.");
 }
 
 // --- SAVE MANIFEST ---
@@ -99,22 +93,46 @@ if ($package_list_updated) {
         $skip             = true;
         $pkg              = [];
         $description_mode = false;
+        $current_description_lines = []; // Almacenamiento temporal para todas las líneas de descripción
 
         while (($line = fgets($handle)) !== false) {
             $line = trim($line);
-            if ($skip) {if (strpos($line, 'PACKAGE NAME:') === 0) {$skip = false;} else {continue;}}
-            if ($line === '' || $description_mode) {
-                if ($line === '') {
-                    $description_mode = false;
-                }
+            if ($skip) {if (strpos($line, 'PACKAGE NAME:') === 0) {$skip = false;} else {continue;}} // Wait for first package
 
-                if ($description_mode && strpos($line, ':') !== false) {$pkg['desc'] = trim(substr($line, strpos($line, ':') + 1));
-                    $description_mode                       = false;}
-                continue;
+            // Verificar si el modo de descripción debe terminar y procesar las líneas recolectadas
+            $is_package_field_header = (
+                strpos($line, 'PACKAGE NAME:') === 0 ||
+                strpos($line, 'PACKAGE LOCATION:') === 0 ||
+                strpos($line, 'PACKAGE SIZE (compressed):') === 0 ||
+                strpos($line, 'PACKAGE SIZE (uncompressed):') === 0 ||
+                strpos($line, 'PACKAGE REQUIRED:') === 0 ||
+                strpos($line, 'PACKAGE DESCRIPTION:') === 0
+            );
+
+            if ($description_mode && ($is_package_field_header || $line === '')) {
+                // El bloque de descripción ha terminado. Procesar las líneas recolectadas.
+                $description_mode = false; // Salir del modo de descripción
+                $pkg['desc'] = '';
+                $pkg['descfull'] = [];
+                $first_desc_line_found = false;
+                foreach ($current_description_lines as $d_line) {
+                    if (!$first_desc_line_found && trim($d_line) !== '') {
+                        $pkg['desc'] = trim($d_line);
+                        $first_desc_line_found = true;
+                    } elseif ($first_desc_line_found) {
+                        $pkg['descfull'][] = $d_line; // Añadir todas las líneas subsiguientes, incluyendo las vacías
+                    }
+                }
+                // Eliminar líneas vacías al principio y al final del array descfull
+                while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') { array_shift($pkg['descfull']); }
+                while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') { array_pop($pkg['descfull']); }
+                $pkg['descfull'] = implode("\n", $pkg['descfull']);
+                $current_description_lines = []; // Reiniciar para la siguiente descripción
             }
 
             if (strpos($line, 'PACKAGE NAME:') === 0) {
                 if (! empty($pkg) && ! empty($pkg['name'])) {
+                    // La descripción para este paquete ya debería haber sido procesada arriba
                     $baseName = strtolower($pkg['name']);
                     $iconPath = null;
                     if (isset($icons[$baseName])) {
@@ -127,7 +145,8 @@ if ($package_list_updated) {
                     $pkg['icon']      = $iconPath ?: $icon_cache_path . 'terminal.svg';
                     $products_cache[] = $pkg;
                 }
-                $pkg         = ["name" => "", "category" => "", "version" => "", "desc" => "", "sizec" => "", "sizeu" => "", "req" => "", "icon" => ""];
+                // Inicializar nuevo paquete, incluyendo descfull
+                $pkg         = ["name" => "", "category" => "", "version" => "", "desc" => "", "descfull" => "", "sizec" => "", "sizeu" => "", "req" => "", "icon" => ""];
                 $pkg['full'] = trim(substr($line, 14));
                 if (preg_match('/-([0-9][^-]*)-/', $pkg['full'], $v)) {
                     $pkg['version'] = $v[1];
@@ -145,12 +164,43 @@ if ($package_list_updated) {
                 $pkg['req'] = trim(substr($line, 18));
             } elseif (strpos($line, 'PACKAGE DESCRIPTION:') === 0) {
                 $description_mode = true;
+                $current_description_lines = []; // Limpiar para la nueva descripción
             }
-
+            // Recolectar líneas de descripción si estamos en modo de descripción
+            elseif ($description_mode) {
+                $clean_line = $line;
+                if (!empty($pkg['name'])) {
+                    $prefix = strtolower($pkg['name']) . ':';
+                    if (strpos(strtolower($line), $prefix) === 0) {
+                        $clean_line = ltrim(substr($line, strlen($prefix)));
+                    }
+                }
+                $current_description_lines[] = $clean_line; // Añadir sin trim para preservar el espaciado interno
+            }
         }
         fclose($handle);
 
+        // Después del bucle, procesar la descripción para el último paquete si description_mode seguía activo
+        if ($description_mode) {
+            $pkg['desc'] = '';
+            $pkg['descfull'] = [];
+            $first_desc_line_found = false;
+            foreach ($current_description_lines as $d_line) {
+                if (!$first_desc_line_found && trim($d_line) !== '') {
+                    $pkg['desc'] = trim($d_line);
+                    $first_desc_line_found = true;
+                } elseif ($first_desc_line_found) {
+                    $pkg['descfull'][] = $d_line;
+                }
+            }
+            while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') { array_shift($pkg['descfull']); }
+            while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') { array_pop($pkg['descfull']); }
+            $pkg['descfull'] = implode("\n", $pkg['descfull']);
+        }
+
+        // Finalizar y añadir el último paquete a la caché
         if (! empty($pkg) && ! empty($pkg['name'])) {
+            // La descripción para este paquete ya debería haber sido procesada arriba
             $baseName = strtolower($pkg['name']);
             $iconPath = null;
             if (isset($icons[$baseName])) {
@@ -174,3 +224,9 @@ if ($package_list_updated) {
 }
 
 logmsg('end');
+
+// Update the daily check file to prevent re-checking on the same day.
+$check_file = __DIR__ . '/../tmp/slackdce_update_check.txt';
+$today      = date('Y-m-d');
+file_put_contents($check_file, $today);
+logmsg("Updated daily check file: {$check_file}");

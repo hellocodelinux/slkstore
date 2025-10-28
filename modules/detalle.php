@@ -51,28 +51,6 @@ $slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';
 $readme_content  = '';
 $info_content    = [];
 
-// Check for the application's directory in the slackbuilds cache.
-$app_dir = "$slackbuilds_dir/$category/$app";
-if (is_dir($app_dir)) {
-    // Read the README file if it exists.
-    $readme_file = "$app_dir/README";
-    if (file_exists($readme_file)) {
-        $readme_content = file_get_contents($readme_file);
-    }
-
-    // Read the .info file if it exists and parse its contents.
-    $info_file = "$app_dir/$app.info";
-    if (file_exists($info_file)) {
-        $lines = file($info_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            if (preg_match('/^(\w+)="?(.*?)"?$/', $line, $m)) {
-                $info_content[$m[1]] = $m[2];
-            }
-
-        }
-    }
-}
-
 // Start generating the HTML output.
 echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . htmlspecialchars($found['name']) . '</title><style>' . $css . '</style></head><body class="' . $theme . '">';
 $icon = '../' . htmlspecialchars($found['icon']); // Adjust path for being in /modules
@@ -86,42 +64,27 @@ echo '<button class="app-remove" ' . ($installed ? '' : 'disabled') . '>Remove</
 echo '</div></div>';
 
 // Display application details from packages.php
+
+if (preg_match('/\(([^)]+)\)/', $found['desc'], $m)) {
+    $desc = $m[1];
+}
+
 echo '<div class="app-detailm">';
 echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
 echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
 echo '<b>Version:</b> ' . htmlspecialchars($found['version']) . '<br>';
-echo '<b>Description:</b> ' . htmlspecialchars($found['desc']) . '<br>';
+echo '<b>Description:</b> ' . htmlspecialchars($desc) . '<br>';
 echo '<b>Compressed Size:</b> ' . htmlspecialchars($found['sizec']) . '<br>';
 echo '<b>Uncompressed Size:</b> ' . htmlspecialchars($found['sizeu']) . '<br>';
 echo '<b>Full Package Name:</b> ' . htmlspecialchars($found['full']) . '<br>';
 echo '</div>';
 
-// Display the README content if available.
-if ($readme_content !== '') {
-    echo '<pre class="app-detail">' . htmlspecialchars($readme_content) . '</pre>';
-} else {
-    echo '<p>README not found</p>';
-}
+echo '<pre class="app-detail">' . htmlspecialchars($found['descfull']) . '</pre>';
 
 // Display information from the .info file, such as requirements, homepage, maintainer, etc.
-if ($info_content) {
-    if (! empty($info_content['REQUIRES'])) {
-        echo '<div class="app-detail">REQUIRES: ' . htmlspecialchars(strtoupper($info_content['REQUIRES'])) . '</div>';
-    }
-    echo '<div class="app-detailx">';
-    if (! empty($info_content['HOMEPAGE'])) {
-        echo '<pre>Home: ' . htmlspecialchars($info_content['HOMEPAGE']) . '<br>';
-    }
 
-    echo 'Source: https://slackbuilds.org/<br>';
-
-    if (! empty($info_content['MAINTAINER'])) {
-        echo 'Maintainer: ' . htmlspecialchars($info_content['MAINTAINER']) . '<br>';
-    }
-    if (! empty($info_content['EMAIL'])) {
-        echo 'Email: ' . htmlspecialchars($info_content['EMAIL']) . '</pre>';
-    }
-    echo '</div>';
+if ($found['req']) {
+    echo '<div class="app-req">REQUIRES: ' . htmlspecialchars(strtoupper(str_replace(',', ' ', $found['req']))) . '</div>';
 }
 
 // Close the HTML document.

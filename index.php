@@ -60,23 +60,26 @@ echo '<body class="' . $theme . '">';
 
 // --- UPDATE CHECK ---
 
-$datas_dir  = __DIR__ . '/datas/';
-$check_file = __DIR__ . '/tmp/slackdce_update_check.txt';
-$today      = date('Y-m-d');
-$last_check = @file_get_contents($check_file);
+$check_file    = __DIR__ . '/tmp/slackdce_update_check.txt';
+$local_pkg_gz  = __DIR__ . '/cache/PACKAGES.TXT.gz';
+$remote_pkg_gz = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz';
+$today         = date('Y-m-d');
+$last_check    = @file_get_contents($check_file);
 
 if ($last_check !== $today) {
     // Display a loading overlay only when checking/updating
 
-    $command = sprintf('rsync -ainq --delete rsync://slackware.uk/slackdce/slkstore/ %s', escapeshellarg($datas_dir));
+    // Use rsync with checksum to check if the remote PACKAGES.TXT.gz has changed.
+    // The -i flag will produce output if there are differences.
+    $command = sprintf('rsync -ani %s %s', escapeshellarg($remote_pkg_gz), escapeshellarg($local_pkg_gz));
     $output  = shell_exec($command);
 
+    // If rsync output is not empty, it means the file has changed.
     if (! empty(trim($output))) {
         include "modules/precarg.php";
-        exit;
+        header('Location: index.php'); // Redirect to reload the page after cache build
+        exit;                          // Ensure script stops execution
     }
-
-    file_put_contents($check_file, $today);
 }
 
 // If we reach here, there is no update. No overlay is shown.
@@ -239,7 +242,7 @@ if (isset($_GET['app'])) {
                 echo '<img class="product-icon" src="' . htmlspecialchars($product['icon']) . '">';
                 // Extract a cleaner description from parenthesis if available.
                 $desc = $product['desc'];
-                if (preg_match('/\]([^)]+)\]/', $desc, $m)) {
+                if (preg_match('/\(([^)]+)\)/', $desc, $m)) {
                     $desc = $m[1];
                 }
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';
@@ -280,7 +283,7 @@ if (isset($_GET['app'])) {
                 echo '<img class="product-icon" src="' . htmlspecialchars($product['icon']) . '">';
                 // Extract a cleaner description from parenthesis if available.
                 $desc = $product['desc'];
-                if (preg_match('/\]([^)]+)\]/', $desc, $m)) {
+                if (preg_match('/\(([^)]+)\)/', $desc, $m)) {
                     $desc = $m[1];
                 }
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';

@@ -305,7 +305,7 @@ footer p {
 
 .banner-right .icon {
     height: 100px;
-    width: auto;
+    width: 100px;
 }
 
 .product-icon {
@@ -571,4 +571,15 @@ footer p {
     cursor: pointer;
     box-shadow: 2px 2px 4px #000000;
     font-weight: bold;
+}
+
+.app-req {
+    font-size: 12px;
+    width: 90%;
+    /* Ocupa el 90% del ancho disponible */
+    max-width: 400px;
+    /* Pero no excede los 400px */
+    margin: 0 auto;
+    margin-top: 20px;
+    text-align: left;
 }
