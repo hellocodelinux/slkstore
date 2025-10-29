@@ -442,7 +442,9 @@ footer p {
     width: fit-content;
     margin: 0 auto;
     font-size: 14px;
-    color: #cccccc
+    color: #cccccc;
+    line-height: 2;
+
 }
 
 .app-detailm b {
@@ -594,4 +596,21 @@ footer p {
     display: flex;
     align-items: center;
     justify-content: center
+}
+
+.app-screenshot {
+    display: flex;
+    margin: 0 auto;
+    justify-content: center;
+    align-items: center
+}
+
+.app-enca {
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: fit-content;
+    margin: 0 auto;
+    ;
 }

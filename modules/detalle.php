@@ -69,6 +69,25 @@ if (preg_match('/\(([^)]+)\)/', $found['desc'], $m)) {
     $desc = $m[1];
 }
 
+echo '<div class="app-enca">';
+
+$screenshot_url = '';
+$xml            = new DOMDocument();
+$xml->load(__DIR__ . '/../cache/appstream.xml');
+$xpath   = new DOMXPath($xml);
+$name    = strtolower($found['name']);
+$query   = "//component[contains(translate(id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'$name')]/screenshots/screenshot/image[1]";
+$entries = $xpath->query($query);
+if ($entries->length > 0) {
+    $screenshot_url = $entries->item(0)->textContent;
+}
+
+if (! empty($screenshot_url)) {
+    echo '<div class="app-screenshot">';
+    echo '<img src="' . htmlspecialchars($screenshot_url) . '" width="320" height="240" alt="Screenshot of ' . htmlspecialchars($found['name']) . '">';
+    echo '</div>';
+}
+
 echo '<div class="app-detailm">';
 echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
 echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
@@ -77,7 +96,7 @@ echo '<b>Description:</b> ' . htmlspecialchars($desc) . '<br>';
 echo '<b>Compressed Size:</b> ' . htmlspecialchars($found['sizec']) . '<br>';
 echo '<b>Uncompressed Size:</b> ' . htmlspecialchars($found['sizeu']) . '<br>';
 echo '<b>Full Package Name:</b> ' . htmlspecialchars($found['full']) . '<br>';
-echo '</div>';
+echo '</div></div>';
 
 echo '<pre class="app-detail">' . htmlspecialchars($found['descfull']) . '</pre>';
 

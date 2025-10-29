@@ -76,6 +76,29 @@ if (!isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $ic
     logmsg("Icons are up to date.");
 }
 
+// --- SYNC FLATHUB APPSTREAM ---
+$remote_flathub_url = 'https://dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz';
+$flathub_gz_path = $datas_dir . 'flathub-appstream.xml.gz';
+$flathub_xml_path = __DIR__ . '/../cache/flathub-appstream.xml';
+
+logmsg("Syncing Flathub appstream from $remote_flathub_url");
+// Use wget for https URL
+exec(sprintf('wget -q -O %s %s', escapeshellarg($flathub_gz_path), escapeshellarg($remote_flathub_url)), $output_fh, $ret_fh);
+logmsg("wget Flathub appstream return code: $ret_fh");
+
+$flathub_hash = file_exists($flathub_gz_path) ? md5_file($flathub_gz_path) : '';
+if (!isset($local_manifest['flathub']) || $local_manifest['flathub']['hash'] !== $flathub_hash) {
+    logmsg("Flathub appstream updated or new.");
+    $package_list_updated = true; // Force cache rebuild if flathub appstream changes
+    if (file_exists($flathub_gz_path)) {
+        exec("gunzip -c " . escapeshellarg($flathub_gz_path) . " > " . escapeshellarg($flathub_xml_path), $out_fh_unzip, $ret_fh_unzip);
+        logmsg("Unzipped Flathub appstream to cache. Return code: $ret_fh_unzip");
+    }
+    $local_manifest['flathub'] = ['filename' => basename($flathub_gz_path), 'hash' => $flathub_hash];
+} else {
+    logmsg("Flathub appstream is up to date.");
+}
+
 // --- SAVE MANIFEST ---
 file_put_contents($manifest_file, json_encode($local_manifest, JSON_PRETTY_PRINT));
 
