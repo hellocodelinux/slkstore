@@ -5,7 +5,7 @@ You can test it; nothing in the operating system will be touched.
 
 * All the install, update, and remove functions are not included in the code until they are 100% tested.
 
-<img src="https://pbs.twimg.com/media/G4R6ZfqXUAQHH5N?format=jpg&name=large" alt="Slkstore screenshot" width="800">
+<img src="https://files.mastodon.social/media_attachments/files/115/458/159/261/362/824/original/f7ef5198a44e6fd8.png" alt="Slkstore screenshot" width="800">
 
 ## 🚀 What is Slkstore?
 
