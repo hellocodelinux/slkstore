@@ -137,7 +137,7 @@ echo '<form method="get" class="search-form">';
 echo '<input type="text" name="search" placeholder="Search apps..." value="' . (isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '') . '" class="search-input">';
 echo '<input type="hidden" name="theme" value="' . $theme . '">'; // Preserve the current theme across searches.
 echo '<button type="submit" class="search-button">Go</button>';
-echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Home</button>';
+echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Clear</button>';
 echo '</form>';
 
 // Main navigation
@@ -260,7 +260,9 @@ if (isset($_GET['app'])) {
         $display_products = [];
         // Filter products based on the current search term or category.
         foreach ($products as $p) {
-            if ($search && strpos(strtolower($p['name']), $search) !== false) {
+            $name_match = strpos(strtolower($p['name']), $search) !== false;
+            $desc_match = strpos(strtolower($p['desc']), $search) !== false;
+            if ($search && ($name_match || $desc_match)) {
                 $display_products[] = $p;
             } elseif (! $search && strtolower($p['category']) === strtolower($current_category)) {
                 $display_products[] = $p;

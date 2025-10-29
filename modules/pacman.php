@@ -46,6 +46,7 @@ echo '<title>SlkStore - Slackware Apps</title><style>' . $css . '</style></head>
 echo '<body class="' . $theme . '">';
 
 echo '<div class="pacman">';
+echo '<button class="back" onclick="history.back()" style="margin-bottom: 15px;">Back</button>';
 
 // Load the cached package data.
 if (file_exists(__DIR__ . '/../cache/packages.php')) {
@@ -110,6 +111,7 @@ if ($updates_available > 0) {
     echo $update_list_html;
 } else {
     echo "<p>All updated, continue</p>";
+    
 }
 
 echo '</div>'; // .installed-packages-list

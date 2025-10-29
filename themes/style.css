@@ -380,12 +380,7 @@ footer p {
     justify-content: right;
     align-items: right;
     box-shadow: 2px 2px 4px #000000;
-}
-
-.app-install:hover,
-.app-remove:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s;
+    border: none;
 }
 
 .app-install:enabled {
@@ -582,4 +577,21 @@ footer p {
     margin: 0 auto;
     margin-top: 20px;
     text-align: left;
+}
+
+.back {
+    color: #f0f0f0;
+    background-color: #0055aa;
+    padding: 0px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 2px 2px 4px #000000;
+    font-weight: bold;
+    text-decoration: none;
+    width: 60px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center
 }
