@@ -1,4 +1,13 @@
 <?php
+
+ini_set('memory_limit', '2G');
+ini_set('max_execution_time', '600');
+ini_set('output_buffering', '1');
+ini_set('opcache.memory_consumption', '512');
+ini_set('opcache.max_accelerated_files', '16000');
+ini_set('opcache.revalidate_freq', '300');
+ini_set('opcache.validate_timestamps', '1');
+
 ob_start(); // Start output buffering to show loading screen
 
 // --- THEME HANDLING ---
@@ -260,8 +269,12 @@ if (isset($_GET['app'])) {
         $display_products = [];
         // Filter products based on the current search term or category.
         foreach ($products as $p) {
+            $name_match = false;
+            $desc_match = false;
+            if ($search) {
             $name_match = strpos(strtolower($p['name']), $search) !== false;
             $desc_match = strpos(strtolower($p['desc']), $search) !== false;
+            }
             if ($search && ($name_match || $desc_match)) {
                 $display_products[] = $p;
             } elseif (! $search && strtolower($p['category']) === strtolower($current_category)) {

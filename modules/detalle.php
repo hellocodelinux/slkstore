@@ -73,7 +73,7 @@ echo '<div class="app-enca">';
 
 $screenshot_url = '';
 $xml            = new DOMDocument();
-$xml->load(__DIR__ . '/../cache/appstream.xml');
+$xml->load(__DIR__ . '/../cache/flathub-appstream.xml');
 $xpath   = new DOMXPath($xml);
 $name    = strtolower($found['name']);
 $query   = "//component[contains(translate(id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'$name')]/screenshots/screenshot/image[1]";
