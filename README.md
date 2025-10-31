@@ -1,11 +1,12 @@
 # 🛍️ Slkstore: The Software Center for Slackware
 
 * This is pre-release - not functional
-You can test it; nothing in the operating system will be touched.
+
+Pre-Release 1.3 - Careful, install ready
 
 * All the install, update, and remove functions are not included in the code until they are 100% tested.
 
-<img src="https://files.mastodon.social/media_attachments/files/115/458/159/261/362/824/original/f7ef5198a44e6fd8.png" alt="Slkstore screenshot" width="800">
+<img src="https://files.mastodon.social/media_attachments/files/115/458/159/261/362/824/original/f7ef5198a44e6fd8.png" alt="Slkstore screenshot" width="400">
 
 ## 🚀 What is Slkstore?
 
@@ -46,4 +47,4 @@ This project is under the **Creative Commons Attribution-NonCommercial-NoDerivat
 ---
 *Created with ❤️ for the Slackware community.*
 
-v1.2
+v1.3
