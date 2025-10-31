@@ -2,14 +2,14 @@
 ob_start();
 set_time_limit(900); // Increased time limit for robustness
 
-$cache_file      = __DIR__ . '/../cache/packages.php';
-$datas_dir       = __DIR__ . '/../datas/';
-$icon_dir        = __DIR__ . '/../cache/icons';
-$packages_file   = __DIR__ . '/../cache/PACKAGES.TXT';
+$cache_file       = __DIR__ . '/../cache/packages.php';
+$datas_dir        = __DIR__ . '/../datas/';
+$icon_dir         = __DIR__ . '/../cache/icons';
+$packages_file    = __DIR__ . '/../cache/PACKAGES.TXT';
 $packages_gz_file = __DIR__ . '/../datas/PACKAGES.TXT.gz';
-$logstore        = __DIR__ . '/../tmp/logstore.txt';
-$manifest_file   = __DIR__ . '/../cache/manifest.json';
-$products_cache  = [];
+$logstore         = __DIR__ . '/../tmp/logstore.txt';
+$manifest_file    = __DIR__ . '/../cache/manifest.json';
+$products_cache   = [];
 
 function logmsg($m)
 {
@@ -36,7 +36,7 @@ logmsg("rsync PACKAGES.TXT.gz return code: $ret");
 logmsg("rsync PACKAGES.TXT.gz output:\n" . implode("\n", $output));
 
 $packages_hash = file_exists($packages_gz_file) ? md5_file($packages_gz_file) : '';
-if (!isset($local_manifest['packages']) || $local_manifest['packages']['hash'] !== $packages_hash) {
+if (! isset($local_manifest['packages']) || $local_manifest['packages']['hash'] !== $packages_hash) {
     logmsg("PACKAGES.TXT.gz updated or new.");
     $package_list_updated = true;
     if (file_exists($packages_gz_file)) {
@@ -49,7 +49,7 @@ if (!isset($local_manifest['packages']) || $local_manifest['packages']['hash'] !
 }
 
 // --- RSYNC ICONS (ic-*.tar.gz) ---
-$remote_icons_url = 'rsync://slackware.uk/slackdce/slkstore/ic-1.0.tar.gz';
+$remote_icons_url  = 'rsync://slackware.uk/slackdce/slkstore/ic-1.0.tar.gz';
 $icon_archive_path = $datas_dir . basename($remote_icons_url);
 logmsg("Syncing icons from $remote_icons_url");
 exec(sprintf('rsync -avz %s %s', escapeshellarg($remote_icons_url), escapeshellarg($icon_archive_path)), $output_ic, $ret_ic);
@@ -57,11 +57,11 @@ logmsg("rsync icons return code: $ret_ic");
 logmsg("rsync icons output:\n" . implode("\n", $output_ic));
 
 $icon_hash = file_exists($icon_archive_path) ? md5_file($icon_archive_path) : '';
-if (!isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $icon_hash) {
+if (! isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $icon_hash) {
     logmsg("Icons archive updated or new.");
     $package_list_updated = true; // Force cache rebuild if icons change
     if (file_exists($icon_archive_path)) {
-        if (!is_dir($icon_dir)) {
+        if (! is_dir($icon_dir)) {
             mkdir($icon_dir, 0755, true);
         }
         // Clean old icons before extracting new ones
@@ -78,8 +78,8 @@ if (!isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $ic
 
 // --- SYNC FLATHUB APPSTREAM ---
 $remote_flathub_url = 'https://dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz';
-$flathub_gz_path = $datas_dir . 'flathub-appstream.xml.gz';
-$flathub_xml_path = __DIR__ . '/../cache/flathub-appstream.xml';
+$flathub_gz_path    = $datas_dir . 'flathub-appstream.xml.gz';
+$flathub_xml_path   = __DIR__ . '/../cache/flathub-appstream.xml';
 
 logmsg("Syncing Flathub appstream from $remote_flathub_url");
 // Use wget for https URL
@@ -87,7 +87,7 @@ exec(sprintf('wget -q -O %s %s', escapeshellarg($flathub_gz_path), escapeshellar
 logmsg("wget Flathub appstream return code: $ret_fh");
 
 $flathub_hash = file_exists($flathub_gz_path) ? md5_file($flathub_gz_path) : '';
-if (!isset($local_manifest['flathub']) || $local_manifest['flathub']['hash'] !== $flathub_hash) {
+if (! isset($local_manifest['flathub']) || $local_manifest['flathub']['hash'] !== $flathub_hash) {
     logmsg("Flathub appstream updated or new.");
     $package_list_updated = true; // Force cache rebuild if flathub appstream changes
     if (file_exists($flathub_gz_path)) {
@@ -113,9 +113,9 @@ if ($package_list_updated) {
 
     $handle = @fopen($packages_file, "r");
     if ($handle) {
-        $skip             = true;
-        $pkg              = [];
-        $description_mode = false;
+        $skip                      = true;
+        $pkg                       = [];
+        $description_mode          = false;
         $current_description_lines = []; // Almacenamiento temporal para todas las líneas de descripción
 
         while (($line = fgets($handle)) !== false) {
@@ -133,23 +133,23 @@ if ($package_list_updated) {
             );
 
             if ($description_mode && ($is_package_field_header || $line === '')) {
-                // El bloque de descripción ha terminado. Procesar las líneas recolectadas.
-                $description_mode = false; // Salir del modo de descripción
-                $pkg['desc'] = '';
-                $pkg['descfull'] = [];
+                                                // El bloque de descripción ha terminado. Procesar las líneas recolectadas.
+                $description_mode      = false; // Salir del modo de descripción
+                $pkg['desc']           = '';
+                $pkg['descfull']       = [];
                 $first_desc_line_found = false;
                 foreach ($current_description_lines as $d_line) {
-                    if (!$first_desc_line_found && trim($d_line) !== '') {
-                        $pkg['desc'] = trim($d_line);
+                    if (! $first_desc_line_found && trim($d_line) !== '') {
+                        $pkg['desc']           = trim($d_line);
                         $first_desc_line_found = true;
                     } elseif ($first_desc_line_found) {
                         $pkg['descfull'][] = $d_line; // Añadir todas las líneas subsiguientes, incluyendo las vacías
                     }
                 }
                 // Eliminar líneas vacías al principio y al final del array descfull
-                while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') { array_shift($pkg['descfull']); }
-                while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') { array_pop($pkg['descfull']); }
-                $pkg['descfull'] = implode("\n", $pkg['descfull']);
+                while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') {array_shift($pkg['descfull']);}
+                while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') {array_pop($pkg['descfull']);}
+                $pkg['descfull']           = implode("\n", $pkg['descfull']);
                 $current_description_lines = []; // Reiniciar para la siguiente descripción
             }
 
@@ -186,13 +186,13 @@ if ($package_list_updated) {
             } elseif (strpos($line, 'PACKAGE REQUIRED:') === 0) {
                 $pkg['req'] = trim(substr($line, 18));
             } elseif (strpos($line, 'PACKAGE DESCRIPTION:') === 0) {
-                $description_mode = true;
+                $description_mode          = true;
                 $current_description_lines = []; // Limpiar para la nueva descripción
             }
             // Recolectar líneas de descripción si estamos en modo de descripción
             elseif ($description_mode) {
                 $clean_line = $line;
-                if (!empty($pkg['name'])) {
+                if (! empty($pkg['name'])) {
                     $prefix = strtolower($pkg['name']) . ':';
                     if (strpos(strtolower($line), $prefix) === 0) {
                         $clean_line = ltrim(substr($line, strlen($prefix)));
@@ -205,19 +205,19 @@ if ($package_list_updated) {
 
         // Después del bucle, procesar la descripción para el último paquete si description_mode seguía activo
         if ($description_mode) {
-            $pkg['desc'] = '';
-            $pkg['descfull'] = [];
+            $pkg['desc']           = '';
+            $pkg['descfull']       = [];
             $first_desc_line_found = false;
             foreach ($current_description_lines as $d_line) {
-                if (!$first_desc_line_found && trim($d_line) !== '') {
-                    $pkg['desc'] = trim($d_line);
+                if (! $first_desc_line_found && trim($d_line) !== '') {
+                    $pkg['desc']           = trim($d_line);
                     $first_desc_line_found = true;
                 } elseif ($first_desc_line_found) {
                     $pkg['descfull'][] = $d_line;
                 }
             }
-            while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') { array_shift($pkg['descfull']); }
-            while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') { array_pop($pkg['descfull']); }
+            while (count($pkg['descfull']) > 0 && trim(reset($pkg['descfull'])) === '') {array_shift($pkg['descfull']);}
+            while (count($pkg['descfull']) > 0 && trim(end($pkg['descfull'])) === '') {array_pop($pkg['descfull']);}
             $pkg['descfull'] = implode("\n", $pkg['descfull']);
         }
 

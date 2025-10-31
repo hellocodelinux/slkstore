@@ -111,7 +111,7 @@ if ($updates_available > 0) {
     echo $update_list_html;
 } else {
     echo "<p>All updated, continue</p>";
-    
+
 }
 
 echo '</div>'; // .installed-packages-list

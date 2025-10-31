@@ -58,7 +58,7 @@ echo '<div class="app-header" style="display:flex;align-items:center;gap:20px;">
 echo '<img src="' . $icon . '" class="app-icon" style="width: 128px; height: 128px; min-width: 128px;">';
 echo '<div class="app-title">' . htmlspecialchars($found['name']) . '<br>Version ' . htmlspecialchars(substr($found['version'], 0, 10)) . '</div>';
 echo '<div class="app-actions">';
-echo '<button class="app-install" ' . ($installed ? 'disabled' : '') . '>Install</button>';
+echo '<button class="app-install" ' . ($installed ? 'disabled' : '') . ' onclick="parent.showInIframe(\'modules/packinstall.php?full=' . urlencode($found['full']) . '\')">Install</button>';
 echo '<button class="app-remove" ' . ($installed ? '' : 'disabled') . '>Remove</button>';
 echo '<button class="back" onclick="history.back()">Back</button>';
 echo '</div></div>';

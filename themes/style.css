@@ -59,7 +59,6 @@ nav a:hover {
 }
 
 #sidebar {
-    width: 150px;
     padding: 2rem;
     background-color: #2c2c2c;
     border-right: 1px solid #444444;
@@ -286,12 +285,12 @@ footer p {
 }
 
 .insta.installed {
-    background-color: #008000;
+    background-color: #2f7231;
     border-radius: 50%;
     width: 14px;
     height: 14px;
     float: right;
-    box-shadow: 0 0 5px #008000;
+    box-shadow: 0 0 5px #2f7231;
 }
 
 .insta.not-installed {
@@ -389,7 +388,7 @@ footer p {
 }
 
 .app-install:enabled:hover {
-    background-color: #2f7231;
+    background-color: #3a8e3d;
 }
 
 .app-remove:enabled {
@@ -398,7 +397,7 @@ footer p {
 }
 
 .app-remove:enabled:hover {
-    background-color: #942a22;
+    background-color: #b23e35;
 }
 
 .app-install:disabled,
@@ -435,6 +434,9 @@ footer p {
     padding: 20px;
     width: 90%;
     margin: 0 auto;
+    font-size: 16px;
+    color: #cccccc;
+    line-height: 2;
 }
 
 .app-detailm {
@@ -444,7 +446,7 @@ footer p {
     font-size: 14px;
     color: #cccccc;
     line-height: 2;
-
+    font-size: 12px;
 }
 
 .app-detailm b {
@@ -503,19 +505,19 @@ footer p {
 }
 
 .button.yes {
-    background-color: #006600;
+    background-color: #2f7231;
 }
 
 .button.no {
-    background-color: #660000;
+    background-color: #942a22;
 }
 
 .button.yes:hover {
-    background-color: #00aa00;
+    background-color: #3a8e3d;
 }
 
 .button.no:hover {
-    background-color: #aa0000;
+    background-color: #b23e35;
 }
 
 /* Styles for pacman.php */
@@ -573,9 +575,7 @@ footer p {
 .app-req {
     font-size: 12px;
     width: 90%;
-    /* Ocupa el 90% del ancho disponible */
     max-width: 400px;
-    /* Pero no excede los 400px */
     margin: 0 auto;
     margin-top: 20px;
     text-align: left;
@@ -589,7 +589,6 @@ footer p {
     border-radius: 6px;
     cursor: pointer;
     box-shadow: 2px 2px 4px #000000;
-    font-weight: bold;
     text-decoration: none;
     width: 60px;
     height: 30px;
@@ -613,4 +612,72 @@ footer p {
     width: fit-content;
     margin: 0 auto;
     ;
+}
+
+.datapack {
+    font-size: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.listpack {
+    font-size: 14px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Styles for packinstall.php */
+.install-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.install-title {
+    margin-right: 15px;
+}
+
+.listpack .installed {
+    color: #5bb5ff;
+    /* blue */
+}
+
+.listpack .not-installed {
+    color: #2f7231;
+}
+
+.button-accept,
+.button-cancel {
+    border: 1px solid #444444;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-shadow: 1px 1px 2px #000000;
+}
+
+.button-accept {
+    background-color: #2f7231;
+    color: #ffffff;
+}
+
+.button-accept:hover {
+    background-color: #3a8e3d;
+}
+
+.button-cancel {
+    background-color: #942a22;
+    color: #ffffff;
+    margin-left: 10px;
+}
+
+.button-cancel:hover {
+    background-color: #b23e35;
+}
+
+button,
+.category-button,
+.button.yes,
+.button.no,
+.back,
+.button-accept,
+.button-cancel {
+    font-weight: bold;
 }

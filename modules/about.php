@@ -50,9 +50,6 @@ echo '<div class="about">';
 // Read the README.md file to display its content on the page.
 $readme = file_get_contents('../README.md');
 
-// Sanitize the content to prevent XSS.
-$readme = htmlspecialchars($readme);
-
 // Convert Markdown headings to HTML tags (h2, h3).
 $readme = preg_replace('/^# (.*)$/m', '<h2>$1</h2>', $readme);
 $readme = preg_replace('/^## (.*)$/m', '<h3>$1</h3>', $readme);
@@ -84,7 +81,7 @@ $readme = preg_replace('/\[(.*?)\]\((.*?)\)/', '$2', $readme);
 
 // Convert newlines to <br> tags and remove excessive line breaks.
 $readme = nl2br($readme);
-$readme = preg_replace('/(<br\s*\/?>\s*){2,}/i', '', $readme);
+$readme = preg_replace('/(<br\s*\/?>\s*){1,}/i', '', $readme);
 
 // Convert Markdown italics (*text*) to <em> tags.
 $readme = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $readme);
