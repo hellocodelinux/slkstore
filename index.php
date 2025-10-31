@@ -33,7 +33,6 @@ if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
 
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
-
 // --- HTML RENDERING (Part 1) & LOADING SCREEN ---
 
 // Begin rendering the HTML document.
@@ -149,7 +148,6 @@ if ($theme === 'dark') {
 }
 echo '<a href="#" onclick="showInIframe(\'modules/about.php\'); return false;">About</a>';
 echo '</nav></div></header>';
-
 
 // --- MAIN CONTENT ---
 echo '<div class="page-body">';
