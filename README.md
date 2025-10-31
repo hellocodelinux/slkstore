@@ -4,9 +4,22 @@
 
 Pre-Release 1.3 - Careful, install ready
 
-* All the install, update, and remove functions are not included in the code until they are 100% tested.
+* All the update and remove functions are not included in the code until they are 100% tested.
+
+```
+This program must be run as root or with sudo.
+
+Usage: slkstore [options]
+Options:
+  --help        Show this help message.
+  --local       Run PHP server on 127.0.0.1:8000 without GUI.
+  --remote      Run PHP server on 0.0.0.0:8000 without GUI.
+```
+---
 
 <img src="https://files.mastodon.social/media_attachments/files/115/458/159/261/362/824/original/f7ef5198a44e6fd8.png" alt="Slkstore screenshot" width="400">
+
+---
 
 ## 🚀 What is Slkstore?
 
