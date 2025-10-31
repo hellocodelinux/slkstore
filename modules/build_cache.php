@@ -2,13 +2,13 @@
 ob_start();
 set_time_limit(900); // Increased time limit for robustness
 
-$cache_file       = __DIR__ . '/../cache/packages.php';
-$datas_dir        = __DIR__ . '/../datas/';
-$icon_dir         = __DIR__ . '/../cache/icons';
-$packages_file    = __DIR__ . '/../cache/PACKAGES.TXT';
-$packages_gz_file = __DIR__ . '/../datas/PACKAGES.TXT.gz';
-$logstore         = __DIR__ . '/../tmp/logstore.txt';
-$manifest_file    = __DIR__ . '/../cache/manifest.json';
+$cache_file       =  $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
+$datas_dir        = $_SERVER['DOCUMENT_ROOT'] . '/datas/';
+$icon_dir         = $_SERVER['DOCUMENT_ROOT'] . '/cache/icons';
+$packages_file    = $_SERVER['DOCUMENT_ROOT'] . '/cache/PACKAGES.TXT';
+$packages_gz_file = $_SERVER['DOCUMENT_ROOT']  . '/datas/PACKAGES.TXT.gz';
+$logstore         = $_SERVER['DOCUMENT_ROOT'] . '/tmp/logstore.txt';
+$manifest_file    = $_SERVER['DOCUMENT_ROOT'] . '/cache/manifest.json';
 $products_cache   = [];
 
 function logmsg($m)
@@ -19,7 +19,7 @@ function logmsg($m)
 
 logmsg('start');
 
-foreach ([dirname($logstore), $icon_dir, $datas_dir, __DIR__ . '/../cache'] as $d) {
+foreach ([dirname($logstore), $icon_dir, $datas_dir, $_SERVER['DOCUMENT_ROOT']  . '/cache'] as $d) {
     if (! is_dir($d)) {
         mkdir($d, 0755, true);
     }
@@ -79,7 +79,7 @@ if (! isset($local_manifest['icons']) || $local_manifest['icons']['hash'] !== $i
 // --- SYNC FLATHUB APPSTREAM ---
 $remote_flathub_url = 'https://dl.flathub.org/repo/appstream/x86_64/appstream.xml.gz';
 $flathub_gz_path    = $datas_dir . 'flathub-appstream.xml.gz';
-$flathub_xml_path   = __DIR__ . '/../cache/flathub-appstream.xml';
+$flathub_xml_path   = $_SERVER['DOCUMENT_ROOT']  . '/cache/flathub-appstream.xml';
 
 logmsg("Syncing Flathub appstream from $remote_flathub_url");
 // Use wget for https URL
@@ -249,7 +249,7 @@ if ($package_list_updated) {
 logmsg('end');
 
 // Update the daily check file to prevent re-checking on the same day.
-$check_file = __DIR__ . '/../tmp/slackdce_update_check.txt';
+$check_file = $_SERVER['DOCUMENT_ROOT'] . '/tmp/slackdce_update_check.txt';
 $today      = date('Y-m-d');
 file_put_contents($check_file, $today);
 logmsg("Updated daily check file: {$check_file}");

@@ -1,41 +1,6 @@
 <?php
 
-// Set the path for the theme configuration file.
-$config_file = '../themes/theme.conf';
-
-// Check if the theme configuration file exists.
-if (file_exists($config_file)) {
-    // If it exists, read the theme from the file.
-    $theme = trim(file_get_contents($config_file));
-} else {
-    // If it doesn't exist, default to the 'dark' theme.
-    $theme = 'dark';
-}
-
-// Check if a 'theme' parameter is set in the URL and if it's a valid theme.
-if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
-    // If a valid theme is passed, update the theme variable.
-    $theme = $_GET['theme'];
-    // Save the new theme setting to the configuration file.
-    file_put_contents($config_file, $theme);
-}
-
-// Read the content of the main stylesheet.
-$css = file_get_contents('../themes/style.css');
-
-// If the theme is 'light', process the CSS to invert colors.
-if ($theme === 'light') {
-    // Use a regular expression to find all hex color codes.
-    $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
-        // For each color, calculate its inverse.
-        $hex = $m[1];
-        $r   = 255 - hexdec(substr($hex, 0, 2));
-        $g   = 255 - hexdec(substr($hex, 2, 2));
-        $b   = 255 - hexdec(substr($hex, 4, 2));
-        // Return the new inverted color in hex format.
-        return sprintf("#%02X%02X%02X", $r, $g, $b);
-    }, $css);
-}
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
 // Start outputting the HTML document.
 echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">';
@@ -49,8 +14,8 @@ echo '<div class="pacman">';
 echo '<button class="back" onclick="history.back()" style="margin-bottom: 15px;">Back</button>';
 
 // Load the cached package data.
-if (file_exists(__DIR__ . '/../cache/packages.php')) {
-    include __DIR__ . '/../cache/packages.php';
+if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php')) {
+    include $_SERVER['DOCUMENT_ROOT']. '/cache/packages.php';
 } else {
     echo '<p>Cache file not found. Please build the cache first.</p>';
     $products_cache = [];

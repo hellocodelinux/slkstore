@@ -1,18 +1,6 @@
 <?php
-// Get the theme from the query string or default to 'dark'.
-$theme = isset($_GET['theme']) && $_GET['theme'] === 'light' ? 'light' : 'dark';
 
-// Load and potentially modify the CSS based on the theme.
-$css = file_get_contents(__DIR__ . '/../themes/style.css');
-if ($theme === 'light') {
-    $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
-        $hex = $m[1];
-        $r   = 255 - hexdec(substr($hex, 0, 2));
-        $g   = 255 - hexdec(substr($hex, 2, 2));
-        $b   = 255 - hexdec(substr($hex, 4, 2));
-        return sprintf("#%02X%02X%02X", $r, $g, $b);
-    }, $css);
-}
+include $_SERVER['DOCUMENT_ROOT']. '/modules/preinit.php';
 
 // Get 'full' from the query string.
 $full = isset($_GET['full']) ? htmlspecialchars($_GET['full']) : 'Not provided';
@@ -27,7 +15,7 @@ echo '<div class="datapack">' . $full . '</div>';
 
 // --- Dependency Resolution Code ---
 
-include __DIR__ . '/../cache/packages.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
 $all_packages = $products_cache;
 
 // Function to find a package by its name
@@ -123,7 +111,7 @@ if ($full !== 'Not provided') {
         if (empty($resolved_dependencies)) {
             echo '<p>No dependencies found.</p>';
         } else {
-            include __DIR__ . '/insta_status.php'; // Include the status check function
+            include $_SERVER['DOCUMENT_ROOT'] . '/modules/insta_status.php'; // Include the status check function
             echo '<ul class="listpack">';
             foreach ($resolved_dependencies as $dep_name => $dep_full) {
                 $dep_package = find_package_by_name($dep_name, $all_packages);

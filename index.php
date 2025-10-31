@@ -13,7 +13,7 @@ ob_start(); // Start output buffering to show loading screen
 // --- THEME HANDLING ---
 
 // Define the path for the theme configuration file.
-$config_file = 'themes/theme.conf';
+$config_file = $_SERVER['DOCUMENT_ROOT'] . '/themes/theme.conf';
 
 // Check if the theme configuration file exists and read the theme from it.
 // If the file doesn't exist, default to the 'dark' theme.
@@ -31,21 +31,8 @@ if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
     file_put_contents($config_file, $theme);
 }
 
-// Read the base CSS stylesheet.
-$css = file_get_contents('themes/style.css');
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
-// If the current theme is 'light', dynamically invert the colors in the CSS.
-// This provides a simple mechanism to switch between dark and light themes
-// by programmatically altering the color values.
-if ($theme === 'light') {
-    $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
-        $hex = $m[1];
-        $r   = 255 - hexdec(substr($hex, 0, 2));
-        $g   = 255 - hexdec(substr($hex, 2, 2));
-        $b   = 255 - hexdec(substr($hex, 4, 2));
-        return sprintf("#%02X%02X%02X", $r, $g, $b);
-    }, $css);
-}
 
 // --- HTML RENDERING (Part 1) & LOADING SCREEN ---
 
@@ -64,13 +51,14 @@ function showInIframe(url) {
     document.querySelector("main").innerHTML = "";
     document.querySelector("main").appendChild(f);
 }
+
 </script></head>';
 echo '<body class="' . $theme . '">';
 
 // --- UPDATE CHECK ---
 
-$check_file    = __DIR__ . '/tmp/slackdce_update_check.txt';
-$local_pkg_gz  = __DIR__ . '/cache/PACKAGES.TXT.gz';
+$check_file    = $_SERVER['DOCUMENT_ROOT'] . '/tmp/slackdce_update_check.txt';
+$local_pkg_gz  = $_SERVER['DOCUMENT_ROOT'] . '/cache/PACKAGES.TXT.gz';
 $remote_pkg_gz = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz';
 $today         = date('Y-m-d');
 $last_check    = @file_get_contents($check_file);
@@ -85,7 +73,7 @@ if ($last_check !== $today) {
 
     // If rsync output is not empty, it means the file has changed.
     if (! empty(trim($output))) {
-        include "modules/precarg.php";
+        include $_SERVER['DOCUMENT_ROOT'] . '/modules/precarg.php';
         header('Location: index.php'); // Redirect to reload the page after cache build
         exit;                          // Ensure script stops execution
     }
@@ -93,7 +81,7 @@ if ($last_check !== $today) {
 
 // If we reach here, there is no update. No overlay is shown.
 
-$readmex = file('README.md');
+$readmex = file($_SERVER['DOCUMENT_ROOT'] . '/README.md');
 $version = trim(end($readmex));
 
 // --- CATEGORY AND SEARCH HANDLING ---
@@ -119,7 +107,7 @@ $search = isset($_GET['search']) ? strtolower($_GET['search']) : '';
 // --- CACHE AND DATA LOADING ---
 
 // Define the path for the cached packages data file.
-$cache_file = 'cache/packages.php';
+$cache_file = $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
 
 // If the cache file does not exist, generate it by running the build script.
 // This ensures that the application data is available for the store.
@@ -133,7 +121,7 @@ include $cache_file;
 $products = $products_cache; // Assign the cached products to a working variable.
 
 // Include the script to determine the installation status of applications.
-include 'modules/insta_status.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/insta_status.php';
 
 // --- HTML RENDERING (Part 2) ---
 
@@ -150,6 +138,7 @@ echo '<button type="button" class="clear-button" onclick="document.querySelector
 echo '</form>';
 
 // Main navigation
+// Main navigation
 echo '<nav>';
 echo '<a href="#" onclick="showInIframe(\'modules/pacman.php\'); return false;">Upgrade</a>';
 // Theme switcher icon (sun or moon)
@@ -161,6 +150,7 @@ if ($theme === 'dark') {
 echo '<a href="#" onclick="showInIframe(\'modules/about.php\'); return false;">About</a>';
 echo '</nav></div></header>';
 
+
 // --- MAIN CONTENT ---
 echo '<div class="page-body">';
 
@@ -169,10 +159,6 @@ echo '<aside id="sidebar"><h3 class="sidebar-title">Categories</h3>';
 foreach ($all_categories as $category) {
     $active_class = (strtolower($current_category) == strtolower($category)) ? ' active' : '';
     $link         = '?category=' . urlencode($category);
-    // Preserve theme and search parameters in category links.
-    if ($theme === 'light') {
-        $link .= '&theme=light';
-    }
     if ($search) {
         $link .= '&search=' . urlencode($search);
     }
@@ -257,7 +243,11 @@ if (isset($_GET['app'])) {
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';
                 echo '<p class="product-version">Version ' . htmlspecialchars(substr($product['version'], 0, 10)) . '</p>';
                 echo '<p class="product-desc">' . htmlspecialchars($desc) . '</p>';
-                echo '<p class="product-size">Size ' . round(htmlspecialchars($product['sizec']) / 1024, 2) . ' MB - Installed ' . round(htmlspecialchars($product['sizeu']) / 1024, 2) . ' MB</p>';
+                $sizec = (float) str_replace(' K', '', $product['sizec']);
+                $sizeu = (float) str_replace(' K', '', $product['sizeu']);
+
+                echo '<p class="product-size">Size ' . round($sizec / 1024, 2) . ' MB - Installed ' . round($sizeu / 1024, 2) . ' MB</p>';
+
                 echo '</div></a>';
                 $count++;
             }
@@ -272,8 +262,8 @@ if (isset($_GET['app'])) {
             $name_match = false;
             $desc_match = false;
             if ($search) {
-            $name_match = strpos(strtolower($p['name']), $search) !== false;
-            $desc_match = strpos(strtolower($p['desc']), $search) !== false;
+                $name_match = strpos(strtolower($p['name']), $search) !== false;
+                $desc_match = strpos(strtolower($p['desc']), $search) !== false;
             }
             if ($search && ($name_match || $desc_match)) {
                 $display_products[] = $p;
@@ -304,7 +294,9 @@ if (isset($_GET['app'])) {
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';
                 echo '<p class="product-version">Version ' . htmlspecialchars(substr($product['version'], 0, 10)) . '</p>';
                 echo '<p class="product-desc">' . htmlspecialchars($desc) . '</p>';
-                echo '<p class="product-size">Size ' . round(htmlspecialchars($product['sizec']) / 1024, 2) . ' MB - Installed ' . round(htmlspecialchars($product['sizeu']) / 1024, 2) . ' MB</p>';
+                $sizec = (float) str_replace(' K', '', $product['sizec']);
+                $sizeu = (float) str_replace(' K', '', $product['sizeu']);
+                echo '<p class="product-size">Size ' . round($sizec / 1024, 2) . ' MB - Installed ' . round($sizeu / 1024, 2) . ' MB</p>';
                 echo '</div></a>';
             }
         }

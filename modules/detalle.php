@@ -1,34 +1,16 @@
 <?php
+
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
+
 // Get the application name from the query string, or exit if not set.
 $app = isset($_GET['app']) ? $_GET['app'] : '';
 if (! $app) {
     exit('app not set');
 }
 
-// Determine the theme (dark or light) from a configuration file or query string.
-$config_file = __DIR__ . '/../themes/theme.conf';
-$theme       = file_exists($config_file) ? trim(file_get_contents($config_file)) : 'dark';
-if (isset($_GET['theme']) && in_array($_GET['theme'], ['dark', 'light'])) {
-    $theme = $_GET['theme'];
-    file_put_contents($config_file, $theme);
-}
-
-// Load the base stylesheet.
-$css = file_get_contents(__DIR__ . '/../themes/style.css');
-// If the theme is light, invert the colors in the stylesheet.
-if ($theme === 'light') {
-    $css = preg_replace_callback('/#([0-9a-fA-F]{6})/', function ($m) {
-        $hex = $m[1];
-        $r   = 255 - hexdec(substr($hex, 0, 2));
-        $g   = 255 - hexdec(substr($hex, 2, 2));
-        $b   = 255 - hexdec(substr($hex, 4, 2));
-        return sprintf("#%02X%02X%02X", $r, $g, $b);
-    }, $css);
-}
-
 // Load the cached package data and installation status functions.
-include __DIR__ . '/../cache/packages.php';
-include __DIR__ . '/insta_status.php';
+include $_SERVER['DOCUMENT_ROOT']. '/cache/packages.php';
+include $_SERVER['DOCUMENT_ROOT']. '/modules/insta_status.php';
 $products = $products_cache;
 
 // Find the specified application in the product list.
@@ -47,7 +29,7 @@ $category  = strtolower($found['category']);
 $installed = is_installed($found['name']);
 
 // Prepare to read README and .info files from the slackbuilds cache.
-$slackbuilds_dir = __DIR__ . '/../cache/slackbuilds';
+$slackbuilds_dir = $_SERVER['DOCUMENT_ROOT'] . '/cache/slackbuilds';
 $readme_content  = '';
 $info_content    = [];
 
@@ -73,7 +55,7 @@ echo '<div class="app-enca">';
 
 $screenshot_url = '';
 $xml            = new DOMDocument();
-$xml->load(__DIR__ . '/../cache/flathub-appstream.xml');
+$xml->load($_SERVER['DOCUMENT_ROOT'] . '/cache/flathub-appstream.xml');
 $xpath   = new DOMXPath($xml);
 $name    = strtolower($found['name']);
 $query   = "//component[contains(translate(id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'$name')]/screenshots/screenshot/image[1]";
@@ -93,8 +75,10 @@ echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
 echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
 echo '<b>Version:</b> ' . htmlspecialchars($found['version']) . '<br>';
 echo '<b>Description:</b> ' . htmlspecialchars($desc) . '<br>';
-echo '<b>Compressed Size:</b> ' . number_format(htmlspecialchars($found['sizec']) / 1024, 2) . ' MB<br>';
-echo '<b>Uncompressed Size:</b> ' . number_format(htmlspecialchars($found['sizeu']) / 1024, 2) . ' MB<br>';
+$sizec = (float) str_replace(' K', '', $found['sizec']);
+$sizeu = (float) str_replace(' K', '', $found['sizeu']);
+echo '<b>Compressed Size:</b> ' . number_format($sizec / 1024, 2) . ' MB<br>';
+echo '<b>Uncompressed Size:</b> ' . number_format($sizeu / 1024, 2) . ' MB<br>';
 echo '<b>Full Package Name:</b> ' . htmlspecialchars($found['full']) . '<br>';
 echo '</div></div>';
 
