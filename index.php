@@ -1,22 +1,40 @@
 <?php
+/**
+ * SlkStore Main Index Page
+ *
+ * This is the main entry point for the SlkStore application.
+ * It handles the display of package categories, search functionality,
+ * theme switching, and package listings.
+ *
+ * The page includes:
+ * - Package browsing by category
+ * - Search functionality
+ * - Theme switching (dark/light)
+ * - Package installation status display
+ * - Update checking system
+ */
 
-ini_set('memory_limit', '2G');
-ini_set('max_execution_time', '600');
-ini_set('output_buffering', '1');
-ini_set('opcache.memory_consumption', '512');
-ini_set('opcache.max_accelerated_files', '16000');
-ini_set('opcache.revalidate_freq', '300');
-ini_set('opcache.validate_timestamps', '1');
+// Configure PHP settings for optimal performance
+ini_set('memory_limit', '2G');                     // Set memory limit to 2GB for large package lists
+ini_set('max_execution_time', '600');              // Allow 10 minutes execution time
+ini_set('output_buffering', '1');                  // Enable output buffering
+ini_set('opcache.memory_consumption', '512');      // Set OPcache memory limit
+ini_set('opcache.max_accelerated_files', '16000'); // Maximum number of files OPcache will cache
+ini_set('opcache.revalidate_freq', '300');         // How often to check file timestamps for changes
+ini_set('opcache.validate_timestamps', '1');       // Enable timestamp validation
 
-ob_start(); // Start output buffering to show loading screen
+// Start output buffering to enable loading screen display and prevent partial page loads
+ob_start();
 
 // --- THEME HANDLING ---
+// This section manages the application's theme system (dark/light modes)
+// Themes are persisted in a configuration file and can be toggled via URL parameter
 
-// Define the path for the theme configuration file.
+// Define the path to the theme configuration file that stores the user's preference
 $config_file = $_SERVER['DOCUMENT_ROOT'] . '/themes/theme.conf';
 
 // Check if the theme configuration file exists and read the theme from it.
-// If the file doesn't exist, default to the 'dark' theme.
+// If the file does not exist, default to the 'dark' theme.
 if (file_exists($config_file)) {
     $theme = trim(file_get_contents($config_file));
 } else {
@@ -55,10 +73,14 @@ function showInIframe(url) {
 echo '<body class="' . $theme . '">';
 
 // --- UPDATE CHECK ---
+// This section handles the automatic update checking system
+// It compares local package lists with the remote repository
+// to determine if updates are available
 
-$check_file    = $_SERVER['DOCUMENT_ROOT'] . '/tmp/slackdce_update_check.txt';
-$local_pkg_gz  = $_SERVER['DOCUMENT_ROOT'] . '/cache/PACKAGES.TXT.gz';
-$remote_pkg_gz = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz';
+// Define paths and URLs for update checking
+$check_file    = $_SERVER['DOCUMENT_ROOT'] . '/tmp/slackdce_update_check.txt';         // Stores the last check date
+$local_pkg_gz  = $_SERVER['DOCUMENT_ROOT'] . '/cache/PACKAGES.TXT.gz';                 // Local package database
+$remote_pkg_gz = 'rsync://slackware.uk/slackdce/packages/15.0/x86_64/PACKAGES.TXT.gz'; // Remote repository URL
 $today         = date('Y-m-d');
 $last_check    = @file_get_contents($check_file);
 
@@ -84,8 +106,12 @@ $readmex = file($_SERVER['DOCUMENT_ROOT'] . '/README.md');
 $version = trim(end($readmex));
 
 // --- CATEGORY AND SEARCH HANDLING ---
+// This section manages the application categorization system and search functionality
+// Categories are used to organize packages, while search allows users to find specific packages
+// Both features can work together to provide filtered views of the package database
 
-// Get the current category from the URL query parameters. Default to 'Welcome'.
+// Get the current category from the URL query parameters
+// If no category is specified, show the Welcome page as default
 $current_category = isset($_GET['category']) ? $_GET['category'] : 'Welcome';
 
 // Define the list of all available application categories.
@@ -105,7 +131,7 @@ $search = isset($_GET['search']) ? strtolower($_GET['search']) : '';
 
 // --- CACHE AND DATA LOADING ---
 
-// Define the path for the cached packages data file.
+// Define the path to the cached packages data file.
 $cache_file = $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
 
 // If the cache file does not exist, generate it by running the build script.
@@ -136,7 +162,6 @@ echo '<button type="submit" class="search-button">Go</button>';
 echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Clear</button>';
 echo '</form>';
 
-// Main navigation
 // Main navigation
 echo '<nav>';
 echo '<a href="#" onclick="showInIframe(\'modules/pacman.php\'); return false;">Upgrade</a>';
@@ -191,6 +216,10 @@ if (isset($_GET['app'])) {
     }
 } else {
     // --- DEFAULT VIEW (EITHER WELCOME PAGE OR CATEGORY LISTING) ---
+    // This section handles two main view types:
+    // 1. Welcome page: Shows featured apps from each category
+    // 2. Category listing: Shows all apps in a specific category
+    // The view type is determined by the current category and search parameters
     echo '<h2>' . htmlspecialchars(ucfirst($current_category)) . '</h2>';
 
     // If on the Welcome page and not searching, display a banner and featured apps.
@@ -202,15 +231,15 @@ if (isset($_GET['app'])) {
         // Display a random selection of applications from each category.
         foreach ($all_categories as $category) {
             if ($category === 'Welcome') {
-                continue;
+                continue; // Skip the Welcome category for featured apps
             }
 
             $cat_products = array_filter($products, fn($p) => strtolower($p['category']) === strtolower($category));
             if (! $cat_products) {
-                continue;
+                continue; // Skip categories with no products
             }
 
-            shuffle($cat_products);
+            shuffle($cat_products); // Shuffle to randomize featured apps
             $cat_link = '?category=' . urlencode($category);
             if ($theme === 'light') {
                 $cat_link .= '&theme=light';
@@ -221,7 +250,7 @@ if (isset($_GET['app'])) {
             $count = 0;
             foreach ($cat_products as $product) {
                 if ($count >= 8) {
-                    break; // Show up to 8 applications per category on the welcome page.
+                    break; // Show up to 8 applications per category on the welcome page
                 }
 
                 $link = '?app=' . urlencode($product['name']);

@@ -1,14 +1,32 @@
 <?php
+/**
+ * Package Download and Installation Handler
+ *
+ * This script manages the download and installation process for SlackDCE packages.
+ * It provides:
+ * - Asynchronous package downloading
+ * - Progress tracking and display
+ * - Package installation management
+ * - AJAX-based status updates
+ */
+
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
+// Define temporary directory for package downloads
 $tmp_dir = $_SERVER['DOCUMENT_ROOT'] . '/tmp/';
 
-if (!isset($_POST['ajax'])) {
+// Check if this is a regular page load (not an AJAX request)
+if (! isset($_POST['ajax'])) {
+    // Retrieve and decode the list of packages to download
+    // Default to empty array if no packages specified
     $packages_to_download_json = isset($_POST['packages']) ? htmlspecialchars_decode($_POST['packages']) : '[]';
-    $packages_to_download = json_decode($packages_to_download_json, true);
+    $packages_to_download      = json_decode($packages_to_download_json, true);
 
+    // Clean up any previous package downloads
+    // Remove all .txz files from temporary directory
     shell_exec("rm -f " . $tmp_dir . "*.txz");
 
+    // Initialize the download progress page
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Downloading</title>';
     echo '<style>' . $css . '</style></head><body>';
     echo '<h1>Downloading Packages</h1>';
@@ -79,18 +97,30 @@ if (!isset($_POST['ajax'])) {
     exit;
 }
 
+// Handle AJAX request for listing downloaded packages ready for installation
 if ($_POST['ajax'] === 'list_installs') {
+    // Get all downloaded .txz package files from temporary directory
     $files = glob($tmp_dir . "*.txz");
+    // Extract just the filenames without paths
     $names = [];
-    foreach ($files as $f) $names[] = basename($f);
+    foreach ($files as $f) {
+        $names[] = basename($f);
+    }
+
+    // Return list as JSON response
     header('Content-Type: application/json');
     echo json_encode($names);
     exit;
 }
 
+// Handle AJAX request for installing a single package
 if ($_POST['ajax'] === 'install_one') {
-    $pkg = basename($_POST['pkg']);
+    // Extract package name and ensure it's safe (no directory traversal)
+    $pkg  = basename($_POST['pkg']);
     $file = $tmp_dir . $pkg;
+    // Install package using upgradepkg with --install-new option
+    // This will either upgrade an existing package or install a new one
+    // Redirect stderr to stdout (2>&1) to capture all output
     $out = shell_exec("upgradepkg --install-new " . escapeshellarg($file) . " 2>&1");
     echo "<p style=color:green>Installed {$pkg}</p>";
     exit;
@@ -98,24 +128,42 @@ if ($_POST['ajax'] === 'install_one') {
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
 $all_packages = $products_cache;
-$pkgfull = $_POST['package'];
+$pkgfull      = $_POST['package'];
 
-function find_package_by_full($full, $packages) {
-    foreach ($packages as $pkg)
-        if ($pkg['full'] === $full)
+/**
+ * Search for a package by its full filename in the package list
+ *
+ * @param string $full     The complete package filename to search for
+ * @param array  $packages List of all available packages
+ * @return array|null      Package information if found, null otherwise
+ */
+function find_package_by_full($full, $packages)
+{
+    foreach ($packages as $pkg) {
+        if ($pkg['full'] === $full) {
             return $pkg;
+        }
+    }
+
     return null;
 }
 
+// Look up the package information in the package database
 $p = find_package_by_full($pkgfull, $all_packages);
+// If the package was found in the database, proceed with download
 if ($p) {
-    $base = 'https://slackware.uk/slackdce/packages/15.0/x86_64/';
-    $dir = $_SERVER['DOCUMENT_ROOT'] . '/tmp/';
-    $url = $base . strtolower($p['category']) . '/' . $p['name'] . '/' . $p['full'];
-    $dest = $dir . $p['full'];
+                                                                   // Configure download parameters
+    $base = 'https://slackware.uk/slackdce/packages/15.0/x86_64/'; // SlackDCE repository URL
+    $dir  = $_SERVER['DOCUMENT_ROOT'] . '/tmp/';                   // Local download directory
+                                                                   // Construct the full download URL following repository structure:
+                                                                   // base/category/package-name/package-full-name.txz
+    $url  = $base . strtolower($p['category']) . '/' . $p['name'] . '/' . $p['full'];
+    $dest = $dir . $p['full']; // Local destination path
     shell_exec("wget -q -O " . escapeshellarg($dest) . " " . escapeshellarg($url));
-    if (file_exists($dest))
+    if (file_exists($dest)) {
         echo "<p style=color:green>Download {$pkgfull}</p>";
-    else
+    } else {
         echo "<p style=color:red>error {$pkgfull}</p>";
+    }
+
 }

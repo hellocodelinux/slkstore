@@ -1,8 +1,19 @@
 <?php
+/**
+ * Package Installation Handler
+ *
+ * This script manages the package installation process for SlkStore.
+ * It handles:
+ * - Package dependency resolution
+ * - Size calculations for downloads and disk space
+ * - Installation status checking
+ * - User interface for installation confirmation
+ */
 
-include $_SERVER['DOCUMENT_ROOT']. '/modules/preinit.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
-// Get 'full' from the query string.
+// Retrieve and sanitize the package identifier from the URL query string
+// The 'full' parameter contains the complete package filename
 $full = isset($_GET['full']) ? htmlspecialchars($_GET['full']) : 'Not provided';
 
 // Start HTML output.
@@ -19,7 +30,13 @@ echo '<div class="datapack">' . $full . '</div>';
 include $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
 $all_packages = $products_cache;
 
-// Function to find a package by its name
+/**
+ * Search for a package in the package list by its name
+ *
+ * @param string $name     The package name to search for
+ * @param array  $packages List of available packages
+ * @return array|null      Package information or null if not found
+ */
 function find_package_by_name($name, $packages)
 {
     foreach ($packages as $pkg) {
@@ -30,7 +47,13 @@ function find_package_by_name($name, $packages)
     return null;
 }
 
-// Function to find a package by its full filename
+/**
+ * Search for a package in the package list by its full filename
+ *
+ * @param string $full     The complete filename to search for
+ * @param array  $packages List of available packages
+ * @return array|null      Package information or null if not found
+ */
 function find_package_by_full($full, $packages)
 {
     foreach ($packages as $pkg) {
@@ -41,15 +64,26 @@ function find_package_by_full($full, $packages)
     return null;
 }
 
-// Recursive function to resolve dependencies
+/**
+ * Recursively resolve package dependencies
+ *
+ * This function traverses the dependency tree of a package and builds
+ * a list of all required packages. It handles circular dependencies
+ * and ensures each package is only processed once.
+ *
+ * @param string $package_name    Name of the package to resolve dependencies for
+ * @param array  $all_packages    Complete list of available packages
+ * @param array  &$resolved_deps  Reference to array storing resolved dependencies
+ * @param array  &$processing     Reference to array tracking packages being processed
+ */
 function resolve_dependencies($package_name, $all_packages, &$resolved_deps, &$processing)
 {
-    // If already resolved, do nothing
+    // Skip if package has already been resolved
     if (isset($resolved_deps[$package_name])) {
         return;
     }
 
-    // Avoid circular dependencies
+    // Prevent circular dependency loops
     if (isset($processing[$package_name])) {
         return;
     }
@@ -75,16 +109,30 @@ function resolve_dependencies($package_name, $all_packages, &$resolved_deps, &$p
     unset($processing[$package_name]);
 }
 
-// Function to convert size string (e.g., "5260 K") to MB
-function convert_size_to_mb($size_str) {
+/**
+ * Convert package size from Kilobytes to Megabytes
+ *
+ * Takes a size string in the format "XXXX K" and converts it to MB
+ * Used for displaying more user-friendly size information
+ *
+ * @param string $size_str Size string in the format "XXXX K"
+ * @return float          Size in megabytes
+ */
+function convert_size_to_mb($size_str)
+{
     $size_kb = floatval(str_replace(' K', '', $size_str));
     return $size_kb / 1024;
 }
 
+// Begin the main package installation process
+// This section handles package resolution and displays installation information
 if ($full !== 'Not provided') {
+    // Locate the requested package in the package database
     $initial_package = find_package_by_full($full, $all_packages);
 
     if ($initial_package) {
+        // Initialize the list of packages to be installed
+        // Start with the main requested package
         $packages_to_install   = [];
         $packages_to_install[] = $initial_package['full'];
         // Display initial package details
@@ -117,17 +165,16 @@ if ($full !== 'Not provided') {
             include $_SERVER['DOCUMENT_ROOT'] . '/modules/insta_status.php'; // Include the status check function
             echo '<ul class="listpack">';
             foreach ($resolved_dependencies as $dep_name => $dep_full) {
-                $dep_package = find_package_by_name($dep_name, $all_packages);
+                $dep_package  = find_package_by_name($dep_name, $all_packages);
                 $is_installed = is_installed($dep_name);
                 $class_color  = $is_installed ? 'installed' : 'not-installed';
-                
+
                 echo '<li class="' . $class_color . '">' . htmlspecialchars($dep_full) . ($is_installed ? ' ✔️' : '');
 
-
-                if ($dep_package && !$is_installed) {
+                if ($dep_package && ! $is_installed) {
                     $packages_to_install[] = $dep_full;
-                    $dep_size_c_mb = convert_size_to_mb($dep_package['sizec']);
-                    $dep_size_u_mb = convert_size_to_mb($dep_package['sizeu']);
+                    $dep_size_c_mb         = convert_size_to_mb($dep_package['sizec']);
+                    $dep_size_u_mb         = convert_size_to_mb($dep_package['sizeu']);
                     $total_size_c += $dep_size_c_mb;
                     $total_size_u += $dep_size_u_mb;
                     echo '<div class="package-size">Compressed: ' . number_format($dep_size_c_mb, 2) . ' MB, Uncompressed: ' . number_format($dep_size_u_mb, 2) . ' MB</div>';

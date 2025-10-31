@@ -1,25 +1,42 @@
 <?php
+/**
+ * Package Detail Display Module
+ *
+ * This script renders a detailed view of a specific package in the SlkStore.
+ * It displays comprehensive information including:
+ * - Basic package metadata (name, version, category)
+ * - Installation status and actions
+ * - Package sizes (compressed and uncompressed)
+ * - Screenshots from Flathub (when available)
+ * - Dependencies and requirements
+ * - Full package description
+ */
 
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 
-// Get the application name from the query string, or exit if not set.
+// Retrieve and validate the application name from the URL query string
+// Exit with an error message if the 'app' parameter is not provided
 $app = isset($_GET['app']) ? $_GET['app'] : '';
 if (! $app) {
     exit('app not set');
 }
 
 // Load the cached package data and installation status functions.
-include $_SERVER['DOCUMENT_ROOT']. '/cache/packages.php';
-include $_SERVER['DOCUMENT_ROOT']. '/modules/insta_status.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/cache/packages.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/modules/insta_status.php';
 $products = $products_cache;
 
-// Find the specified application in the product list.
+// Search for the requested application in the package database
+// Perform a case-insensitive comparison to ensure reliable matching
 $found = null;
 foreach ($products as $p) {
-    if (strtolower($p['name']) === strtolower($app)) {$found = $p;
-        break;}
+    if (strtolower($p['name']) === strtolower($app)) {
+        $found = $p;
+        break;
+    }
 }
-// Exit if the application is not found.
+
+// If the package wasn't found in the database, terminate with an error
 if (! $found) {
     exit('Application not found');
 }
@@ -28,12 +45,14 @@ if (! $found) {
 $category  = strtolower($found['category']);
 $installed = is_installed($found['name']);
 
-// Prepare to read README and .info files from the slackbuilds cache.
+// Initialize variables for README and .info files from the slackbuilds cache.
+// These could be used for additional package information display
 $slackbuilds_dir = $_SERVER['DOCUMENT_ROOT'] . '/cache/slackbuilds';
 $readme_content  = '';
 $info_content    = [];
 
-// Start generating the HTML output.
+// Start generating the HTML output with application details and styling
+// Create the page structure with proper encoding and theme application
 echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . htmlspecialchars($found['name']) . '</title><style>' . $css . '</style></head><body class="' . $theme . '">';
 $icon = '../' . htmlspecialchars($found['icon']);
 echo '<div class="app-header" style="display:flex;align-items:center;gap:20px;">';
@@ -45,19 +64,25 @@ echo '<button class="app-remove" ' . ($installed ? '' : 'disabled') . '>Remove</
 echo '<button class="back" onclick="history.back()">Back</button>';
 echo '</div></div>';
 
-// Display application details from packages.php
-
+// Extract the short description from the full description
+// The description is expected to be in parentheses within the desc field
 if (preg_match('/\(([^)]+)\)/', $found['desc'], $m)) {
     $desc = $m[1];
 }
 
 echo '<div class="app-enca">';
 
+// Attempt to find a screenshot for the application in Flathub's AppStream data
+// The process involves:
+// 1. Loading the AppStream XML database
+// 2. Creating an XPath query to find matching application entries
+// 3. Extracting the first screenshot URL if available
 $screenshot_url = '';
 $xml            = new DOMDocument();
 $xml->load($_SERVER['DOCUMENT_ROOT'] . '/cache/flathub-appstream.xml');
-$xpath   = new DOMXPath($xml);
-$name    = strtolower($found['name']);
+$xpath = new DOMXPath($xml);
+$name  = strtolower($found['name']);
+// Case-insensitive XPath query to find the first screenshot for this application
 $query   = "//component[contains(translate(id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'$name')]/screenshots/screenshot/image[1]";
 $entries = $xpath->query($query);
 if ($entries->length > 0) {
@@ -70,11 +95,17 @@ if (! empty($screenshot_url)) {
     echo '</div>';
 }
 
+// Display the main package details section
+// This includes essential information about the package:
+// - Package identification (name, category, version)
+// - Package description
+// - Size information (both compressed and installed sizes)
 echo '<div class="app-detailm">';
 echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
 echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
 echo '<b>Version:</b> ' . htmlspecialchars($found['version']) . '<br>';
 echo '<b>Description:</b> ' . htmlspecialchars($desc) . '<br>';
+// Convert size strings from KB to floating point values for conversion to MB
 $sizec = (float) str_replace(' K', '', $found['sizec']);
 $sizeu = (float) str_replace(' K', '', $found['sizeu']);
 echo '<b>Compressed Size:</b> ' . number_format($sizec / 1024, 2) . ' MB<br>';
@@ -84,8 +115,8 @@ echo '</div></div>';
 
 echo '<pre class="app-detail">' . htmlspecialchars($found['descfull']) . '</pre>';
 
-// Display information from the .info file, such as requirements, homepage, maintainer, etc.
-
+// Display package dependencies if they exist
+// The requirements are displayed in uppercase for better visibility
 if ($found['req']) {
     echo '<div class="app-req">REQUIRES: ' . htmlspecialchars(strtoupper(str_replace(',', ' ', $found['req']))) . '</div>';
 }
