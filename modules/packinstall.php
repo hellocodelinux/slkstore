@@ -10,7 +10,8 @@ echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Package Installati
 echo '<style>' . $css . '</style></head><body class="' . $theme . '">';
 
 echo '<h1>Package Installation</h1>';
-echo '<div class="install-header"><h2 class="install-title">Will be installed:</h2><button class="button-accept">Accept</button><button class="button-cancel" onclick="history.back()">Cancel</button></div>';
+echo '<form action="/modules/downloader.php" method="post">';
+echo '<div class="install-header"><h2 class="install-title">Will be installed:</h2><button type="submit" class="button-accept">Accept</button><button type="button" class="button-cancel" onclick="history.back()">Cancel</button></div>';
 echo '<div class="datapack">' . $full . '</div>';
 
 // --- Dependency Resolution Code ---
@@ -84,6 +85,8 @@ if ($full !== 'Not provided') {
     $initial_package = find_package_by_full($full, $all_packages);
 
     if ($initial_package) {
+        $packages_to_install   = [];
+        $packages_to_install[] = $initial_package['full'];
         // Display initial package details
         $initial_size_c_mb = convert_size_to_mb($initial_package['sizec']);
         $initial_size_u_mb = convert_size_to_mb($initial_package['sizeu']);
@@ -122,6 +125,7 @@ if ($full !== 'Not provided') {
 
 
                 if ($dep_package && !$is_installed) {
+                    $packages_to_install[] = $dep_full;
                     $dep_size_c_mb = convert_size_to_mb($dep_package['sizec']);
                     $dep_size_u_mb = convert_size_to_mb($dep_package['sizeu']);
                     $total_size_c += $dep_size_c_mb;
@@ -136,11 +140,13 @@ if ($full !== 'Not provided') {
             echo '<h4 style="font-weight: normal;">Total to download: <b>' . number_format($total_size_c, 2) . ' MB</b> - Total size on disk: <b>' . number_format($total_size_u, 2) . ' MB</b></h4>';
             echo '</div>';
         }
+        echo '<input type="hidden" name="packages" value="' . htmlspecialchars(json_encode($packages_to_install)) . '">';
     } else {
         echo '<p>Initial package not found.</p>';
     }
 }
 
+echo '</form>';
 // --- End of Code ---
 
 echo '</body></html>';
