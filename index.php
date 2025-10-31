@@ -257,7 +257,7 @@ if (isset($_GET['app'])) {
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';
                 echo '<p class="product-version">Version ' . htmlspecialchars(substr($product['version'], 0, 10)) . '</p>';
                 echo '<p class="product-desc">' . htmlspecialchars($desc) . '</p>';
-                echo '<p class="product-size">Size ' . htmlspecialchars($product['sizec']) . ' - Installed ' . htmlspecialchars($product['sizeu']) . '</p>';
+                echo '<p class="product-size">Size ' . round(htmlspecialchars($product['sizec']) / 1024, 2) . ' MB - Installed ' . round(htmlspecialchars($product['sizeu']) / 1024, 2) . ' MB</p>';
                 echo '</div></a>';
                 $count++;
             }
@@ -304,7 +304,7 @@ if (isset($_GET['app'])) {
                 echo '<h3 class="product-title">' . htmlspecialchars($product['name']) . '</h3>';
                 echo '<p class="product-version">Version ' . htmlspecialchars(substr($product['version'], 0, 10)) . '</p>';
                 echo '<p class="product-desc">' . htmlspecialchars($desc) . '</p>';
-                echo '<p class="product-size">Size ' . htmlspecialchars($product['sizec']) . ' - Installed ' . htmlspecialchars($product['sizeu']) . '</p>';
+                echo '<p class="product-size">Size ' . round(htmlspecialchars($product['sizec']) / 1024, 2) . ' MB - Installed ' . round(htmlspecialchars($product['sizeu']) / 1024, 2) . ' MB</p>';
                 echo '</div></a>';
             }
         }

@@ -93,8 +93,8 @@ echo '<b>Name:</b> ' . htmlspecialchars($found['name']) . '<br>';
 echo '<b>Category:</b> ' . htmlspecialchars($found['category']) . '<br>';
 echo '<b>Version:</b> ' . htmlspecialchars($found['version']) . '<br>';
 echo '<b>Description:</b> ' . htmlspecialchars($desc) . '<br>';
-echo '<b>Compressed Size:</b> ' . htmlspecialchars($found['sizec']) . '<br>';
-echo '<b>Uncompressed Size:</b> ' . htmlspecialchars($found['sizeu']) . '<br>';
+echo '<b>Compressed Size:</b> ' . number_format(htmlspecialchars($found['sizec']) / 1024, 2) . ' MB<br>';
+echo '<b>Uncompressed Size:</b> ' . number_format(htmlspecialchars($found['sizeu']) / 1024, 2) . ' MB<br>';
 echo '<b>Full Package Name:</b> ' . htmlspecialchars($found['full']) . '<br>';
 echo '</div></div>';
 

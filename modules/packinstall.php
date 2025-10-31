@@ -86,10 +86,24 @@ function resolve_dependencies($package_name, $all_packages, &$resolved_deps, &$p
     unset($processing[$package_name]);
 }
 
+// Function to convert size string (e.g., "5260 K") to MB
+function convert_size_to_mb($size_str) {
+    $size_kb = floatval(str_replace(' K', '', $size_str));
+    return $size_kb / 1024;
+}
+
 if ($full !== 'Not provided') {
     $initial_package = find_package_by_full($full, $all_packages);
 
     if ($initial_package) {
+        // Display initial package details
+        $initial_size_c_mb = convert_size_to_mb($initial_package['sizec']);
+        $initial_size_u_mb = convert_size_to_mb($initial_package['sizeu']);
+        echo '<div class="package-size">Compressed: ' . number_format($initial_size_c_mb, 2) . ' MB, Uncompressed: ' . number_format($initial_size_u_mb, 2) . ' MB</div>';
+
+        $total_size_c = $initial_size_c_mb;
+        $total_size_u = $initial_size_u_mb;
+
         $resolved_dependencies = [];
         $processing_stack      = [];
 
@@ -112,11 +126,27 @@ if ($full !== 'Not provided') {
             include __DIR__ . '/insta_status.php'; // Include the status check function
             echo '<ul class="listpack">';
             foreach ($resolved_dependencies as $dep_name => $dep_full) {
+                $dep_package = find_package_by_name($dep_name, $all_packages);
                 $is_installed = is_installed($dep_name);
                 $class_color  = $is_installed ? 'installed' : 'not-installed';
-                echo '<li class="' . $class_color . '">' . htmlspecialchars($dep_full) . '</li>';
+                
+                echo '<li class="' . $class_color . '">' . htmlspecialchars($dep_full) . ($is_installed ? ' ✔️' : '');
+
+
+                if ($dep_package && !$is_installed) {
+                    $dep_size_c_mb = convert_size_to_mb($dep_package['sizec']);
+                    $dep_size_u_mb = convert_size_to_mb($dep_package['sizeu']);
+                    $total_size_c += $dep_size_c_mb;
+                    $total_size_u += $dep_size_u_mb;
+                    echo '<div class="package-size">Compressed: ' . number_format($dep_size_c_mb, 2) . ' MB, Uncompressed: ' . number_format($dep_size_u_mb, 2) . ' MB</div>';
+                }
+                echo '</li><br>';
             }
             echo '</ul>';
+
+            echo '<div class="total-size">';
+            echo '<h4 style="font-weight: normal;">Total to download: <b>' . number_format($total_size_c, 2) . ' MB</b> - Total size on disk: <b>' . number_format($total_size_u, 2) . ' MB</b></h4>';
+            echo '</div>';
         }
     } else {
         echo '<p>Initial package not found.</p>';

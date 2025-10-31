@@ -446,7 +446,6 @@ footer p {
     font-size: 14px;
     color: #cccccc;
     line-height: 2;
-    font-size: 12px;
 }
 
 .app-detailm b {
@@ -617,6 +616,7 @@ footer p {
 .datapack {
     font-size: 20px;
     font-family: 'Courier New', Courier, monospace;
+    color: #97dd9a;
 }
 
 .listpack {
@@ -641,7 +641,7 @@ footer p {
 }
 
 .listpack .not-installed {
-    color: #2f7231;
+    color: #97dd9a;
 }
 
 .button-accept,
@@ -680,4 +680,8 @@ button,
 .button-accept,
 .button-cancel {
     font-weight: bold;
+}
+
+.package-size {
+    color: #dadada;
 }
