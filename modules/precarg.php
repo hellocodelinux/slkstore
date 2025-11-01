@@ -10,6 +10,10 @@
  * - Displaying a loading screen
  * - Building/updating the package cache
  * - Redirecting back to the main interface
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Flush any existing output buffers to ensure immediate display

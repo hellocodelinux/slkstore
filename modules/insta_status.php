@@ -5,6 +5,10 @@
  * This module provides functionality to check whether a package is installed
  * in the Slackware system by examining the /var/log/packages directory.
  * It supports version-aware package name matching and handles error cases.
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Retrieve a list of all packages installed in the system

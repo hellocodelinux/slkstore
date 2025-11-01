@@ -1,3 +1,6 @@
+/* Dark theme for SlkStore */
+/* Author: Eduardo Castillo (hellcodelinux@gmail.com) */
+
 html,
 body {
     height: 100%;
@@ -287,7 +290,7 @@ footer p {
 }
 
 .insta.installed {
-    background-color: #2f7231;
+    background-color: #52bb55;
     border-radius: 50%;
     width: 14px;
     height: 14px;
@@ -296,7 +299,7 @@ footer p {
 }
 
 .insta.not-installed {
-    background-color: #808080;
+    background-color: #cfcfcf;
     border-radius: 50%;
     width: 14px;
     height: 14px;
@@ -680,8 +683,13 @@ button,
 .button.no,
 .back,
 .button-accept,
+.clear-button,
 .button-cancel {
-    font-weight: bold;
+    font-weight: bold !important;
+}
+
+.clear-button {
+    box-shadow: 0px 0px 8px #0080ff !important;
 }
 
 .package-size {

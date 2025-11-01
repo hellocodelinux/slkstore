@@ -8,6 +8,10 @@
  * - Icon management and association
  * - Cache file generation and maintenance
  * - Update checking and manifest management
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Initialize output buffering and extend execution time limit

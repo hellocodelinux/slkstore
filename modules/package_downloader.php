@@ -8,6 +8,10 @@
  * - Download from the Slackware repository
  * - Error handling and status reporting
  * - JSON response generation
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Load the cached package database

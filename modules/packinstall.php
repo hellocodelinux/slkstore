@@ -8,6 +8,10 @@
  * - Size calculations for downloads and disk space
  * - Installation status checking
  * - User interface for installation confirmation
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';

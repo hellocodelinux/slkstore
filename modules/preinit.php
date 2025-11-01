@@ -7,6 +7,10 @@
  * - Theme configuration loading and saving
  * - Theme switching functionality
  * - CSS processing and color inversion for light/dark modes
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Define the path for the theme configuration file that stores user preference

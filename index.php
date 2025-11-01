@@ -12,6 +12,10 @@
  * - Theme switching (dark/light)
  * - Package installation status display
  * - Update checking system
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 // Configure PHP settings for optimal performance
@@ -159,8 +163,8 @@ echo '<form method="get" class="search-form">';
 echo '<input type="text" name="search" placeholder="Search apps..." value="' . (isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '') . '" class="search-input">';
 echo '<input type="hidden" name="theme" value="' . $theme . '">'; // Preserve the current theme across searches.
 echo '<button type="submit" class="search-button">Go</button>';
-echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Clear</button>';
 echo '<button type="button" class="search-button" onclick="history.back();">Back</button>';
+echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Clear</button>';
 echo '</form>';
 
 // Main navigation
@@ -194,10 +198,10 @@ echo '</aside>';
 echo '<main>';
 
 // Verificar permisos de sudo para upgradepkg y removepkg
-$check_sudo_upgradepkg = shell_exec("sudo -n upgradepkg --help 2>&1");
-$check_sudo_removepkg = shell_exec("sudo -n removepkg --help 2>&1");
-$sudo_password_required = (strpos($check_sudo_upgradepkg, 'password is required') !== false || 
-                         strpos($check_sudo_removepkg, 'password is required') !== false);
+$check_sudo_upgradepkg  = shell_exec("sudo -n upgradepkg --help 2>&1");
+$check_sudo_removepkg   = shell_exec("sudo -n removepkg --help 2>&1");
+$sudo_password_required = (strpos($check_sudo_upgradepkg, 'password is required') !== false ||
+    strpos($check_sudo_removepkg, 'password is required') !== false);
 
 if ($sudo_password_required) {
     // Redirigir a la página de configuración de sudo

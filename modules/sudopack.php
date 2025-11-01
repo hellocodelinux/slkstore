@@ -1,4 +1,15 @@
 <?php
+/**
+ * Sudo Configuration Page Generator
+ *
+ * This script generates the Sudo Configuration page
+ * - Handling code blocks and special formatting
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
+ */
+
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
 $current_user = trim(shell_exec('whoami'));
 
@@ -61,4 +72,3 @@ echo '</div>'; // Close app-detailx
 echo '</main></div>';
 
 echo '</body></html>';
-?>

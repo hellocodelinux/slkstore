@@ -1,11 +1,5 @@
 # 🛍️ Slkstore: The Software Center for Slackware
 
-* This is pre-release - not functional
-
-Pre-Release 1.3 - Careful, install ready
-
-* All the update and remove functions are not included in the code until they are 100% tested.
-
 ```
 slkstore - Package Store for Slackware 64-bit Stable
 
@@ -79,4 +73,4 @@ This project is under the **Creative Commons Attribution-NonCommercial-NoDerivat
 ---
 *Created with ❤️ for the Slackware community.*
 
-v1.3
+v1.4

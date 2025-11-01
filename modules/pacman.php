@@ -5,6 +5,10 @@
  * This script provides a web interface for managing SlackDCE packages.
  * It displays installed packages, checks for available updates,
  * and provides update functionality for outdated packages.
+ *
+ * @package SlkStore
+ * @author Eduardo Castillo
+ * @email hellcodelinux@gmail.com
  */
 
 include $_SERVER['DOCUMENT_ROOT'] . '/modules/preinit.php';
