@@ -161,7 +161,7 @@ footer p {
     align-items: center;
     width: 50%;
     padding-left: 5px;
-    margin: 0 auto
+    margin: 0 auto;
 }
 
 .search-form input {
@@ -181,6 +181,8 @@ footer p {
     border-radius: 4px;
     cursor: pointer;
     box-shadow: 2px 2px 4px #000000;
+    margin-left: 10px;
+
 }
 
 .search-form button:hover {
@@ -684,4 +686,29 @@ button,
 
 .package-size {
     color: #dadada;
+}
+
+.code-block {
+    background-color: #202020 !important;
+    color: #f0f0f0;
+    border: 1px solid #4b9758;
+    border-radius: 8px;
+    padding: 1.5em;
+    margin: 1em 0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    line-height: 1.5;
+    overflow-x: auto;
+    box-shadow: 2px 2px 4px #000000;
+    white-space: pre;
+    font-size: 12px;
+}
+
+.tagline {
+    font-size: large;
+    color: #a0c0ff;
+    margin-left: 10px;
+    align-self: center;
+    text-shadow: 2px 2px 4px #000000;
+    font-weight: bold;
 }

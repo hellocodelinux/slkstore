@@ -152,7 +152,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/modules/insta_status.php';
 
 // --- HEADER SECTION ---
 echo '<header><div class="page-container"><div class="container">';
-echo '<h1 class="logo">SlkStore ' . $version . '</h1>';
+echo '<h1 class="logo">SlkStore ' . $version . '</h1><p class="tagline">lts</p>';
 
 // Search form
 echo '<form method="get" class="search-form">';
@@ -160,18 +160,19 @@ echo '<input type="text" name="search" placeholder="Search apps..." value="' . (
 echo '<input type="hidden" name="theme" value="' . $theme . '">'; // Preserve the current theme across searches.
 echo '<button type="submit" class="search-button">Go</button>';
 echo '<button type="button" class="clear-button" onclick="document.querySelector(\'.search-input\').value=\'\'; window.location.href=\'index.php\';">Clear</button>';
+echo '<button type="button" class="search-button" onclick="history.back();">Back</button>';
 echo '</form>';
 
 // Main navigation
 echo '<nav>';
-echo '<a href="#" onclick="showInIframe(\'modules/pacman.php\'); return false;">Upgrade</a>';
+echo '<a href="#" onclick="showInIframe(\'modules/about.php\'); return false;">About</a>';
+
 // Theme switcher icon (sun or moon)
 if ($theme === 'dark') {
     echo '<a href="?theme=light" class="theme-icon">☀️</a>';
 } else {
     echo '<a href="?theme=dark" class="theme-icon">🌙</a>';
 }
-echo '<a href="#" onclick="showInIframe(\'modules/about.php\'); return false;">About</a>';
 echo '</nav></div></header>';
 
 // --- MAIN CONTENT ---
@@ -191,6 +192,19 @@ echo '</aside>';
 
 // --- CONTENT AREA ---
 echo '<main>';
+
+// Verificar permisos de sudo para upgradepkg y removepkg
+$check_sudo_upgradepkg = shell_exec("sudo -n upgradepkg --help 2>&1");
+$check_sudo_removepkg = shell_exec("sudo -n removepkg --help 2>&1");
+$sudo_password_required = (strpos($check_sudo_upgradepkg, 'password is required') !== false || 
+                         strpos($check_sudo_removepkg, 'password is required') !== false);
+
+if ($sudo_password_required) {
+    // Redirigir a la página de configuración de sudo
+    echo '<script>showInIframe("modules/sudopack.php");</script>';
+    echo '</main></div></body></html>';
+    exit;
+}
 
 // Check if a specific application is requested to be displayed.
 if (isset($_GET['app'])) {
@@ -337,7 +351,7 @@ echo '</main></div>';
 echo '<footer>';
 $total_programs = count($products);
 $found_programs = isset($display_products) ? count($display_products) : 0;
-echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore ' . $version . ' (By SlackDCE). All rights reserved.</p>';
+echo '<div class="container"><p class="copyright">&copy; ' . date("Y") . ' SlkStore ' . $version . ' lts (By SlackDCE). All rights reserved.</p>';
 echo '<div class="status-bar">';
 echo "Programs in this view: $found_programs / $total_programs - ";
 // Read and display repository information from the PACKAGES.TXT file.

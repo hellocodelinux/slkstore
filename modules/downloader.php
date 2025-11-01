@@ -73,7 +73,7 @@ if (! isset($_POST['ajax'])) {
 
         async function installNext() {
             if (list.length === 0) {
-                document.getElementById("progress").innerHTML += "<h2>Installation Complete!</h2>";
+                document.getElementById("progress").innerHTML += "<h2>Installation Complete!</h2><div class=\"logo\" style=\"font-size: 18px;\">Press CLEAR button</div>";
                 return;
             }
             let pkg = list.shift();
@@ -121,7 +121,7 @@ if ($_POST['ajax'] === 'install_one') {
     // Install package using upgradepkg with --install-new option
     // This will either upgrade an existing package or install a new one
     // Redirect stderr to stdout (2>&1) to capture all output
-    $out = shell_exec("upgradepkg --install-new " . escapeshellarg($file) . " 2>&1");
+    $out = shell_exec("sudo upgradepkg --install-new " . escapeshellarg($file) . " 2>&1");
     echo "<p style=color:green>Installed {$pkg}</p>";
     exit;
 }
